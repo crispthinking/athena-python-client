@@ -1,12 +1,18 @@
 [project]
+
+
 name = "athena_client"
 version = "0.1.0"
 description = "Athena Client Library"
 readme = "README.md"
 authors = [{ name = "Resolver Global", email = "opensource@kroll.com" }]
 requires-python = ">=3.10"
-dependencies = ["grpcio-tools>=1.74.0"]
-
+dependencies = [
+    "grpcio-tools>=1.74.0",
+    "pillow>=11.3.0",
+    "pydantic>=2.11.7",
+    "types-protobuf>=6.30.2.20250703",
+]
 [dependency-groups]
 dev = [
     "mypy-protobuf>=3.6.0",

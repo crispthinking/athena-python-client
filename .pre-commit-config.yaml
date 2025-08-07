@@ -5,17 +5,18 @@ repos:
       - id: ruff-check
         args: [--fix]
       - id: ruff-format
+        args: [--fix]
   - repo: https://github.com/astral-sh/uv-pre-commit
     rev: 0.7.15
     hooks:
       - id: uv-lock
-  - repo: https://github.com/fsouza/mirrors-pyright
-    rev: v1.1.403
+  - repo: https://github.com/necaris/pre-commit-pyright
+    rev: "1.1.53"
     hooks:
       - id: pyright
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
-      - id: mixed-line-ending
+      - id: mixed-line-endings
       - id: end-of-file-fixer
       - id: trailing-whitespace
