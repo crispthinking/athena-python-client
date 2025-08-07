@@ -44,12 +44,12 @@ class ClassifierServiceClient:
         async for grpc_response in self.stub.Classify(request_iter):
             yield grpc_response
 
-        return ListDeploymentsResponse(
-            deployments=[
-                Deployment(
-                    deployment_id=deployment.deployment_id,
-                    backlog=deployment.backlog,
-                )
-                for deployment in grpc_response.deployments
-            ]
-        )
+    async def list_deployments(self) -> ListDeploymentsResponse:
+        """Retrieve a list of all active deployment IDs.
+
+        Returns:
+            ListDeploymentsResponse: The model representing the list
+            deployments response.
+
+        """
+        return await self.stub.ListDeployments(Empty())
