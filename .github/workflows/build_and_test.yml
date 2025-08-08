@@ -37,6 +37,10 @@ jobs:
         run: |
           uv run ruff check
 
+      - name: Run code formatting check
+        run: |
+          uv run ruff format --check
+
       - name: Run type checking
         run: |
           uv run pyright
