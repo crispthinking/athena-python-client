@@ -29,9 +29,11 @@ jobs:
 
       - name: Ensure no differences in generated code
         run: |
+          source .venv/bin/activate
           cp -r src/athena_client/generated src/athena_client/generated_backup
           ./scripts/compile_proto.sh
           diff -r src/athena_client/generated src/athena_client/generated_backup || (echo "Generated code differs. Please commit the changes after running compile_proto.sh." && exit 1)
+          rm -rf src/athena_client/generated_backup
 
       - name: Run linter
         run: |
