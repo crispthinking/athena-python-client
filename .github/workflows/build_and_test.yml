@@ -1,0 +1,46 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
+
+      - name: Ensure no differences in generated code
+        run: |
+          cp -r src/athena_client/generated src/athena_client/generated_backup
+          ./scripts/compile_proto.sh
+          diff -r src/athena_client/generated src/athena_client/generated_backup || (echo "Generated code differs. Please commit the changes after running compile_proto.sh." && exit 1)
+
+      - name: Run linter
+        run: |
+          uv run ruff check
+
+      - name: Run type checking
+        run: |
+          uv run pyright
+
+      - name: Run tests
+        run: |
+          uv run pytest
