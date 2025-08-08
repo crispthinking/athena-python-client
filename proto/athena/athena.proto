@@ -1,16 +1,16 @@
 syntax = "proto3";
 
-package athena;
-
 import "google/protobuf/empty.proto";
 
 option csharp_namespace = "Resolver.Athena.Grpc";
-option java_outer_classname = "AthenaProto";
 option java_package = "com.resolver.athena.grpc";
-option objc_class_prefix = "RNX";
+option java_outer_classname = "AthenaProto";
 option php_namespace = "Resolver\\Athena\\Grpc";
 option ruby_package = "Resolver::Athena::Grpc";
-option swift_prefix = "RNX";
+option swift_prefix = "RAT";
+option objc_class_prefix = "RAT";
+
+package athena;
 
 // The classifier service definition.
 // Provides image classification capabilities with session-based streaming
@@ -74,6 +74,9 @@ message ClassificationInput {
   // The raw image data bytes in the format specified by encoding
   // Can be compressed or uncompressed based on the encoding field
   bytes data = 4;
+
+  // The image file format of the data bytes
+  ImageFormat format = 5;
 }
 
 // The response message containing the classification results.
@@ -146,10 +149,36 @@ enum ErrorCode {
 // Enumeration of supported image data encoding formats.
 // Determines how the server should interpret the image data bytes.
 enum RequestEncoding {
-  // Uncompressed raw image data (e.g., raw RGB pixels, BMP, etc.)
+  // Unxpecified encoding. Assumed to be uncompressed.
   REQUEST_ENCODING_UNSPECIFIED = 0;
+
+  // Uncompressed raw image data (e.g., raw RGB pixels, BMP, etc.)
+  REQUEST_ENCODING_UNCOMPRESSED = 1;
 
   // Brotli-compressed image data for reduced bandwidth usage
   // Server will decompress using Brotli algorithm before processing
-  REQUEST_ENCODING_BROTLI = 1;
+  REQUEST_ENCODING_BROTLI = 2;
+}
+
+// Enumeration of supported image file formats.
+// Specifies the image file format structure for proper parsing.
+enum ImageFormat {
+  IMAGE_FORMAT_UNSPECIFIED = 0;
+  IMAGE_FORMAT_GIF = 1;
+  IMAGE_FORMAT_JPEG = 2;        // Covers .jpeg, .jpg, .jpe extensions
+  IMAGE_FORMAT_BMP = 3;
+  IMAGE_FORMAT_DIB = 4;
+  IMAGE_FORMAT_PNG = 5;
+  IMAGE_FORMAT_WEBP = 6;
+  IMAGE_FORMAT_PBM = 7;
+  IMAGE_FORMAT_PGM = 8;
+  IMAGE_FORMAT_PPM = 9;
+  IMAGE_FORMAT_PXM = 10;
+  IMAGE_FORMAT_PNM = 11;
+  IMAGE_FORMAT_PFM = 12;
+  IMAGE_FORMAT_SR = 13;
+  IMAGE_FORMAT_RAS = 14;
+  IMAGE_FORMAT_TIFF = 15;       // Covers .tiff, .tif extensions
+  IMAGE_FORMAT_HDR = 16;
+  IMAGE_FORMAT_PIC = 17;
 }

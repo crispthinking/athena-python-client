@@ -16,7 +16,7 @@ python -m grpc_tools.protoc \
   "$PROTO_DIR/athena/athena.proto"
 
 # Fix imports in generated files
-sed -i '' 's/^from athena /from athena_client.generated.athena /' "$OUT_DIR/athena/athena_pb2_grpc.py"
-sed -i '' 's/^from athena /from athena_client.generated.athena /' "$OUT_DIR/athena/athena_pb2.py"
+sed -i "$OUT_DIR/athena/athena_pb2_grpc.py" -e 's/^from athena /from athena_client.generated.athena /'
+sed -i "$OUT_DIR/athena/athena_pb2.py" -e 's/^from athena /from athena_client.generated.athena /'
 
 echo "Compilation complete. Files generated in $OUT_DIR"

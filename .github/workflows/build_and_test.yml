@@ -30,10 +30,25 @@ jobs:
       - name: Ensure no differences in generated code
         run: |
           source .venv/bin/activate
-          cp -r src/athena_client/generated src/athena_client/generated_backup
+          GENERATED_DIR="src/athena_client/generated"
+          BACKUP_DIR="src/athena_client/generated_backup"
+
+          cp -r $GENERATED_DIR $BACKUP_DIR
+
           ./scripts/compile_proto.sh
-          diff -r src/athena_client/generated src/athena_client/generated_backup || (echo "Generated code differs. Please commit the changes after running compile_proto.sh." && exit 1)
-          rm -rf src/athena_client/generated_backup
+
+          # Fix imports in generated files
+          if [[ -f "$GENERATED_DIR/athena/athena_pb2_grpc.py" && -f "$GENERATED_DIR/athena/athena_pb2.py" ]]; then
+            sed -i "$GENERATED_DIR/athena/athena_pb2_grpc.py" -e 's/^from athena /from athena_client.generated.athena /'
+            sed -i "$GENERATED_DIR/athena/athena_pb2.py" -e 's/^from athena /from athena_client.generated.athena /'
+          else
+            echo "Error: Expected files not found in $GENERATED_DIR/athena"
+            exit 1
+          fi
+
+          diff -r $GENERATED_DIR $BACKUP_DIR || (echo "Generated code differs. Please commit the changes after running compile_proto.sh." && exit 1)
+
+          rm -rf $BACKUP_DIR
 
       - name: Run linter
         run: |

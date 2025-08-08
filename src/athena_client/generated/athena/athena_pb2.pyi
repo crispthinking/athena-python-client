@@ -50,8 +50,10 @@ class _RequestEncoding:
 class _RequestEncodingEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_RequestEncoding.ValueType], builtins.type):
     DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
     REQUEST_ENCODING_UNSPECIFIED: _RequestEncoding.ValueType  # 0
+    """Unxpecified encoding. Assumed to be uncompressed."""
+    REQUEST_ENCODING_UNCOMPRESSED: _RequestEncoding.ValueType  # 1
     """Uncompressed raw image data (e.g., raw RGB pixels, BMP, etc.)"""
-    REQUEST_ENCODING_BROTLI: _RequestEncoding.ValueType  # 1
+    REQUEST_ENCODING_BROTLI: _RequestEncoding.ValueType  # 2
     """Brotli-compressed image data for reduced bandwidth usage
     Server will decompress using Brotli algorithm before processing
     """
@@ -62,12 +64,68 @@ class RequestEncoding(_RequestEncoding, metaclass=_RequestEncodingEnumTypeWrappe
     """
 
 REQUEST_ENCODING_UNSPECIFIED: RequestEncoding.ValueType  # 0
+"""Unxpecified encoding. Assumed to be uncompressed."""
+REQUEST_ENCODING_UNCOMPRESSED: RequestEncoding.ValueType  # 1
 """Uncompressed raw image data (e.g., raw RGB pixels, BMP, etc.)"""
-REQUEST_ENCODING_BROTLI: RequestEncoding.ValueType  # 1
+REQUEST_ENCODING_BROTLI: RequestEncoding.ValueType  # 2
 """Brotli-compressed image data for reduced bandwidth usage
 Server will decompress using Brotli algorithm before processing
 """
 global___RequestEncoding = RequestEncoding
+
+class _ImageFormat:
+    ValueType = typing.NewType("ValueType", builtins.int)
+    V: typing_extensions.TypeAlias = ValueType
+
+class _ImageFormatEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_ImageFormat.ValueType], builtins.type):
+    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
+    IMAGE_FORMAT_UNSPECIFIED: _ImageFormat.ValueType  # 0
+    IMAGE_FORMAT_GIF: _ImageFormat.ValueType  # 1
+    IMAGE_FORMAT_JPEG: _ImageFormat.ValueType  # 2
+    """Covers .jpeg, .jpg, .jpe extensions"""
+    IMAGE_FORMAT_BMP: _ImageFormat.ValueType  # 3
+    IMAGE_FORMAT_DIB: _ImageFormat.ValueType  # 4
+    IMAGE_FORMAT_PNG: _ImageFormat.ValueType  # 5
+    IMAGE_FORMAT_WEBP: _ImageFormat.ValueType  # 6
+    IMAGE_FORMAT_PBM: _ImageFormat.ValueType  # 7
+    IMAGE_FORMAT_PGM: _ImageFormat.ValueType  # 8
+    IMAGE_FORMAT_PPM: _ImageFormat.ValueType  # 9
+    IMAGE_FORMAT_PXM: _ImageFormat.ValueType  # 10
+    IMAGE_FORMAT_PNM: _ImageFormat.ValueType  # 11
+    IMAGE_FORMAT_PFM: _ImageFormat.ValueType  # 12
+    IMAGE_FORMAT_SR: _ImageFormat.ValueType  # 13
+    IMAGE_FORMAT_RAS: _ImageFormat.ValueType  # 14
+    IMAGE_FORMAT_TIFF: _ImageFormat.ValueType  # 15
+    """Covers .tiff, .tif extensions"""
+    IMAGE_FORMAT_HDR: _ImageFormat.ValueType  # 16
+    IMAGE_FORMAT_PIC: _ImageFormat.ValueType  # 17
+
+class ImageFormat(_ImageFormat, metaclass=_ImageFormatEnumTypeWrapper):
+    """Enumeration of supported image file formats.
+    Specifies the image file format structure for proper parsing.
+    """
+
+IMAGE_FORMAT_UNSPECIFIED: ImageFormat.ValueType  # 0
+IMAGE_FORMAT_GIF: ImageFormat.ValueType  # 1
+IMAGE_FORMAT_JPEG: ImageFormat.ValueType  # 2
+"""Covers .jpeg, .jpg, .jpe extensions"""
+IMAGE_FORMAT_BMP: ImageFormat.ValueType  # 3
+IMAGE_FORMAT_DIB: ImageFormat.ValueType  # 4
+IMAGE_FORMAT_PNG: ImageFormat.ValueType  # 5
+IMAGE_FORMAT_WEBP: ImageFormat.ValueType  # 6
+IMAGE_FORMAT_PBM: ImageFormat.ValueType  # 7
+IMAGE_FORMAT_PGM: ImageFormat.ValueType  # 8
+IMAGE_FORMAT_PPM: ImageFormat.ValueType  # 9
+IMAGE_FORMAT_PXM: ImageFormat.ValueType  # 10
+IMAGE_FORMAT_PNM: ImageFormat.ValueType  # 11
+IMAGE_FORMAT_PFM: ImageFormat.ValueType  # 12
+IMAGE_FORMAT_SR: ImageFormat.ValueType  # 13
+IMAGE_FORMAT_RAS: ImageFormat.ValueType  # 14
+IMAGE_FORMAT_TIFF: ImageFormat.ValueType  # 15
+"""Covers .tiff, .tif extensions"""
+IMAGE_FORMAT_HDR: ImageFormat.ValueType  # 16
+IMAGE_FORMAT_PIC: ImageFormat.ValueType  # 17
+global___ImageFormat = ImageFormat
 
 @typing.final
 class ListDeploymentsResponse(google.protobuf.message.Message):
@@ -156,6 +214,7 @@ class ClassificationInput(google.protobuf.message.Message):
     CORRELATION_ID_FIELD_NUMBER: builtins.int
     ENCODING_FIELD_NUMBER: builtins.int
     DATA_FIELD_NUMBER: builtins.int
+    FORMAT_FIELD_NUMBER: builtins.int
     affiliate: builtins.str
     """The affiliate or source system that provided this image
     Used for tracking, analytics, and routing purposes.
@@ -172,6 +231,8 @@ class ClassificationInput(google.protobuf.message.Message):
     """The raw image data bytes in the format specified by encoding
     Can be compressed or uncompressed based on the encoding field
     """
+    format: global___ImageFormat.ValueType
+    """The image file format of the data bytes"""
     def __init__(
         self,
         *,
@@ -179,8 +240,9 @@ class ClassificationInput(google.protobuf.message.Message):
         correlation_id: builtins.str = ...,
         encoding: global___RequestEncoding.ValueType = ...,
         data: builtins.bytes = ...,
+        format: global___ImageFormat.ValueType = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing.Literal["affiliate", b"affiliate", "correlation_id", b"correlation_id", "data", b"data", "encoding", b"encoding"]) -> None: ...
+    def ClearField(self, field_name: typing.Literal["affiliate", b"affiliate", "correlation_id", b"correlation_id", "data", b"data", "encoding", b"encoding", "format", b"format"]) -> None: ...
 
 global___ClassificationInput = ClassificationInput
 
