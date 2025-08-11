@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define paths
-PROTO_DIR="proto"
+PROTO_DIR="athena-protobufs"
 OUT_DIR="src/athena_client/generated"
 
 # Ensure output directory exists

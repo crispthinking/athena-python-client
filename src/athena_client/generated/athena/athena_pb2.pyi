@@ -50,7 +50,7 @@ class _RequestEncoding:
 class _RequestEncodingEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_RequestEncoding.ValueType], builtins.type):
     DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
     REQUEST_ENCODING_UNSPECIFIED: _RequestEncoding.ValueType  # 0
-    """Unxpecified encoding. Assumed to be uncompressed."""
+    """Unspecified encoding. Assumed to be uncompressed."""
     REQUEST_ENCODING_UNCOMPRESSED: _RequestEncoding.ValueType  # 1
     """Uncompressed raw image data (e.g., raw RGB pixels, BMP, etc.)"""
     REQUEST_ENCODING_BROTLI: _RequestEncoding.ValueType  # 2
@@ -64,7 +64,7 @@ class RequestEncoding(_RequestEncoding, metaclass=_RequestEncodingEnumTypeWrappe
     """
 
 REQUEST_ENCODING_UNSPECIFIED: RequestEncoding.ValueType  # 0
-"""Unxpecified encoding. Assumed to be uncompressed."""
+"""Unspecified encoding. Assumed to be uncompressed."""
 REQUEST_ENCODING_UNCOMPRESSED: RequestEncoding.ValueType  # 1
 """Uncompressed raw image data (e.g., raw RGB pixels, BMP, etc.)"""
 REQUEST_ENCODING_BROTLI: RequestEncoding.ValueType  # 2
