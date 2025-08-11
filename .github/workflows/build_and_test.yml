@@ -16,6 +16,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Initialize submodules
+        run: git submodule update --init --recursive
+
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
@@ -35,7 +38,7 @@ jobs:
 
           cp -r $GENERATED_DIR $BACKUP_DIR
 
-          ./scripts/compile_proto.sh
+          ./scripts/compile_proto.sh || (echo "Protobuf compilation failed. Ensure submodules are initialized and the proto file exists." && exit 1)
 
           # Fix imports in generated files
           if [[ -f "$GENERATED_DIR/athena/athena_pb2_grpc.py" && -f "$GENERATED_DIR/athena/athena_pb2.py" ]]; then
