@@ -16,6 +16,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Initialize submodules
+        env:
+          GIT_ASKPASS: /bin/echo
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          git config --global url."https://${GH_PAT}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init --recursive
+
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
@@ -29,13 +37,34 @@ jobs:
 
       - name: Ensure no differences in generated code
         run: |
-          cp -r src/athena_client/generated src/athena_client/generated_backup
-          ./scripts/compile_proto.sh
-          diff -r src/athena_client/generated src/athena_client/generated_backup || (echo "Generated code differs. Please commit the changes after running compile_proto.sh." && exit 1)
+          source .venv/bin/activate
+          GENERATED_DIR="src/athena_client/generated"
+          BACKUP_DIR="src/athena_client/generated_backup"
+
+          cp -r $GENERATED_DIR $BACKUP_DIR
+
+          ./scripts/compile_proto.sh || (echo "Protobuf compilation failed. Ensure submodules are initialized and the proto file exists." && exit 1)
+
+          # Fix imports in generated files
+          if [[ -f "$GENERATED_DIR/athena/athena_pb2_grpc.py" && -f "$GENERATED_DIR/athena/athena_pb2.py" ]]; then
+            sed -i "$GENERATED_DIR/athena/athena_pb2_grpc.py" -e 's/^from athena /from athena_client.generated.athena /'
+            sed -i "$GENERATED_DIR/athena/athena_pb2.py" -e 's/^from athena /from athena_client.generated.athena /'
+          else
+            echo "Error: Expected files not found in $GENERATED_DIR/athena"
+            exit 1
+          fi
+
+          diff -r $GENERATED_DIR $BACKUP_DIR || (echo "Generated code differs. Please commit the changes after running compile_proto.sh." && exit 1)
+
+          rm -rf $BACKUP_DIR
 
       - name: Run linter
         run: |
           uv run ruff check
+
+      - name: Run code formatting check
+        run: |
+          uv run ruff format --check
 
       - name: Run type checking
         run: |
@@ -44,3 +73,7 @@ jobs:
       - name: Run tests
         run: |
           uv run pytest
+
+      - name: Build package
+        run: |
+          uv build
