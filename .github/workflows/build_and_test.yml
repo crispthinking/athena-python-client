@@ -77,7 +77,7 @@ jobs:
       - name: Pytest Coverage Comment
         uses: MishaKav/pytest-coverage-comment@v1.1.56
         with:
-          junitxml-path: ./cov.xml
+          junitxml-path: ./pytest.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v4 # upload test results
