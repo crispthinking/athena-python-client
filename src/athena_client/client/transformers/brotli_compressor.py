@@ -2,7 +2,7 @@
 
 import brotli
 
-from athena_client.client.transformers.async_transfomer import (
+from athena_client.client.transformers.async_transformer import (
     AsyncTransformer,
 )
 

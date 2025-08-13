@@ -9,7 +9,7 @@ from PIL import Image
 from PIL.Image import Image as PILImage
 
 from athena_client.client.consts import EXPECTED_HEIGHT, EXPECTED_WIDTH
-from athena_client.client.transformers.async_transfomer import (
+from athena_client.client.transformers.async_transformer import (
     AsyncTransformer,
 )
 

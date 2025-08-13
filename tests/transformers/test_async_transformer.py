@@ -5,7 +5,7 @@ from typing import TypeVar
 
 import pytest
 
-from athena_client.client.transformers.async_transfomer import AsyncTransformer
+from athena_client.client.transformers.async_transformer import AsyncTransformer
 from tests.utils.mock_async_iterator import MockAsyncIterator
 
 T = TypeVar("T")

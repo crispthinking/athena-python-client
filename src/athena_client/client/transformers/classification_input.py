@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncIterator
 
-from athena_client.client.transformers.async_transfomer import (
+from athena_client.client.transformers.async_transformer import (
     AsyncTransformer,
 )
 from athena_client.generated.athena.athena_pb2 import (
