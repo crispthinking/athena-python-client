@@ -22,6 +22,11 @@ class DummyTransformer(AsyncTransformer[bytes]):
 class MockTransformer(AsyncTransformer[T]):
     """Mock implementation for testing abstract base class."""
 
+    async def transform(self, data: bytes) -> T:
+        """Mock transform method that raises NotImplementedError."""
+        message = "Subclasses must implement this method"
+        raise NotImplementedError(message)
+
 
 @pytest.fixture
 def source() -> AsyncIterator[bytes]:
@@ -49,3 +54,15 @@ async def test_transformer_iteration(source: AsyncIterator[bytes]) -> None:
     # Test StopAsyncIteration
     with pytest.raises(StopAsyncIteration):
         await anext(transformer)
+
+
+@pytest.mark.asyncio
+async def test_abstract_transform_raises() -> None:
+    """Test that the abstract transform method raises NotImplementedError."""
+    mock_source = MockAsyncIterator([b"test"])
+    transformer = MockTransformer[bytes](mock_source)
+
+    with pytest.raises(
+        NotImplementedError, match="Subclasses must implement this method"
+    ):
+        await transformer.transform(b"test")

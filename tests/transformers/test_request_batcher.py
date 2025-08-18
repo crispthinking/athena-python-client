@@ -12,9 +12,14 @@ from athena_client.generated.athena.athena_pb2 import (
     RequestEncoding,
 )
 
+# Test constants for various batch scenarios
+FULL_BATCH_SIZE = 3
+LARGE_BATCH_SIZE = 5
+
 # Constants for test configuration
 BATCH_SIZE_TWO = 2
 BATCH_SIZE_THREE = 3
+REMAINING_BATCH_SIZE = 2  # Size of remaining items in partial batch
 DELAY_LONGER_THAN_TIMEOUT = 0.2  # > default timeout of 0.1
 
 
@@ -192,6 +197,72 @@ async def test_request_batcher_exact_batch() -> None:
         "id1",
         "id2",
     ]
+
+    # Should raise StopAsyncIteration after that
+    with pytest.raises(StopAsyncIteration):
+        await anext(batcher)
+
+
+@pytest.mark.asyncio
+async def test_request_batcher_edge_cases() -> None:
+    """Test edge cases in request batching."""
+    # Create a source with many items to test partial batch handling
+    test_inputs = [
+        create_test_input(b"test1", f"id{i}")
+        for i in range(LARGE_BATCH_SIZE + 1)
+    ]
+    source = AsyncIteratorWithDelay(test_inputs)
+
+    # Create batcher with size that doesn't evenly divide input count
+    batcher = RequestBatcher(
+        source, deployment_id="test-deployment", max_batch_size=BATCH_SIZE_TWO
+    )
+
+    # First batch: should be full
+    request = await anext(batcher)
+    assert len(request.inputs) == BATCH_SIZE_TWO
+    assert [inp.correlation_id for inp in request.inputs] == ["id0", "id1"]
+
+    # Second batch: should be full
+    request = await anext(batcher)
+    assert len(request.inputs) == BATCH_SIZE_TWO
+    assert [inp.correlation_id for inp in request.inputs] == ["id2", "id3"]
+
+    # Third batch: should be full
+    request = await anext(batcher)
+    assert len(request.inputs) == BATCH_SIZE_TWO
+    assert [inp.correlation_id for inp in request.inputs] == ["id4", "id5"]
+
+    # Should raise StopAsyncIteration after that
+    with pytest.raises(StopAsyncIteration):
+        await anext(batcher)
+
+
+@pytest.mark.asyncio
+async def test_request_batcher_full_batch() -> None:
+    """Test that when a batch becomes full, it is immediately returned."""
+    test_inputs = [
+        create_test_input(b"test1", f"id{i}")
+        for i in range(FULL_BATCH_SIZE + 2)
+    ]
+    source = AsyncIteratorWithDelay(test_inputs)
+    batcher = RequestBatcher(
+        source, deployment_id="test-deployment", max_batch_size=FULL_BATCH_SIZE
+    )
+
+    # First batch should be returned immediately when it hits max size
+    request = await anext(batcher)
+    assert len(request.inputs) == FULL_BATCH_SIZE
+    assert [inp.correlation_id for inp in request.inputs] == [
+        "id0",
+        "id1",
+        "id2",
+    ]
+
+    # Second batch should contain the remaining items
+    request = await anext(batcher)
+    assert len(request.inputs) == REMAINING_BATCH_SIZE
+    assert [inp.correlation_id for inp in request.inputs] == ["id3", "id4"]
 
     # Should raise StopAsyncIteration after that
     with pytest.raises(StopAsyncIteration):

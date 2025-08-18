@@ -2,6 +2,11 @@
 
 from dataclasses import dataclass
 
+from athena_client.client.correlation import (
+    CorrelationProvider,
+    HashCorrelationProvider,
+)
+
 
 @dataclass
 class AthenaOptions:
@@ -12,5 +17,5 @@ class AthenaOptions:
     compress_images: bool = True
     deployment_id: str = "default"
     affiliate: str = "default"
-    correlation_id: str = "default"
     max_batch_size: int = 100
+    correlation_provider: type[CorrelationProvider] = HashCorrelationProvider

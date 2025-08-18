@@ -61,8 +61,9 @@ class AthenaClient:
             images (AsyncIterator[Image]): The images to classify in an
                 asynchronous iterator.
 
-        Yields:
-            ClassifyResponse: The classification responses.
+        Returns:
+            AsyncIterator[ClassifyResponse]: An async iterator yielding
+                classification responses from the server.
 
         """
         # Build middleware pipeline
@@ -79,6 +80,7 @@ class AthenaClient:
             deployment_id=self.options.deployment_id,
             affiliate=self.options.affiliate,
             request_encoding=RequestEncoding.REQUEST_ENCODING_BROTLI,
+            correlation_provider=self.options.correlation_provider,
         )
 
         request_batcher = RequestBatcher(
@@ -87,7 +89,11 @@ class AthenaClient:
             max_batch_size=self.max_batch_size,
         )
 
-        async for response in self.classifier.classify(request_batcher):
+        # Stream responses directly from the classifier
+        async for response in await self.classifier.classify(request_batcher):
+            if response.global_error and response.global_error.message:
+                raise AthenaError(response.global_error.message)
+
             yield response
 
     async def close(self) -> None:
@@ -100,16 +106,6 @@ class AthenaClient:
         Registers the client with the server by sending a
         classification request. With a deployment ID.
         """
-
-        # Register the client with the server, just send one deployment ID.
-        async def init_request() -> AsyncIterator[ClassifyRequest]:
-            yield ClassifyRequest(deployment_id=self.deployment_id)
-
-        responses = self.classifier.classify(init_request())
-        async for response in responses:
-            if response.global_error:
-                raise AthenaError(response.global_error.message)
-
         return self
 
     async def __aexit__(
@@ -120,3 +116,9 @@ class AthenaClient:
     ) -> None:
         """Context manager exit."""
         await self.close()
+
+    @staticmethod
+    async def _init_request_generator(
+        deployment_id: str,
+    ) -> AsyncIterator[ClassifyRequest]:
+        yield ClassifyRequest(deployment_id=deployment_id)

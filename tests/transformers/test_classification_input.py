@@ -33,6 +33,7 @@ async def test_classification_input_transform(
         deployment_id=transformer_config.deployment_id,
         affiliate=transformer_config.affiliate,
         request_encoding=RequestEncoding.REQUEST_ENCODING_BROTLI,
+        correlation_provider=transformer_config.correlation_provider,
     )
 
     test_data = b"test image bytes"
@@ -55,6 +56,7 @@ async def test_classification_input_iteration(
         deployment_id=transformer_config.deployment_id,
         affiliate=transformer_config.affiliate,
         request_encoding=RequestEncoding.REQUEST_ENCODING_BROTLI,
+        correlation_provider=transformer_config.correlation_provider,
     )
 
     # Test first item
@@ -90,6 +92,7 @@ async def test_classification_input_empty(
         deployment_id=transformer_config.deployment_id,
         affiliate=transformer_config.affiliate,
         request_encoding=RequestEncoding.REQUEST_ENCODING_BROTLI,
+        correlation_provider=transformer_config.correlation_provider,
     )
 
     result = await transformer.transform(b"")
@@ -116,6 +119,7 @@ async def test_classification_input_encodings(
         deployment_id=transformer_config.deployment_id,
         affiliate=transformer_config.affiliate,
         request_encoding=encoding,
+        correlation_provider=transformer_config.correlation_provider,
     )
 
     result = await transformer.transform(b"test")
