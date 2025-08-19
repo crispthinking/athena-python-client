@@ -7,7 +7,7 @@ from athena_client.client.transformers.async_transformer import (
 )
 
 
-class BrotliCompressor(AsyncTransformer[bytes]):
+class BrotliCompressor(AsyncTransformer[bytes, bytes]):
     """Middleware for compressing bytes."""
 
     async def transform(self, data: bytes) -> bytes:

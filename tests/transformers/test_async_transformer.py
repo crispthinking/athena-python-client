@@ -11,7 +11,7 @@ from tests.utils.mock_async_iterator import MockAsyncIterator
 T = TypeVar("T")
 
 
-class DummyTransformer(AsyncTransformer[bytes]):
+class DummyTransformer(AsyncTransformer[bytes, bytes]):
     """Test implementation of AsyncTransformer."""
 
     async def transform(self, data: bytes) -> bytes:
@@ -19,7 +19,7 @@ class DummyTransformer(AsyncTransformer[bytes]):
         return data
 
 
-class MockTransformer(AsyncTransformer[T]):
+class MockTransformer(AsyncTransformer[bytes, T]):
     """Mock implementation for testing abstract base class."""
 
     async def transform(self, data: bytes) -> T:

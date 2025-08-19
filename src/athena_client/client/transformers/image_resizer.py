@@ -14,7 +14,7 @@ from athena_client.client.transformers.async_transformer import (
 )
 
 
-class ImageResizer(AsyncTransformer[bytes]):
+class ImageResizer(AsyncTransformer[bytes, bytes]):
     """Transform image bytes to ensure expected dimensions."""
 
     def __init__(self, source: AsyncIterator[bytes]) -> None:

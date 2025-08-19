@@ -12,7 +12,9 @@ from athena_client.generated.athena.athena_pb2 import (
 )
 
 
-class ClassificationInputTransformer(AsyncTransformer[ClassificationInput]):
+class ClassificationInputTransformer(
+    AsyncTransformer[bytes, ClassificationInput]
+):
     """Transform image bytes into ClassifyRequests."""
 
     def __init__(
