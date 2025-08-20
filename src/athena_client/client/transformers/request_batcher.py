@@ -17,6 +17,7 @@ class RequestBatcher:
         source: AsyncIterator[ClassificationInput],
         deployment_id: str,
         max_batch_size: int = 10,
+        timeout: float = 0.1,
     ) -> None:
         """Initialize the batcher.
 
@@ -24,11 +25,13 @@ class RequestBatcher:
             source: Iterator of ClassificationInputs to batch
             deployment_id: Deployment ID to use in requests
             max_batch_size: Maximum number of inputs per batch
+            timeout: Max seconds to wait for additional items before batching
 
         """
         self.source = source
         self.deployment_id = deployment_id
         self.max_batch_size = max_batch_size
+        self.timeout = timeout
         self._batch: list[ClassificationInput] = []
 
     def __aiter__(self) -> AsyncIterator[ClassifyRequest]:
@@ -37,28 +40,27 @@ class RequestBatcher:
 
     async def __anext__(self) -> ClassifyRequest:
         """Get the next batched request."""
-        if self._batch and len(self._batch) >= self.max_batch_size:
+        try:
+            # Always get at least one item
+            if not self._batch:
+                self._batch.append(await anext(self.source))
+
+            # Try to get more items up to max_batch_size
+            try:
+                while len(self._batch) < self.max_batch_size:
+                    item = await asyncio.wait_for(
+                        anext(self.source), self.timeout
+                    )
+                    self._batch.append(item)
+            except (asyncio.TimeoutError, StopAsyncIteration):
+                pass
+
             return self._create_request()
 
-        try:
-            if not self._batch:
-                first_item = await anext(self.source)
-                self._batch.append(first_item)
         except StopAsyncIteration:
             if self._batch:
                 return self._create_request()
             raise
-
-        try:
-            while len(self._batch) < self.max_batch_size:
-                item = await asyncio.wait_for(anext(self.source), timeout=0.1)
-                self._batch.append(item)
-        except (StopAsyncIteration, asyncio.TimeoutError) as e:
-            if self._batch:
-                return self._create_request()
-            raise StopAsyncIteration from e
-
-        return self._create_request()
 
     def _create_request(self) -> ClassifyRequest:
         """Create a ClassifyRequest from the current batch."""

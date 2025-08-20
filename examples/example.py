@@ -2,87 +2,18 @@
 """Example script that uses the athena client."""
 
 import asyncio
-import io
 import logging
 import os
-import random
-from collections.abc import AsyncIterator
-from pathlib import Path
+import sys
+import time
 
+from create_image import iter_images
 from dotenv import load_dotenv
-from PIL import Image, ImageDraw
 
 from athena_client.client.athena_client import AthenaClient
 from athena_client.client.athena_options import AthenaOptions
 from athena_client.client.channel import create_channel
-
-EXAMPLE_IMAGES_DIR = Path(__file__).parent / "example_images"
-
-
-def create_random_image(width: int = 640, height: int = 480) -> bytes:
-    """Create a random test image with random shapes and colors.
-
-    Args:
-        width: Width of the test image in pixels
-        height: Height of the test image in pixels
-
-    Returns:
-        JPEG image bytes
-
-    """
-    # Create a new image with random background color
-    image = Image.new(
-        "RGB",
-        (width, height),
-        (
-            random.randint(0, 255),
-            random.randint(0, 255),
-            random.randint(0, 255),
-        ),
-    )
-
-    draw = ImageDraw.Draw(image)
-
-    # Draw some random shapes
-    for _ in range(3):
-        # Random coordinates
-        x0 = random.randint(0, width - 1)
-        y0 = random.randint(0, height - 1)
-        x1 = random.randint(0, width - 1)
-        y1 = random.randint(0, height - 1)
-
-        # Random color
-        color = (
-            random.randint(0, 255),
-            random.randint(0, 255),
-            random.randint(0, 255),
-        )
-
-        draw.rectangle(
-            [min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1)], fill=color
-        )
-
-    # Convert to JPEG bytes
-    img_byte_arr = io.BytesIO()
-    image.save(img_byte_arr, format="JPEG")
-    return img_byte_arr.getvalue()
-
-
-async def iter_images(max_images: int | None = None) -> AsyncIterator[bytes]:
-    """Generate random test images.
-
-    Args:
-        max_images: Maximum number of images to generate. If None, generates
-        infinitely.
-
-    Yields:
-        JPEG image bytes with random content
-
-    """
-    count = 0
-    while max_images is None or count < max_images:
-        yield create_random_image()
-        count += 1
+from athena_client.client.deployment_selector import DeploymentSelector
 
 
 async def run_example(
@@ -104,37 +35,91 @@ async def run_example(
     channel = create_channel(options.host, auth_token)
 
     async with AthenaClient(channel, options) as client:
+        # Start image classification
         results = client.classify_images(iter_images(max_test_images))
-        logger.info("Classifying images in image iter")
-        async for result in results:
-            result_msg = f"Get result {result=}"
-            logger.info(result_msg)
+        logger.info("Starting classification...")
+
+        # Initialize rate tracking
+        start_time = time.time()
+        response_count = 0
+
+        try:
+            async for result in results:
+                response_count += 1
+                current_time = time.time()
+                elapsed = current_time - start_time
+
+                if response_count % 10 == 0:
+                    rate = response_count / elapsed
+                    logger.info(
+                        "Processed %d responses (%.1f/sec)",
+                        response_count,
+                        rate,
+                    )
+
+                logger.debug("Got result: %s", result)
+        except Exception:
+            logger.exception("Error during classification")
+            if response_count == 0:
+                # Re-raise if we didn't process any responses
+                raise
+        finally:
+            # Calculate final statistics after loop completes
+            if response_count > 0:
+                duration = time.time() - start_time
+                avg_rate = response_count / duration
+                logger.info(
+                    "\nFinal: %d responses in %.1f seconds (%.1f/sec)",
+                    response_count,
+                    duration,
+                    avg_rate,
+                )
 
 
-async def main() -> None:
+async def main() -> int:
     """Run examples showing both authenticated and unauthenticated usage."""
     logger = logging.getLogger(__name__)
     load_dotenv()
 
     # Set maximum number of test images to generate (None for infinite)
-    max_test_images = 5
+    max_test_images = None
 
     # Example with authenticated channel
     auth_token = os.getenv("ATHENA_AUTH_TOKEN")
-    if auth_token:
-        logger.info("Running example with secure authenticated channel...")
-        auth_options = AthenaOptions(
-            host=os.getenv("ATHENA_HOST", "localhost"),
-            resize_images=True,
-            deployment_id="argh",
-        )
-        await run_example(logger, auth_options, auth_token, max_test_images)
-    else:
-        logger.info(
-            "Skipping authenticated example - ATHENA_AUTH_TOKEN not set"
-        )
+    if not auth_token:
+        logger.error("ATHENA_AUTH_TOKEN not set.")
+        return 1
+
+    logger.info("Running example with secure authenticated channel")
+    host = os.getenv("ATHENA_HOST", "localhost")
+    channel = create_channel(host, auth_token)
+
+    # Get the first available deployment using context manager
+    async with DeploymentSelector(channel) as deployment_selector:
+        deployments = await deployment_selector.list_deployments()
+
+    if not deployments.deployments:
+        logger.error("No deployments available")
+        return 1
+
+    deployment_id = deployments.deployments[0].deployment_id
+    logger.info("Using deployment: %s", deployment_id)
+
+    athena_options = AthenaOptions(
+        host=host,
+        resize_images=True,
+        deployment_id=deployment_id,
+        compress_images=True,
+    )
+    await run_example(logger, athena_options, auth_token, max_test_images)
+
+    return 0
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    asyncio.run(main())
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s.%(msecs)03d %(levelname)s: %(message)s",
+        datefmt="%H:%M:%S",
+    )
+    sys.exit(asyncio.run(main()))

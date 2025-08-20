@@ -1,6 +1,4 @@
 [project]
-
-
 name = "athena_client"
 version = "0.1.0"
 description = "Athena Client Library"
@@ -14,7 +12,17 @@ dependencies = [
     "numpy>=2.2.6",
     "pillow>=11.3.0",
 ]
+
+[project.optional-dependencies]
 [dependency-groups]
+docs = [
+    "sphinx>=7.1.0",
+    "furo>=2024.1.29",
+    "sphinx-autodoc-typehints>=1.25.0",
+    "sphinx-copybutton>=0.5.0",
+    "myst-parser>=2.0.0",
+]
+
 dev = [
     "load-dotenv>=0.1.0",
     "mypy-protobuf>=3.6.0",

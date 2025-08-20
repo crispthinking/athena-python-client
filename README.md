@@ -10,8 +10,12 @@ Make pipeline style invocation of the async interators such that we can
 
 async read file -> async transform -> async classify -> async results
 
-### Generate correlation IDs based on <something>
-Make do this with strategy pattern?
+### More async pipeline transformers
+Add additional pipeline transformers for:
+- Image format conversion
+- Metadata extraction
+- Error recovery and retry
+
 
 
 ## Development

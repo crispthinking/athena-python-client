@@ -93,7 +93,6 @@ class AthenaClient:
         async for response in await self.classifier.classify(request_batcher):
             if response.global_error and response.global_error.message:
                 raise AthenaError(response.global_error.message)
-
             yield response
 
     async def close(self) -> None:

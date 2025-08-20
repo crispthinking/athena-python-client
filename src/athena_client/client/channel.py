@@ -32,8 +32,7 @@ class TokenMetadataPlugin(grpc.AuthMetadataPlugin):
             synchronously or asynchronously.
 
         """
-        # Create metadata with token
-        metadata = (("Authorization", f"Token {self._token}"),)
+        metadata = (("authorization", f"Token {self._token}"),)
         callback(metadata, None)
 
 
