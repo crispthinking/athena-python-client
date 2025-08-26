@@ -31,6 +31,10 @@ class _ErrorCodeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._Enum
     """Image is too large to process"""
     ERROR_CODE_MODEL_ERROR: _ErrorCode.ValueType  # 3
     """Opaque error from the classifier"""
+    ERROR_CODE_AFFILIATE_NOT_PERMITTED: _ErrorCode.ValueType  # 4
+    """Attempt to send data for an affiliate which is not granted to the current
+    client.
+    """
 
 class ErrorCode(_ErrorCode, metaclass=_ErrorCodeEnumTypeWrapper):
     """Enumeration of possible classification error codes."""
@@ -41,6 +45,10 @@ ERROR_CODE_IMAGE_TOO_LARGE: ErrorCode.ValueType  # 2
 """Image is too large to process"""
 ERROR_CODE_MODEL_ERROR: ErrorCode.ValueType  # 3
 """Opaque error from the classifier"""
+ERROR_CODE_AFFILIATE_NOT_PERMITTED: ErrorCode.ValueType  # 4
+"""Attempt to send data for an affiliate which is not granted to the current
+client.
+"""
 global___ErrorCode = ErrorCode
 
 class _RequestEncoding:
@@ -99,6 +107,8 @@ class _ImageFormatEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._En
     """Covers .tiff, .tif extensions"""
     IMAGE_FORMAT_HDR: _ImageFormat.ValueType  # 16
     IMAGE_FORMAT_PIC: _ImageFormat.ValueType  # 17
+    IMAGE_FORMAT_RAW_UINT8: _ImageFormat.ValueType  # 18
+    """Raw unsigned 8-bit image data (RGB, C order array)"""
 
 class ImageFormat(_ImageFormat, metaclass=_ImageFormatEnumTypeWrapper):
     """Enumeration of supported image file formats.
@@ -125,6 +135,8 @@ IMAGE_FORMAT_TIFF: ImageFormat.ValueType  # 15
 """Covers .tiff, .tif extensions"""
 IMAGE_FORMAT_HDR: ImageFormat.ValueType  # 16
 IMAGE_FORMAT_PIC: ImageFormat.ValueType  # 17
+IMAGE_FORMAT_RAW_UINT8: ImageFormat.ValueType  # 18
+"""Raw unsigned 8-bit image data (RGB, C order array)"""
 global___ImageFormat = ImageFormat
 
 @typing.final
