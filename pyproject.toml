@@ -9,6 +9,7 @@ dependencies = [
     "anyio>=4.10.0",
     "brotli>=1.1.0",
     "grpcio-tools>=1.74.0",
+    "httpx>=0.25.0",
     "numpy>=2.2.6",
     "pillow>=11.3.0",
 ]
@@ -49,7 +50,9 @@ ignore = ["COM812", "D213", "D211", "D203", "S101", "S311"]
 
 [tool.ruff.lint.per-file-ignores]
 # Ignore doc lint rules in tests.
-"tests/**" = ["D"]
+"tests/**" = ["D", "S106", "S105", "SLF001", "E501"]
+# Ignore example-specific rules
+"examples/**" = ["BLE001", "TRY400", "TRY401", "ERA001", "EXE001"]
 
 [tool.pyright]
 exclude = ["src/athena_client/generated/*", ".venv"]

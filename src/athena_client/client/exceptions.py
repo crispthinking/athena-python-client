@@ -27,3 +27,21 @@ class InvalidHostError(AthenaError):
     """Raised when the host is invalid."""
 
     default_message = "host cannot be empty"
+
+
+class OAuthError(AthenaError):
+    """Raised when OAuth authentication fails."""
+
+    default_message = "OAuth authentication failed"
+
+
+class TokenExpiredError(AthenaError):
+    """Raised when the authentication token has expired."""
+
+    default_message = "Authentication token has expired"
+
+
+class CredentialError(AthenaError):
+    """Raised when there are issues with credential management."""
+
+    default_message = "Credential management error"

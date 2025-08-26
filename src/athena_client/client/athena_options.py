@@ -21,6 +21,10 @@ class AthenaOptions:
         resize_images: Whether to automatically resize images before sending.
             When True, images will be resized to the optimal size for the model.
             Defaults to False.
+        convert_jpeg: Whether to convert images to JPEG format before sending.
+            When True, images will be converted to JPEG with quality=85.
+            Enabling this ensures consistent image format and can reduce size.
+            Defaults to True.
         compress_images: Whether to compress images using Brotli compression.
             Enabling this reduces network bandwidth usage but adds slight CPU
             overhead.
@@ -37,13 +41,26 @@ class AthenaOptions:
         correlation_provider: Class that generates correlation IDs for requests.
             Used for request tracing and debugging.
             Defaults to HashCorrelationProvider.
+        timeout: Optional timeout in seconds for receiving responses.
+            When None, allows infinite streaming with no timeout.
+            When set to a float value, stream will stop after that many seconds
+            without receiving a response.
+            Defaults to 120.0 seconds.
+        keepalive_interval: Optional interval in seconds for sending keepalive
+            requests to maintain stream connection. When None, uses a sensible
+            default based on server configuration. When set to a float value,
+            sends empty requests at this interval to prevent stream timeouts.
+            Defaults to None (auto-detect).
 
     """
 
     host: str = "localhost"
     resize_images: bool = False
+    convert_jpeg: bool = True
     compress_images: bool = True
     deployment_id: str = "default"
     affiliate: str = "default"
     max_batch_size: int = 100
     correlation_provider: type[CorrelationProvider] = HashCorrelationProvider
+    timeout: float | None = 120.0
+    keepalive_interval: float | None = None

@@ -8,6 +8,7 @@ from athena_client.client.transformers.async_transformer import (
 )
 from athena_client.generated.athena.athena_pb2 import (
     ClassificationInput,
+    ImageFormat,
     RequestEncoding,
 )
 
@@ -52,6 +53,7 @@ class ClassificationInputTransformer(
             ),
             data=image_bytes,
             encoding=self.request_encoding,
+            format=ImageFormat.IMAGE_FORMAT_JPEG,
         )
 
     async def transform(self, data: bytes) -> ClassificationInput:

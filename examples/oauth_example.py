@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Example script that uses the athena client."""
+"""Example script demonstrating OAuth credential helper usage."""
 
 import asyncio
 import logging
@@ -12,29 +12,34 @@ from dotenv import load_dotenv
 
 from athena_client.client.athena_client import AthenaClient
 from athena_client.client.athena_options import AthenaOptions
-from athena_client.client.channel import create_channel
+from athena_client.client.channel import (
+    CredentialHelper,
+    create_channel_with_credentials,
+)
 from athena_client.client.deployment_selector import DeploymentSelector
 
 
-async def run_example(
+async def run_oauth_example(
     logger: logging.Logger,
     options: AthenaOptions,
-    auth_token: str,
+    credential_helper: CredentialHelper,
     max_test_images: int | None = None,
 ) -> tuple[int, int]:
-    """Run example classification with the given options.
+    """Run example classification with OAuth credential helper.
 
     Args:
         logger: Logger instance for output
         options: Configuration options for the Athena client
-        auth_token: Authentication token for the API
+        credential_helper: OAuth credential helper for authentication
         max_test_images: Maximum number of test images to generate
 
     Returns:
         Number of requests sent and responses received
 
     """
-    channel = create_channel(options.host, auth_token)
+    channel = await create_channel_with_credentials(
+        options.host, credential_helper
+    )
 
     sent_counter = [0]  # Use list to allow mutation in closure
     received_count = 0
@@ -104,23 +109,47 @@ async def run_example(
 
 
 async def main() -> int:
-    """Run the classification example."""
+    """Run the OAuth classification example."""
     logger = logging.getLogger(__name__)
     load_dotenv()
 
     # Configuration
     max_test_images = 100
 
-    auth_token = os.getenv("ATHENA_AUTH_TOKEN")
-    if not auth_token:
-        logger.error("ATHENA_AUTH_TOKEN not set")
+    # OAuth credentials from environment
+    client_id = os.getenv("OAUTH_CLIENT_ID")
+    client_secret = os.getenv("OAUTH_CLIENT_SECRET")
+    auth_url = os.getenv(
+        "OAUTH_AUTH_URL", "https://crispthinking.auth0.com/oauth/token"
+    )
+    audience = os.getenv("OAUTH_AUDIENCE", "crisp-athena-dev")
+
+    if not client_id or not client_secret:
+        logger.error("OAUTH_CLIENT_ID and OAUTH_CLIENT_SECRET must be set")
         return 1
 
     host = os.getenv("ATHENA_HOST", "localhost")
     logger.info("Connecting to %s", host)
 
+    # Create credential helper
+    credential_helper = CredentialHelper(
+        client_id=client_id,
+        client_secret=client_secret,
+        auth_url=auth_url,
+        audience=audience,
+    )
+
+    # Test token acquisition
+    try:
+        logger.info("Acquiring OAuth token...")
+        token = await credential_helper.get_token()
+        logger.info("Successfully acquired token (length: %d)", len(token))
+    except Exception:
+        logger.exception("Failed to acquire OAuth token")
+        return 1
+
     # Get available deployment
-    channel = create_channel(host, auth_token)
+    channel = await create_channel_with_credentials(host, credential_helper)
     async with DeploymentSelector(channel) as deployment_selector:
         deployments = await deployment_selector.list_deployments()
 
@@ -131,7 +160,7 @@ async def main() -> int:
     deployment_id = deployments.deployments[0].deployment_id
     logger.info("Using deployment: %s", deployment_id)
 
-    # Run classification with persistent connection
+    # Run classification with OAuth authentication
     options = AthenaOptions(
         host=host,
         resize_images=True,
@@ -141,8 +170,8 @@ async def main() -> int:
         keepalive_interval=30.0,  # Longer intervals for persistent streams
     )
 
-    sent, received = await run_example(
-        logger, options, auth_token, max_test_images
+    sent, received = await run_oauth_example(
+        logger, options, credential_helper, max_test_images
     )
 
     if sent == received:
@@ -152,10 +181,47 @@ async def main() -> int:
     return 1
 
 
+async def demo_token_refresh() -> None:
+    """Demonstrate automatic token refresh capabilities."""
+    logger = logging.getLogger(__name__)
+    load_dotenv()
+
+    client_id = os.getenv("OAUTH_CLIENT_ID")
+    client_secret = os.getenv("OAUTH_CLIENT_SECRET")
+
+    if not client_id or not client_secret:
+        logger.error("OAUTH_CLIENT_ID and OAUTH_CLIENT_SECRET must be set")
+        return
+
+    credential_helper = CredentialHelper(
+        client_id=client_id,
+        client_secret=client_secret,
+    )
+
+    # Get initial token
+    logger.info("Getting initial token...")
+    token1 = await credential_helper.get_token()
+    logger.info("Token 1 acquired (first 20 chars): %s...", token1[:20])
+
+    # Get token again (should return cached token)
+    logger.info("Getting token again (should be cached)...")
+    token2 = await credential_helper.get_token()
+    logger.info("Token 2 acquired (first 20 chars): %s...", token2[:20])
+    logger.info("Tokens identical: %s", token1 == token2)
+
+    # Force token refresh
+    logger.info("Invalidating token to force refresh...")
+    await credential_helper.invalidate_token()
+    token3 = await credential_helper.get_token()
+    logger.info("Token 3 acquired (first 20 chars): %s...", token3[:20])
+    logger.info("Token 3 different from Token 1: %s", token1 != token3)
+
+
 if __name__ == "__main__":
     logging.basicConfig(
         level=logging.DEBUG,
         format="%(asctime)s.%(msecs)03d %(levelname)s: %(message)s",
         datefmt="%H:%M:%S",
     )
+
     sys.exit(asyncio.run(main()))

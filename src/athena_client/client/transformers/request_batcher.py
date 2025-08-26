@@ -1,6 +1,8 @@
 """Transform ClassificationInputs into batched ClassifyRequests."""
 
 import asyncio
+import logging
+import time
 from collections.abc import AsyncIterator
 
 from athena_client.generated.athena.athena_pb2 import (
@@ -10,7 +12,7 @@ from athena_client.generated.athena.athena_pb2 import (
 
 
 class RequestBatcher:
-    """Batches ClassificationInputs into ClassifyRequests."""
+    """Batches ClassificationInputs into ClassifyRequests with keepalive."""
 
     def __init__(
         self,
@@ -18,6 +20,7 @@ class RequestBatcher:
         deployment_id: str,
         max_batch_size: int = 10,
         timeout: float = 0.1,
+        keepalive_interval: float | None = None,
     ) -> None:
         """Initialize the batcher.
 
@@ -26,13 +29,20 @@ class RequestBatcher:
             deployment_id: Deployment ID to use in requests
             max_batch_size: Maximum number of inputs per batch
             timeout: Max seconds to wait for additional items before batching
+            keepalive_interval: Seconds between keepalive requests
 
         """
         self.source = source
         self.deployment_id = deployment_id
         self.max_batch_size = max_batch_size
         self.timeout = timeout
+        self.keepalive_interval = (
+            keepalive_interval or 30.0
+        )  # Longer for persistence
         self._batch: list[ClassificationInput] = []
+        self._last_send_time = time.time()
+        self._stream_started = False
+        self.logger = logging.getLogger(__name__)
 
     def __aiter__(self) -> AsyncIterator[ClassifyRequest]:
         """Return self as an async iterator."""
@@ -40,30 +50,70 @@ class RequestBatcher:
 
     async def __anext__(self) -> ClassifyRequest:
         """Get the next batched request."""
-        try:
-            # Always get at least one item
-            if not self._batch:
-                self._batch.append(await anext(self.source))
+        current_time = time.time()
 
-            # Try to get more items up to max_batch_size
+        # Send keepalive if needed
+        if self._should_send_keepalive(current_time):
+            return self._create_keepalive_request(current_time)
+
+        # Build batch
+        await self._ensure_batch_has_items()
+        await self._fill_batch()
+
+        self._last_send_time = current_time
+        return self._create_request()
+
+    def _should_send_keepalive(self, current_time: float) -> bool:
+        """Check if a keepalive request should be sent."""
+        if self._batch:
+            return False
+
+        time_since_last_send = current_time - self._last_send_time
+        return time_since_last_send >= self.keepalive_interval
+
+    def _create_keepalive_request(self, current_time: float) -> ClassifyRequest:
+        """Create a keepalive request to maintain persistent connection."""
+        time_since_last = current_time - self._last_send_time
+        self._last_send_time = current_time
+
+        if not self._stream_started:
+            self.logger.debug(
+                "Sending initial keepalive to establish persistent stream"
+            )
+            self._stream_started = True
+        else:
+            self.logger.debug(
+                "Sending keepalive after %.1fs to maintain connection",
+                time_since_last,
+            )
+
+        return ClassifyRequest(deployment_id=self.deployment_id, inputs=[])
+
+    async def _ensure_batch_has_items(self) -> None:
+        """Ensure the batch has at least one item."""
+        if not self._batch:
             try:
-                while len(self._batch) < self.max_batch_size:
-                    item = await asyncio.wait_for(
-                        anext(self.source), self.timeout
-                    )
-                    self._batch.append(item)
+                self._batch.append(await anext(self.source))
+            except StopAsyncIteration:
+                if self._batch:
+                    return
+                raise
+
+    async def _fill_batch(self) -> None:
+        """Fill the batch up to max_batch_size."""
+        while len(self._batch) < self.max_batch_size:
+            try:
+                item = await asyncio.wait_for(anext(self.source), self.timeout)
             except (asyncio.TimeoutError, StopAsyncIteration):
-                pass
-
-            return self._create_request()
-
-        except StopAsyncIteration:
-            if self._batch:
-                return self._create_request()
-            raise
+                break
+            self._batch.append(item)
 
     def _create_request(self) -> ClassifyRequest:
         """Create a ClassifyRequest from the current batch."""
+        if not self._batch:
+            msg = "No more inputs available"
+            raise StopAsyncIteration(msg)
+
         batch = self._batch
         self._batch = []
         return ClassifyRequest(

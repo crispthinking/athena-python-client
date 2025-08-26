@@ -12,8 +12,12 @@ class MockAsyncIterator(Generic[T]):
     async def __call__(
         self,
         _: AsyncIterable[bytes],
+        *,
+        timeout: float | None = None,
     ) -> "MockAsyncIterator":
         self.call_count += 1
+        # Store timeout for potential use in testing
+        self._timeout = timeout
         return self
 
     def __aiter__(self) -> Self:

@@ -3,6 +3,65 @@
 This is a Python library for interacting with the Athena API (Resolver Unknown
 CSAM Detection).
 
+## Authentication
+
+The Athena client supports two authentication methods:
+
+### Static Token Authentication
+```python
+from athena_client.client.channel import create_channel
+
+# Use a pre-existing authentication token
+channel = create_channel(host="your-host", auth_token="your-token")
+```
+
+### OAuth Credential Helper (Recommended)
+The credential helper automatically handles OAuth token acquisition and refresh:
+
+```python
+import asyncio
+from athena_client.client.channel import CredentialHelper, create_channel_with_credentials
+
+async def main():
+    # Create credential helper with OAuth settings
+    credential_helper = CredentialHelper(
+        client_id="your-oauth-client-id",
+        client_secret="your-oauth-client-secret",
+        auth_url="https://crispthinking.auth0.com/oauth/token",  # Optional, this is default
+        audience="crisp-athena-dev"  # Optional, this is default
+    )
+
+    # Create channel with automatic OAuth handling
+    channel = await create_channel_with_credentials(
+        host="your-host",
+        credential_helper=credential_helper
+    )
+
+asyncio.run(main())
+```
+
+#### Environment Variables
+For the OAuth example to work, set these environment variables:
+```bash
+export OAUTH_CLIENT_ID="your-client-id"
+export OAUTH_CLIENT_SECRET="your-client-secret"
+export ATHENA_HOST="your-athena-host"
+```
+
+#### OAuth Features
+- **Automatic token refresh**: Tokens are automatically refreshed when they expire
+- **Thread-safe**: Multiple concurrent requests will safely share cached tokens
+- **Error handling**: Comprehensive error handling for OAuth failures
+- **Configurable**: Custom OAuth endpoints and audiences supported
+
+See `examples/oauth_example.py` for a complete working example.
+
+## Examples
+
+- `examples/example.py` - Basic classification example with static token
+- `examples/oauth_example.py` - OAuth authentication with credential helper
+- `examples/create_image.py` - Image generation utilities
+
 ## TODO
 
 ### Async pipelines

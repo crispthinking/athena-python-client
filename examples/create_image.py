@@ -56,12 +56,17 @@ def create_random_image(width: int = 640, height: int = 480) -> bytes:
     return img_byte_arr.getvalue()
 
 
-async def iter_images(max_images: int | None = None) -> AsyncIterator[bytes]:
+async def iter_images(
+    max_images: int | None = None, counter: list[int] | None = None
+) -> AsyncIterator[bytes]:
     """Generate random test images.
 
     Args:
         max_images: Maximum number of images to generate. If None, generates
-        infinitely.
+            infinitely.
+        counter: Optional list with single integer to track number of images
+            sent.
+            The first element will be incremented for each image generated.
 
     Yields:
         JPEG image bytes with random content
@@ -69,5 +74,8 @@ async def iter_images(max_images: int | None = None) -> AsyncIterator[bytes]:
     """
     count = 0
     while max_images is None or count < max_images:
-        yield create_random_image()
+        img = create_random_image()
+        if counter is not None:
+            counter[0] = counter[0] + 1
+        yield img
         count += 1

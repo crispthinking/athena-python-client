@@ -163,25 +163,16 @@ async def test_client_transformers_disabled(
     mock_options: AthenaOptions,
 ) -> None:
     """Test client with image transformers disabled."""
-    # Explicitly override options to ensure transformers are disabled
-    mock_options.resize_images = False
-    mock_options.compress_images = False
+    # Explicitly override options to ensure jpeg conversion is disabled
+    mock_options.convert_jpeg = False
 
     test_response = ClassifyResponse(
         outputs=[ClassificationOutput(correlation_id="1")]
     )
 
-    with (
-        mock.patch(
-            "athena_client.client.athena_client.ClassifierServiceClient"
-        ) as mock_client_cls,
-        mock.patch(
-            "athena_client.client.athena_client.ImageResizer"
-        ) as mock_resizer,
-        mock.patch(
-            "athena_client.client.athena_client.BrotliCompressor"
-        ) as mock_compressor,
-    ):
+    with mock.patch(
+        "athena_client.client.athena_client.ClassifierServiceClient"
+    ) as mock_client_cls:
         mock_client = mock_client_cls.return_value
         mock_classify = MockAsyncIterator([test_response])
         mock_client.classify = mock_classify
@@ -202,10 +193,6 @@ async def test_client_transformers_disabled(
         assert len(responses) == 1
         assert responses[0].outputs[0].correlation_id == "1"
 
-        # Verify transformers were not instantiated
-        mock_resizer.assert_not_called()
-        mock_compressor.assert_not_called()
-
         # Verify classify was called
         assert mock_classify.call_count == 1
 
@@ -216,25 +203,16 @@ async def test_client_transformers_enabled(
     mock_options: AthenaOptions,
 ) -> None:
     """Test client with image transformers enabled."""
-    # Enable transformers in options
-    mock_options.resize_images = True
-    mock_options.compress_images = True
+    # Enable jpeg conversion
+    mock_options.convert_jpeg = True
 
     test_response = ClassifyResponse(
         outputs=[ClassificationOutput(correlation_id="1")]
     )
 
-    with (
-        mock.patch(
-            "athena_client.client.athena_client.ClassifierServiceClient"
-        ) as mock_client_cls,
-        mock.patch(
-            "athena_client.client.athena_client.ImageResizer"
-        ) as mock_resizer,
-        mock.patch(
-            "athena_client.client.athena_client.BrotliCompressor"
-        ) as mock_compressor,
-    ):
+    with mock.patch(
+        "athena_client.client.athena_client.ClassifierServiceClient"
+    ) as mock_client_cls:
         mock_client = mock_client_cls.return_value
         mock_classify = MockAsyncIterator([test_response])
         mock_client.classify = mock_classify
@@ -254,10 +232,6 @@ async def test_client_transformers_enabled(
         # Verify response was received
         assert len(responses) == 1
         assert responses[0].outputs[0].correlation_id == "1"
-
-        # Verify transformers were instantiated
-        mock_resizer.assert_called_once()
-        mock_compressor.assert_called_once()
 
         # Verify classify was called
         assert mock_classify.call_count == 1

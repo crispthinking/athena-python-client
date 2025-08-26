@@ -30,6 +30,9 @@ class MockStreamCall(Generic[RequestT, ResponseT]):
     def __call__(
         self,
         request_iter: AsyncIterator[RequestT],
+        *,
+        timeout: float | None = None,
+        wait_for_ready: bool = True,
     ) -> StreamStreamCall[RequestT, ResponseT]:
         """Handle calls with request iterator.
 
@@ -40,6 +43,9 @@ class MockStreamCall(Generic[RequestT, ResponseT]):
             StreamStreamCall for response streaming.
         """
         self.call_count += 1
+        # Store parameters for potential test verification
+        self._last_timeout = timeout
+        self._last_wait_for_ready = wait_for_ready
         return StreamCallMock(request_iter, self.responses)
 
 

@@ -31,20 +31,28 @@ class ClassifierServiceClient:
         self.stub = ClassifierServiceStub(channel)
 
     async def classify(
-        self, request_iter: AsyncIterable[ClassifyRequest]
+        self,
+        request_iter: AsyncIterable[ClassifyRequest],
+        timeout: float | None = None,
     ) -> "StreamStreamCall[ClassifyRequest, ClassifyResponse]":
         """Perform image classification in a deployment-based streaming context.
 
         Args:
             request_iter (AsyncIterable[ClassifyRequest]): An async
-            iterable of classify requests to be streamed to the server.
+                iterable of classify requests to be streamed to the server.
+            timeout (float | None): RPC timeout in seconds. None for no timeout.
+                The overall duration for receiving all responses.
 
         Returns:
             StreamStreamCall[ClassifyRequest, ClassifyResponse]: A gRPC stream
             call object that can be used as an async iterator of responses.
 
         """
-        return self.stub.Classify(request_iter)
+        return self.stub.Classify(
+            request_iter,
+            timeout=timeout,
+            wait_for_ready=True,
+        )
 
     async def list_deployments(self) -> ListDeploymentsResponse:
         """Retrieve a list of all active deployment IDs.
