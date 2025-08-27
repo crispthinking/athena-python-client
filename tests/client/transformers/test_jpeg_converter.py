@@ -1,6 +1,7 @@
 """Tests for JPEG converter transformer."""
 
 import asyncio
+import hashlib
 from collections.abc import AsyncIterator, Sequence
 from io import BytesIO
 
@@ -8,6 +9,7 @@ import pytest
 from PIL import Image
 
 from athena_client.client.consts import EXPECTED_HEIGHT, EXPECTED_WIDTH
+from athena_client.client.models import ImageData
 from athena_client.client.transformers.jpeg_converter import JpegConverter
 
 
@@ -26,10 +28,10 @@ def create_test_image(mode: str, size: tuple[int, int] = (100, 100)) -> bytes:
 
 async def create_image_stream(
     images: Sequence[bytes],
-) -> AsyncIterator[bytes]:
-    """Create an async iterator of image bytes."""
+) -> AsyncIterator[ImageData]:
+    """Create an async iterator of ImageData objects."""
     for img in images:
-        yield img
+        yield ImageData(img)
         await asyncio.sleep(0)  # Allow other tasks to run
 
 
@@ -42,7 +44,7 @@ async def test_jpeg_converter_basic() -> None:
     result = await anext(converter)
 
     # Verify output is valid JPEG
-    with Image.open(BytesIO(result)) as img:
+    with Image.open(BytesIO(result.data)) as img:
         assert img.format == "JPEG"
         assert img.mode == "RGB"
         assert img.size == (EXPECTED_HEIGHT, EXPECTED_WIDTH)
@@ -57,7 +59,7 @@ async def test_jpeg_converter_rgba() -> None:
     result = await anext(converter)
 
     # Verify RGBA was converted to RGB JPEG
-    with Image.open(BytesIO(result)) as img:
+    with Image.open(BytesIO(result.data)) as img:
         assert img.format == "JPEG"
         assert img.mode == "RGB"  # Should be converted from RGBA
 
@@ -73,7 +75,7 @@ async def test_jpeg_converter_quality() -> None:
     low_result = await anext(low_quality)
 
     # Lower quality should result in smaller file size
-    assert len(low_result) < len(high_result)
+    assert len(low_result.data) < len(high_result.data)
 
 
 @pytest.mark.asyncio
@@ -90,9 +92,9 @@ async def test_jpeg_converter_optimize() -> None:
     unopt_result = await anext(unoptimized)
 
     # Both should produce valid JPEGs
-    with Image.open(BytesIO(opt_result)) as img:
+    with Image.open(BytesIO(opt_result.data)) as img:
         assert img.format == "JPEG"
-    with Image.open(BytesIO(unopt_result)) as img:
+    with Image.open(BytesIO(unopt_result.data)) as img:
         assert img.format == "JPEG"
 
 
@@ -105,7 +107,7 @@ async def test_jpeg_converter_grayscale() -> None:
     result = await anext(converter)
 
     # Verify grayscale was converted to RGB JPEG
-    with Image.open(BytesIO(result)) as img:
+    with Image.open(BytesIO(result.data)) as img:
         assert img.format == "JPEG"
         assert img.mode == "RGB"
 
@@ -122,7 +124,7 @@ async def test_jpeg_converter_multiple_images() -> None:
 
     results = []
     async for result in converter:
-        with Image.open(BytesIO(result)) as img:
+        with Image.open(BytesIO(result.data)) as img:
             assert img.format == "JPEG"
             assert img.mode == "RGB"
             results.append(result)
@@ -146,3 +148,49 @@ async def test_jpeg_converter_invalid_input() -> None:
 
     with pytest.raises(ValueError, match="Failed to convert image to JPEG"):
         await anext(converter)
+
+
+@pytest.mark.asyncio
+async def test_jpeg_converter_recalculates_hashes() -> None:
+    """Test that JpegConverter recalculates hashes after format conversion.
+
+    Format conversion operations should add new hashes to track the
+    transformation since the image content has changed.
+    """
+
+    converter = JpegConverter(create_image_stream([]))
+    test_image_bytes = create_test_image("RGB", (100, 100))
+    test_data = ImageData(test_image_bytes)
+
+    # Store original hashes and data for comparison
+    original_sha256 = test_data.sha256_hashes.copy()
+    original_md5 = test_data.md5_hashes.copy()
+    original_data = test_data.data
+
+    # Convert to JPEG
+    converted = await converter.transform(test_data)
+
+    # Note: converted is the same object as test_data (modified in place)
+    assert converted is test_data  # Same object reference
+
+    # Verify the data is actually converted (different bytes)
+    assert converted.data != original_data
+
+    # Verify hashes are extended (original preserved + new added)
+    assert len(converted.sha256_hashes) == len(original_sha256) + 1
+    assert len(converted.md5_hashes) == len(original_md5) + 1
+
+    # Verify original hashes are preserved
+    assert converted.sha256_hashes[:-1] == original_sha256
+    assert converted.md5_hashes[:-1] == original_md5
+
+    # Verify the new hashes match the converted data
+    expected_sha256 = hashlib.sha256(converted.data).hexdigest()
+    expected_md5 = hashlib.md5(converted.data).hexdigest()
+    assert converted.sha256_hashes[-1] == expected_sha256
+    assert converted.md5_hashes[-1] == expected_md5
+
+    # Verify output is valid JPEG
+    with Image.open(BytesIO(converted.data)) as img:
+        assert img.format == "JPEG"
+        assert img.mode == "RGB"

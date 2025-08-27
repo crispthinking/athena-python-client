@@ -108,7 +108,7 @@ class TestCredentialHelper:
         assert helper._audience == "custom-audience"
 
     def test_init_with_empty_client_id(self) -> None:
-        """Test CredentialHelper initialization with empty client_id raises error."""
+        """Test CredentialHelper initialization with empty client_id."""
         with pytest.raises(CredentialError, match="client_id cannot be empty"):
             CredentialHelper(
                 client_id="",
@@ -116,7 +116,7 @@ class TestCredentialHelper:
             )
 
     def test_init_with_empty_client_secret(self) -> None:
-        """Test CredentialHelper initialization with empty client_secret raises error."""
+        """Test CredentialHelper initialization with empty client_secret."""
         with pytest.raises(
             CredentialError, match="client_secret cannot be empty"
         ):
@@ -159,7 +159,7 @@ class TestCredentialHelper:
         assert helper._is_token_valid()
 
     def test_is_token_valid_with_soon_expiring_token(self) -> None:
-        """Test _is_token_valid returns False when token expires soon (within 30s)."""
+        """Test _is_token_valid returns False when token expires soon."""
         helper = CredentialHelper(
             client_id="test_client_id",
             client_secret="test_client_secret",
@@ -186,7 +186,8 @@ class TestCredentialHelper:
         mock_response.raise_for_status.return_value = None
 
         with mock.patch("httpx.AsyncClient") as mock_client:
-            mock_client.return_value.__aenter__.return_value.post.return_value = mock_response
+            mock_response_obj = mock_client.return_value.__aenter__.return_value
+            mock_response_obj.post.return_value = mock_response
 
             token = await helper.get_token()
 
@@ -232,7 +233,8 @@ class TestCredentialHelper:
         )
 
         with mock.patch("httpx.AsyncClient") as mock_client:
-            mock_client.return_value.__aenter__.return_value.post.side_effect = http_error
+            mock_response_obj = mock_client.return_value.__aenter__.return_value
+            mock_response_obj.post.side_effect = http_error
 
             with pytest.raises(
                 OAuthError, match="OAuth request failed with status 401"
@@ -250,7 +252,8 @@ class TestCredentialHelper:
         request_error = httpx.RequestError("Connection failed")
 
         with mock.patch("httpx.AsyncClient") as mock_client:
-            mock_client.return_value.__aenter__.return_value.post.side_effect = request_error
+            mock_response_obj = mock_client.return_value.__aenter__.return_value
+            mock_response_obj.post.side_effect = request_error
 
             with pytest.raises(
                 OAuthError, match="Failed to connect to OAuth server"
@@ -272,7 +275,8 @@ class TestCredentialHelper:
         mock_response.raise_for_status.return_value = None
 
         with mock.patch("httpx.AsyncClient") as mock_client:
-            mock_client.return_value.__aenter__.return_value.post.return_value = mock_response
+            mock_response_obj = mock_client.return_value.__aenter__.return_value
+            mock_response_obj.post.return_value = mock_response
 
             with pytest.raises(
                 OAuthError, match="Invalid OAuth response format"

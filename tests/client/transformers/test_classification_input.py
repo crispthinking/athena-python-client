@@ -3,6 +3,7 @@ from collections.abc import AsyncIterator
 import pytest
 
 from athena_client.client.athena_options import AthenaOptions
+from athena_client.client.models import ImageData
 from athena_client.client.transformers.classification_input import (
     ClassificationInputTransformer,
 )
@@ -11,8 +12,8 @@ from tests.utils.mock_async_iterator import MockAsyncIterator
 
 
 @pytest.fixture
-def source() -> AsyncIterator[bytes]:
-    test_data = [b"test1", b"test2", b"test3"]
+def source() -> AsyncIterator[ImageData]:
+    test_data = [ImageData(b"test1"), ImageData(b"test2"), ImageData(b"test3")]
     return MockAsyncIterator(test_data)
 
 
@@ -36,20 +37,20 @@ async def test_classification_input_transform(
         correlation_provider=transformer_config.correlation_provider,
     )
 
-    test_data = b"test image bytes"
+    test_data = ImageData(b"test image bytes")
     result = await transformer.transform(test_data)
 
     assert result.affiliate == transformer_config.affiliate
     assert isinstance(
         result.correlation_id, str
     )  # Should be a non-empty string
-    assert result.data == test_data
+    assert result.data == test_data.data
     assert result.encoding == RequestEncoding.REQUEST_ENCODING_BROTLI
 
 
 @pytest.mark.asyncio
 async def test_classification_input_iteration(
-    source: AsyncIterator[bytes], transformer_config: AthenaOptions
+    source: AsyncIterator[ImageData], transformer_config: AthenaOptions
 ) -> None:
     transformer = ClassificationInputTransformer(
         source=source,
@@ -95,7 +96,8 @@ async def test_classification_input_empty(
         correlation_provider=transformer_config.correlation_provider,
     )
 
-    result = await transformer.transform(b"")
+    test_data = ImageData(b"")
+    result = await transformer.transform(test_data)
     assert result.data == b""
     assert result.affiliate == transformer_config.affiliate
     assert result.encoding == RequestEncoding.REQUEST_ENCODING_BROTLI
@@ -122,5 +124,6 @@ async def test_classification_input_encodings(
         correlation_provider=transformer_config.correlation_provider,
     )
 
-    result = await transformer.transform(b"test")
+    test_data = ImageData(b"test")
+    result = await transformer.transform(test_data)
     assert result.encoding == encoding

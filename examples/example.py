@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Example script that uses the athena client."""
+"""Example script demonstrating OAuth credential helper usage."""
 
 import asyncio
 import logging
@@ -12,29 +12,39 @@ from dotenv import load_dotenv
 
 from athena_client.client.athena_client import AthenaClient
 from athena_client.client.athena_options import AthenaOptions
-from athena_client.client.channel import create_channel
+from athena_client.client.channel import (
+    CredentialHelper,
+    create_channel_with_credentials,
+)
 from athena_client.client.deployment_selector import DeploymentSelector
+from athena_client.client.utils import (
+    get_output_error_summary,
+    has_output_errors,
+    process_classification_outputs,
+)
 
 
-async def run_example(
+async def run_oauth_example(
     logger: logging.Logger,
     options: AthenaOptions,
-    auth_token: str,
+    credential_helper: CredentialHelper,
     max_test_images: int | None = None,
 ) -> tuple[int, int]:
-    """Run example classification with the given options.
+    """Run example classification with OAuth credential helper.
 
     Args:
         logger: Logger instance for output
         options: Configuration options for the Athena client
-        auth_token: Authentication token for the API
+        credential_helper: OAuth credential helper for authentication
         max_test_images: Maximum number of test images to generate
 
     Returns:
         Number of requests sent and responses received
 
     """
-    channel = create_channel(options.host, auth_token)
+    channel = await create_channel_with_credentials(
+        options.host, credential_helper
+    )
 
     sent_counter = [0]  # Use list to allow mutation in closure
     received_count = 0
@@ -60,7 +70,22 @@ async def run_example(
                         rate,
                     )
 
-                for output in result.outputs:
+                # Check for output errors and handle them
+                if has_output_errors(result):
+                    error_summary = get_output_error_summary(result)
+                    logger.warning(
+                        "Received %d outputs with errors: %s",
+                        sum(error_summary.values()),
+                        error_summary,
+                    )
+
+                # Process outputs, logging errors but continuing with
+                # successful ones
+                successful_outputs = process_classification_outputs(
+                    result, raise_on_error=False, log_errors=True
+                )
+
+                for output in successful_outputs:
                     classifications = {
                         c.label: round(c.weight, 3)
                         for c in output.classifications
@@ -104,23 +129,47 @@ async def run_example(
 
 
 async def main() -> int:
-    """Run the classification example."""
+    """Run the OAuth classification example."""
     logger = logging.getLogger(__name__)
     load_dotenv()
 
     # Configuration
     max_test_images = 100
 
-    auth_token = os.getenv("ATHENA_AUTH_TOKEN")
-    if not auth_token:
-        logger.error("ATHENA_AUTH_TOKEN not set")
+    # OAuth credentials from environment
+    client_id = os.getenv("OAUTH_CLIENT_ID")
+    client_secret = os.getenv("OAUTH_CLIENT_SECRET")
+    auth_url = os.getenv(
+        "OAUTH_AUTH_URL", "https://crispthinking.auth0.com/oauth/token"
+    )
+    audience = os.getenv("OAUTH_AUDIENCE", "crisp-athena-dev")
+
+    if not client_id or not client_secret:
+        logger.error("OAUTH_CLIENT_ID and OAUTH_CLIENT_SECRET must be set")
         return 1
 
     host = os.getenv("ATHENA_HOST", "localhost")
     logger.info("Connecting to %s", host)
 
+    # Create credential helper
+    credential_helper = CredentialHelper(
+        client_id=client_id,
+        client_secret=client_secret,
+        auth_url=auth_url,
+        audience=audience,
+    )
+
+    # Test token acquisition
+    try:
+        logger.info("Acquiring OAuth token...")
+        token = await credential_helper.get_token()
+        logger.info("Successfully acquired token (length: %d)", len(token))
+    except Exception:
+        logger.exception("Failed to acquire OAuth token")
+        return 1
+
     # Get available deployment
-    channel = create_channel(host, auth_token)
+    channel = await create_channel_with_credentials(host, credential_helper)
     async with DeploymentSelector(channel) as deployment_selector:
         deployments = await deployment_selector.list_deployments()
 
@@ -131,7 +180,7 @@ async def main() -> int:
     deployment_id = deployments.deployments[0].deployment_id
     logger.info("Using deployment: %s", deployment_id)
 
-    # Run classification with persistent connection
+    # Run classification with OAuth authentication
     options = AthenaOptions(
         host=host,
         resize_images=True,
@@ -139,10 +188,11 @@ async def main() -> int:
         compress_images=True,
         timeout=120.0,  # Maximum duration, not forced timeout
         keepalive_interval=30.0,  # Longer intervals for persistent streams
+        affiliate="crisp",
     )
 
-    sent, received = await run_example(
-        logger, options, auth_token, max_test_images
+    sent, received = await run_oauth_example(
+        logger, options, credential_helper, max_test_images
     )
 
     if sent == received:
@@ -158,4 +208,5 @@ if __name__ == "__main__":
         format="%(asctime)s.%(msecs)03d %(levelname)s: %(message)s",
         datefmt="%H:%M:%S",
     )
+
     sys.exit(asyncio.run(main()))

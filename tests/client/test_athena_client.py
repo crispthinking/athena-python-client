@@ -8,6 +8,7 @@ from grpc import aio
 from athena_client.client.athena_client import AthenaClient
 from athena_client.client.athena_options import AthenaOptions
 from athena_client.client.exceptions import AthenaError
+from athena_client.client.models import ImageData
 from athena_client.generated.athena.athena_pb2 import (
     ClassificationError,
     ClassificationOutput,
@@ -42,15 +43,15 @@ def mock_options() -> AthenaOptions:
 
 
 @pytest.fixture
-def test_images() -> list[bytes]:
-    return [b"test_image_1", b"test_image_2"]
+def test_images() -> list[ImageData]:
+    return [ImageData(b"test_image_1"), ImageData(b"test_image_2")]
 
 
 @pytest.mark.asyncio
 async def test_classify_images_success(
     mock_channel: mock.Mock,
     mock_options: AthenaOptions,
-    test_images: list[bytes],
+    test_images: list[ImageData],
 ) -> None:
     # Create test data
     test_responses = [
@@ -110,7 +111,7 @@ async def test_client_context_manager_success(
         async with AthenaClient(mock_channel, mock_options) as client:
             assert isinstance(client, AthenaClient)
             # Send a test image to trigger the classify call
-            test_image = b"test_image"
+            test_image = ImageData(b"test_image")
             async for _ in client.classify_images(
                 MockAsyncIterator([test_image])
             ):
@@ -149,7 +150,7 @@ async def test_client_context_manager_error(
         client = AthenaClient(mock_channel, mock_options)
 
         # Verify error is raised when processing images
-        test_image = b"test_image"
+        test_image = ImageData(b"test_image")
         with pytest.raises(AthenaError, match="Test error"):
             async for _ in client.classify_images(
                 MockAsyncIterator([test_image])
@@ -181,7 +182,7 @@ async def test_client_transformers_disabled(
         client = AthenaClient(mock_channel, mock_options)
 
         # Send raw test image that would normally be resized/compressed
-        raw_image = b"uncompressed_test_image"
+        raw_image = ImageData(b"uncompressed_test_image")
         responses = [
             response
             async for response in client.classify_images(
@@ -221,7 +222,7 @@ async def test_client_transformers_enabled(
         client = AthenaClient(mock_channel, mock_options)
 
         # Send test image that should be resized/compressed
-        raw_image = b"uncompressed_test_image"
+        raw_image = ImageData(b"uncompressed_test_image")
         responses = [
             response
             async for response in client.classify_images(

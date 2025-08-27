@@ -4,24 +4,24 @@ import asyncio
 from collections.abc import AsyncIterator
 from io import BytesIO
 
-import numpy as np
 from PIL import Image
 from PIL.Image import Image as PILImage
 
 from athena_client.client.consts import EXPECTED_HEIGHT, EXPECTED_WIDTH
+from athena_client.client.models import ImageData
 from athena_client.client.transformers.async_transformer import (
     AsyncTransformer,
 )
 
 
-class ImageResizer(AsyncTransformer[bytes, bytes]):
-    """Transform image bytes to ensure expected dimensions."""
+class ImageResizer(AsyncTransformer[ImageData, ImageData]):
+    """Transform ImageData to ensure expected dimensions."""
 
-    def __init__(self, source: AsyncIterator[bytes]) -> None:
+    def __init__(self, source: AsyncIterator[ImageData]) -> None:
         """Initialize with source iterator and optional size overrides.
 
         Args:
-            source: Iterator yielding image bytes
+            source: Iterator yielding ImageData objects
 
         """
         super().__init__(source)
@@ -31,11 +31,11 @@ class ImageResizer(AsyncTransformer[bytes, bytes]):
         """Resize image to expected dimensions."""
         return image.resize(self.target_size)
 
-    async def transform(self, data: bytes) -> bytes:
-        """Transform image bytes by resizing to expected dimensions."""
+    async def transform(self, data: ImageData) -> ImageData:
+        """Transform ImageData by resizing to expected dimensions."""
 
         def process_image() -> bytes:
-            with Image.open(BytesIO(data)) as image:
+            with Image.open(BytesIO(data.data)) as image:
                 image_to_resize = image
 
                 if image.mode != "RGB":
@@ -43,8 +43,13 @@ class ImageResizer(AsyncTransformer[bytes, bytes]):
 
                 resized = self._resize_image(image_to_resize)
 
-                arr = np.array(resized, dtype=np.uint8)
-                arr = np.ascontiguousarray(arr)
-                return arr.tobytes()
+                # Save as PNG to maintain quality and preserve format
+                output_buffer = BytesIO()
+                resized.save(output_buffer, format="PNG")
+                return output_buffer.getvalue()
 
-        return await asyncio.to_thread(process_image)
+        resized_bytes = await asyncio.to_thread(process_image)
+        # Modify existing ImageData with new bytes and add transformation hashes
+        data.data = resized_bytes
+        data.add_transformation_hashes()
+        return data

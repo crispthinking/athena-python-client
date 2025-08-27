@@ -12,6 +12,7 @@ from grpc.aio._call import AioRpcError
 
 from athena_client.client.athena_client import AthenaClient
 from athena_client.client.athena_options import AthenaOptions
+from athena_client.client.models import ImageData
 from athena_client.generated.athena.athena_pb2 import (
     ClassificationOutput,
     ClassifyResponse,
@@ -85,7 +86,7 @@ async def test_timeout_behavior() -> None:
         mock_client.classify = mock.AsyncMock(return_value=mock_classify)
 
         client = AthenaClient(mock_channel, options)
-        image_stream = SlowMockAsyncIterator([b"test_image"])
+        image_stream = SlowMockAsyncIterator([ImageData(b"test_image")])
 
         responses = []
         start_time = time.time()
@@ -128,7 +129,7 @@ async def test_infinite_timeout() -> None:
 
         options.timeout = None  # type: ignore[assignment]
         client = AthenaClient(mock_channel, options)
-        image_stream = SlowMockAsyncIterator([b"test_image"])
+        image_stream = SlowMockAsyncIterator([ImageData(b"test_image")])
 
         responses = []
         responses = [
@@ -166,7 +167,7 @@ async def test_custom_timeout() -> None:
 
         options.timeout = 0.2  # Set short custom timeout
         client = AthenaClient(mock_channel, options)
-        image_stream = SlowMockAsyncIterator([b"test_image"])
+        image_stream = SlowMockAsyncIterator([ImageData(b"test_image")])
 
         responses = []
         responses = [
@@ -200,7 +201,7 @@ async def test_timeout_with_errors() -> None:
         mock_client.classify = mock.AsyncMock(side_effect=error)
 
         client = AthenaClient(mock_channel, options)
-        image_stream = SlowMockAsyncIterator([b"test_image"])
+        image_stream = SlowMockAsyncIterator([ImageData(b"test_image")])
 
         # With persistent streams, errors end the stream naturally
         responses = [
@@ -234,7 +235,7 @@ async def test_timeout_with_cancellation() -> None:
         mock_client.classify = mock.AsyncMock(return_value=mock_classify)
 
         client = AthenaClient(mock_channel, options)
-        image_stream = SlowMockAsyncIterator([b"test_image"])
+        image_stream = SlowMockAsyncIterator([ImageData(b"test_image")])
 
         responses = []
 
@@ -253,3 +254,11 @@ async def test_timeout_with_cancellation() -> None:
             pass
         finally:
             assert len(responses) == target_responses
+
+
+# NOTE: Timeout behavior has been improved to only apply while input is active.
+# Once the input iterator ends, the stream waits indefinitely for remaining
+# responses. The timeout is now based on time between responses rather than
+# total stream time. This addresses the issue where streams would timeout even
+# when input had finished and responses were still pending (e.g., sent 26400,
+# received 3437, timed out at 120s).

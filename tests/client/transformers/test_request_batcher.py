@@ -1,6 +1,7 @@
 """Tests for RequestBatcher transformer."""
 
 import asyncio
+import time
 from collections.abc import AsyncIterator
 
 import pytest
@@ -286,6 +287,49 @@ async def test_request_batcher_stop_iteration_during_batch() -> None:
     assert len(request.inputs) == BATCH_SIZE_TWO
     assert request.inputs[0].correlation_id == "id0"
     assert request.inputs[1].correlation_id == "id1"
+
+    # Should raise StopAsyncIteration after that
+    with pytest.raises(StopAsyncIteration):
+        await anext(batcher)
+
+
+@pytest.mark.asyncio
+async def test_request_batcher_iterator_end_no_timeout() -> None:
+    """Test that batches are returned immediately when iterator ends."""
+
+    # Create a source with 2 items - no delays
+    test_inputs = [
+        create_test_input(b"test1", "id0"),
+        create_test_input(b"test2", "id1"),
+    ]
+    source = AsyncIteratorWithDelay(test_inputs, delay=0)  # No delay
+
+    # Use a long timeout to ensure we're not hitting timeout
+    long_timeout = 1.0
+    batcher = RequestBatcher(
+        source,
+        deployment_id="test-deployment",
+        max_batch_size=3,  # Larger than available items
+        timeout=long_timeout,
+    )
+
+    # Measure time for first batch
+    start_time = time.time()
+    request = await anext(batcher)
+    elapsed = time.time() - start_time
+
+    # Should get both items immediately when iterator ends
+    # without waiting for timeout
+    expected_items = 2
+    assert len(request.inputs) == expected_items
+    assert request.inputs[0].correlation_id == "id0"
+    assert request.inputs[1].correlation_id == "id1"
+
+    # Should complete much faster than timeout
+    # Allow some buffer for test execution overhead
+    assert elapsed < long_timeout * 0.1, (
+        f"Took {elapsed}s, should be much less than {long_timeout}s"
+    )
 
     # Should raise StopAsyncIteration after that
     with pytest.raises(StopAsyncIteration):

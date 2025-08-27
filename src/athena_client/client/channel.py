@@ -96,11 +96,15 @@ class CredentialHelper:
         """
         async with self._lock:
             if self._is_token_valid():
-                assert self._token is not None  # Type hint for mypy
+                if self._token is None:
+                    msg = "Token should be valid but is None"
+                    raise RuntimeError(msg)
                 return self._token
 
             await self._refresh_token()
-            assert self._token is not None  # Type hint for mypy
+            if self._token is None:
+                msg = "Token refresh failed"
+                raise RuntimeError(msg)
             return self._token
 
     def _is_token_valid(self) -> bool:

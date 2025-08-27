@@ -9,6 +9,7 @@ import grpc
 
 from athena_client.client.athena_options import AthenaOptions
 from athena_client.client.exceptions import AthenaError
+from athena_client.client.models import ImageData
 from athena_client.client.transformers.classification_input import (
     ClassificationInputTransformer,
 )
@@ -46,15 +47,37 @@ class AthenaClient:
         self.classifier = ClassifierServiceClient(self.channel)
 
     async def classify_images(
-        self, images: AsyncIterator[bytes]
+        self, images: AsyncIterator[ImageData]
     ) -> AsyncIterator[ClassifyResponse]:
         """Classify images using the Athena service.
 
         Args:
-            images: An async iterator of image bytes to classify.
+            images: An async iterator of ImageData objects containing image
+                bytes and hash lists tracking transformations. Users must create
+                ImageData objects from raw image bytes before passing to this
+                method. The transformation pipeline will automatically track
+                hash changes for operations that modify visual content (resize,
+                format conversion) while preserving hashes for compression
+                operations.
 
-        Returns:
-            An async iterator yielding classification responses.
+        Yields:
+            Classification responses from the service.
+
+        Example:
+            ```python
+            # Create ImageData from raw bytes
+            image_data = ImageData(image_bytes)
+            print(f"Initial hashes: {len(image_data.sha256_hashes)}")  # 1
+
+            async def image_stream():
+                yield image_data
+
+            async with AthenaClient(channel, options) as client:
+                async for response in client.classify_images(image_stream()):
+                    # Process classification response
+                    # ImageData will have accumulated transformation hashes
+                    pass
+            ```
 
         """
         request_batcher = self._create_request_pipeline(images)
@@ -81,7 +104,7 @@ class AthenaClient:
             )
 
     def _create_request_pipeline(
-        self, images: AsyncIterator[bytes]
+        self, images: AsyncIterator[ImageData]
     ) -> RequestBatcher:
         """Create the request processing pipeline."""
         image_stream = images
@@ -110,24 +133,39 @@ class AthenaClient:
         start_time: float,
     ) -> AsyncIterator[ClassifyResponse]:
         """Process a persistent gRPC stream with keepalives."""
-        # Calculate total timeout for the stream
-        total_timeout = self.options.timeout
-
         self.logger.debug(
             "Starting persistent stream (max duration: %.1fs)",
-            total_timeout or -1,
+            self.options.timeout or -1,
         )
 
         try:
+            # Never apply timeout at gRPC level - handle timeout logic ourselves
             response_stream = await self.classifier.classify(
-                request_batcher, timeout=total_timeout
+                request_batcher, timeout=None
             )
 
+            last_response_time = start_time
+
             async for response in response_stream:
-                # Check if we've exceeded our maximum duration
-                if self._check_max_duration_reached(start_time):
-                    self.logger.debug("Maximum duration reached, ending stream")
+                current_time = asyncio.get_running_loop().time()
+
+                # Only check timeout if input source is still active
+                # Timeout is based on time since last response, not total time
+                if (
+                    not request_batcher.source_exhausted
+                    and self.options.timeout
+                    and (current_time - last_response_time)
+                    >= self.options.timeout
+                ):
+                    self.logger.debug(
+                        "No response received for %.1fs while input active, "
+                        "ending stream",
+                        current_time - last_response_time,
+                    )
                     return
+
+                # Update last response time
+                last_response_time = current_time
 
                 if response.global_error and response.global_error.message:
                     raise AthenaError(response.global_error.message)
@@ -142,14 +180,6 @@ class AthenaClient:
                 self._get_error_code_name(e),
             )
             # Let the stream end naturally - no restarts for persistent streams
-
-    def _check_max_duration_reached(self, start_time: float) -> bool:
-        """Check if maximum duration has been reached."""
-        if not self.options.timeout:
-            return False
-
-        elapsed = asyncio.get_running_loop().time() - start_time
-        return elapsed >= self.options.timeout
 
     def _get_error_code_name(self, error: grpc.aio.AioRpcError) -> str:
         """Get error code name safely."""

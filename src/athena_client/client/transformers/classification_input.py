@@ -3,6 +3,7 @@
 from collections.abc import AsyncIterator
 
 from athena_client.client.correlation import CorrelationProvider
+from athena_client.client.models import ImageData
 from athena_client.client.transformers.async_transformer import (
     AsyncTransformer,
 )
@@ -14,13 +15,13 @@ from athena_client.generated.athena.athena_pb2 import (
 
 
 class ClassificationInputTransformer(
-    AsyncTransformer[bytes, ClassificationInput]
+    AsyncTransformer[ImageData, ClassificationInput]
 ):
-    """Transform image bytes into ClassifyRequests."""
+    """Transform ImageData into ClassifyRequests."""
 
     def __init__(
         self,
-        source: AsyncIterator[bytes],
+        source: AsyncIterator[ImageData],
         deployment_id: str,
         affiliate: str,
         request_encoding: RequestEncoding.ValueType,
@@ -29,7 +30,7 @@ class ClassificationInputTransformer(
         """Initialize with source iterator and request configuration.
 
         Args:
-            source: Image bytes source iterator
+            source: ImageData source iterator
             deployment_id: Model deployment ID for classification
             affiliate: Affiliate identifier
             request_encoding: Compression type for image bytes
@@ -43,19 +44,19 @@ class ClassificationInputTransformer(
         self.correlation_provider = correlation_provider()
 
     def _create_classification_input(
-        self, image_bytes: bytes
+        self, image_data: ImageData
     ) -> ClassificationInput:
         # Get image format and data
         return ClassificationInput(
             affiliate=self.affiliate,
             correlation_id=self.correlation_provider.get_correlation_id(
-                image_bytes
+                image_data.data
             ),
-            data=image_bytes,
+            data=image_data.data,
             encoding=self.request_encoding,
             format=ImageFormat.IMAGE_FORMAT_JPEG,
         )
 
-    async def transform(self, data: bytes) -> ClassificationInput:
-        """Transform image bytes into a ClassifyRequest."""
+    async def transform(self, data: ImageData) -> ClassificationInput:
+        """Transform ImageData into a ClassifyRequest."""
         return self._create_classification_input(data)

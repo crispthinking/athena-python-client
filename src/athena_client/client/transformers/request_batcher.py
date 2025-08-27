@@ -36,13 +36,17 @@ class RequestBatcher:
         self.deployment_id = deployment_id
         self.max_batch_size = max_batch_size
         self.timeout = timeout
-        self.keepalive_interval = (
-            keepalive_interval or 30.0
-        )  # Longer for persistence
+        self.keepalive_interval = keepalive_interval or 30.0
         self._batch: list[ClassificationInput] = []
         self._last_send_time = time.time()
         self._stream_started = False
+        self._source_exhausted = False
         self.logger = logging.getLogger(__name__)
+
+    @property
+    def source_exhausted(self) -> bool:
+        """Check if the input source is exhausted."""
+        return self._source_exhausted
 
     def __aiter__(self) -> AsyncIterator[ClassifyRequest]:
         """Return self as an async iterator."""
@@ -95,6 +99,7 @@ class RequestBatcher:
             try:
                 self._batch.append(await anext(self.source))
             except StopAsyncIteration:
+                self._source_exhausted = True
                 if self._batch:
                     return
                 raise
@@ -104,9 +109,14 @@ class RequestBatcher:
         while len(self._batch) < self.max_batch_size:
             try:
                 item = await asyncio.wait_for(anext(self.source), self.timeout)
-            except (asyncio.TimeoutError, StopAsyncIteration):
+                self._batch.append(item)
+            except StopAsyncIteration:  # noqa: PERF203 - Need to handle this whilst in the loop.
+                # Iterator ended - no more items available
+                self._source_exhausted = True
                 break
-            self._batch.append(item)
+            except asyncio.TimeoutError:
+                # Timeout waiting for next item - send current batch
+                break
 
     def _create_request(self) -> ClassifyRequest:
         """Create a ClassifyRequest from the current batch."""

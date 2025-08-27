@@ -24,11 +24,11 @@ class AsyncTransformer(ABC, AsyncIterator[TOutput], Generic[TInput, TOutput]):
         """Asynchronously transform a single chunk of input data.
 
         Args:
-            data (bytes): The input data to be transformed, typically
-            representing image bytes.
+            data: The input data to be transformed, typically an ImageData
+            object containing image bytes and calculated hashes.
 
         Returns:
-            T: The transformed output, as defined by the subclass
+            The transformed output, as defined by the subclass
                 implementation.
 
         Raises:
@@ -39,6 +39,6 @@ class AsyncTransformer(ABC, AsyncIterator[TOutput], Generic[TInput, TOutput]):
         raise NotImplementedError(message)
 
     async def __anext__(self) -> TOutput:
-        """Get next transformed bytes."""
+        """Get next transformed data."""
         data = await anext(self.source)
         return await self.transform(data)

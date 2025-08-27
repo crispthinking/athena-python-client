@@ -1,10 +1,12 @@
 """Random image creation utilities."""
 
 import io
-import random
+import secrets
 from collections.abc import AsyncIterator
 
 from PIL import Image, ImageDraw
+
+from athena_client.client.models import ImageData
 
 
 def create_random_image(width: int = 640, height: int = 480) -> bytes:
@@ -23,9 +25,9 @@ def create_random_image(width: int = 640, height: int = 480) -> bytes:
         "RGB",
         (width, height),
         (
-            random.randint(0, 255),
-            random.randint(0, 255),
-            random.randint(0, 255),
+            secrets.randbits(8),
+            secrets.randbits(8),
+            secrets.randbits(8),
         ),
     )
 
@@ -34,16 +36,16 @@ def create_random_image(width: int = 640, height: int = 480) -> bytes:
     # Draw some random shapes
     for _ in range(3):
         # Random coordinates
-        x0 = random.randint(0, width - 1)
-        y0 = random.randint(0, height - 1)
-        x1 = random.randint(0, width - 1)
-        y1 = random.randint(0, height - 1)
+        x0 = secrets.randbelow(width)
+        y0 = secrets.randbelow(height)
+        x1 = secrets.randbelow(width)
+        y1 = secrets.randbelow(height)
 
         # Random color
         color = (
-            random.randint(0, 255),
-            random.randint(0, 255),
-            random.randint(0, 255),
+            secrets.randbits(8),
+            secrets.randbits(8),
+            secrets.randbits(8),
         )
 
         draw.rectangle(
@@ -58,7 +60,7 @@ def create_random_image(width: int = 640, height: int = 480) -> bytes:
 
 async def iter_images(
     max_images: int | None = None, counter: list[int] | None = None
-) -> AsyncIterator[bytes]:
+) -> AsyncIterator[ImageData]:
     """Generate random test images.
 
     Args:
@@ -69,7 +71,7 @@ async def iter_images(
             The first element will be incremented for each image generated.
 
     Yields:
-        JPEG image bytes with random content
+        ImageData objects containing JPEG image bytes with random content
 
     """
     count = 0
@@ -77,5 +79,5 @@ async def iter_images(
         img = create_random_image()
         if counter is not None:
             counter[0] = counter[0] + 1
-        yield img
+        yield ImageData(img)
         count += 1

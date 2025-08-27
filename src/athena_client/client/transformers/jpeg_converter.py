@@ -11,6 +11,7 @@ from io import BytesIO
 from PIL import Image
 
 from athena_client.client.consts import EXPECTED_HEIGHT, EXPECTED_WIDTH
+from athena_client.client.models import ImageData
 
 from .async_transformer import AsyncTransformer
 
@@ -20,12 +21,12 @@ MIN_QUALITY = 1
 MAX_QUALITY = 100
 
 
-class JpegConverter(AsyncTransformer[bytes, bytes]):
-    """Transformer that converts image bytes to JPEG format.
+class JpegConverter(AsyncTransformer[ImageData, ImageData]):
+    """Transformer that converts ImageData to JPEG format.
 
-    This transformer takes image bytes in any PIL-supported format and converts
-    them to JPEG format with configurable quality settings. This ensures
-    consistent image format handling and can help reduce file size.
+    This transformer takes ImageData containing image bytes in any PIL-supported
+    format and converts them to JPEG format with configurable quality settings.
+    This ensures consistent image format handling and can help reduce file size.
 
     Attributes:
         quality: JPEG quality setting (1-100, default 85)
@@ -43,7 +44,7 @@ class JpegConverter(AsyncTransformer[bytes, bytes]):
 
     def __init__(
         self,
-        source: AsyncIterator[bytes],
+        source: AsyncIterator[ImageData],
         *,
         quality: int = DEFAULT_QUALITY,
         optimize: bool = True,
@@ -51,7 +52,7 @@ class JpegConverter(AsyncTransformer[bytes, bytes]):
         """Initialize the JPEG converter.
 
         Args:
-            source: Source of image bytes
+            source: Source of ImageData objects
             quality: JPEG quality setting from 1 (worst) to 100 (best).
                 Default is 85 which provides good quality with reasonable size.
             optimize: Whether to attempt to optimize the JPEG output.
@@ -70,17 +71,19 @@ class JpegConverter(AsyncTransformer[bytes, bytes]):
         self.quality = quality
         self.optimize = optimize
 
-    async def transform(self, data: bytes) -> bytes:
-        """Transform input image bytes to JPEG format.
+    async def transform(self, data: ImageData) -> ImageData:
+        """Transform ImageData to JPEG format.
 
-        This method takes image bytes in any PIL-supported format and converts
-        them to JPEG format with the configured quality settings.
+        This method takes ImageData containing image bytes in any PIL-supported
+        format and converts them to JPEG format with the configured quality
+        settings.
 
         Args:
-            data: Raw image bytes in any PIL-supported format.
+            data: ImageData object containing raw image bytes in any
+                PIL-supported format.
 
         Returns:
-            JPEG-formatted image bytes.
+            ImageData object containing JPEG-formatted image bytes.
 
         Raises:
             ValueError: If the input bytes cannot be decoded as an image.
@@ -97,11 +100,11 @@ class JpegConverter(AsyncTransformer[bytes, bytes]):
 
         try:
             # Validate input data
-            if not data:
+            if not data.data:
                 _raise_empty_data_error()
 
             # Try to open the image bytes with PIL
-            input_buffer = BytesIO(data)
+            input_buffer = BytesIO(data.data)
             if input_buffer.getvalue()[:2] not in (
                 b"\xff\xd8",
                 b"\x89\x50",
@@ -139,7 +142,10 @@ class JpegConverter(AsyncTransformer[bytes, bytes]):
                     quality=self.quality,
                     optimize=self.optimize,
                 )
-                return buffer.getvalue()
+                # Modify existing ImageData with new bytes and add hashes
+                data.data = buffer.getvalue()
+                data.add_transformation_hashes()
+                return data
 
         except Exception as e:
             err_msg = f"Failed to convert image to JPEG: {e}"
