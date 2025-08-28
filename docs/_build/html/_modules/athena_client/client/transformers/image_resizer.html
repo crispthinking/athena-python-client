@@ -227,7 +227,6 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../quickstart.html">Quickstart Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../examples.html">Examples</a></li>
 </ul>
@@ -240,10 +239,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/grpc_wrappers.html">GRPC Wrappers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/deployment_selector.html">Deployment Selector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/correlation.html">Correlation System</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Development</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing Guide</a></li>
 </ul>
 
 </div>
@@ -285,11 +280,11 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncIterator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">BytesIO</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">PIL.Image</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span> <span class="k">as</span> <span class="n">PILImage</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">athena_client.client.consts</span><span class="w"> </span><span class="kn">import</span> <span class="n">EXPECTED_HEIGHT</span><span class="p">,</span> <span class="n">EXPECTED_WIDTH</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">athena_client.client.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">athena_client.client.transformers.async_transformer</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">AsyncTransformer</span><span class="p">,</span>
 <span class="p">)</span>
@@ -297,16 +292,16 @@
 
 <div class="viewcode-block" id="ImageResizer">
 <a class="viewcode-back" href="../../../../api/transformers.html#athena_client.client.transformers.ImageResizer">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">ImageResizer</span><span class="p">(</span><span class="n">AsyncTransformer</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Transform image bytes to ensure expected dimensions.&quot;&quot;&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ImageResizer</span><span class="p">(</span><span class="n">AsyncTransformer</span><span class="p">[</span><span class="n">ImageData</span><span class="p">,</span> <span class="n">ImageData</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Transform ImageData to ensure expected dimensions.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="ImageResizer.__init__">
 <a class="viewcode-back" href="../../../../api/transformers.html#athena_client.client.transformers.ImageResizer.__init__">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="nb">bytes</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">ImageData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize with source iterator and optional size overrides.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            source: Iterator yielding image bytes</span>
+<span class="sd">            source: Iterator yielding ImageData objects</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
@@ -319,11 +314,11 @@
 
 <div class="viewcode-block" id="ImageResizer.transform">
 <a class="viewcode-back" href="../../../../api/transformers.html#athena_client.client.transformers.ImageResizer.transform">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform image bytes by resizing to expected dimensions.&quot;&quot;&quot;</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">ImageData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImageData</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform ImageData by resizing to expected dimensions.&quot;&quot;&quot;</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">process_image</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-            <span class="k">with</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">))</span> <span class="k">as</span> <span class="n">image</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">))</span> <span class="k">as</span> <span class="n">image</span><span class="p">:</span>
                 <span class="n">image_to_resize</span> <span class="o">=</span> <span class="n">image</span>
 
                 <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">mode</span> <span class="o">!=</span> <span class="s2">&quot;RGB&quot;</span><span class="p">:</span>
@@ -331,11 +326,16 @@
 
                 <span class="n">resized</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resize_image</span><span class="p">(</span><span class="n">image_to_resize</span><span class="p">)</span>
 
-                <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">resized</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
-                <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
-                <span class="k">return</span> <span class="n">arr</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()</span>
+                <span class="c1"># Save as PNG to maintain quality and preserve format</span>
+                <span class="n">output_buffer</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">()</span>
+                <span class="n">resized</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">output_buffer</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;PNG&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">output_buffer</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
 
-        <span class="k">return</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">to_thread</span><span class="p">(</span><span class="n">process_image</span><span class="p">)</span></div>
+        <span class="n">resized_bytes</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">to_thread</span><span class="p">(</span><span class="n">process_image</span><span class="p">)</span>
+        <span class="c1"># Modify existing ImageData with new bytes and add transformation hashes</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">resized_bytes</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">add_transformation_hashes</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">data</span></div>
 </div>
 
 </pre></div>

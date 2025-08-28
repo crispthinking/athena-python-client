@@ -92,7 +92,7 @@ Next Steps
 
 Once installed, you can:
 
-* Read the :doc:`quickstart` guide to begin using Athena Client
+* Read the :doc:`examples` guide to begin using Athena Client
 * Check out the :doc:`api/index` documentation
 * Check out the examples section for common use cases
 

@@ -228,7 +228,6 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
 </ul>
@@ -241,10 +240,6 @@
 <li class="toctree-l1"><a class="reference internal" href="grpc_wrappers.html">GRPC Wrappers</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Deployment Selector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="correlation.html">Correlation System</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Development</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing Guide</a></li>
 </ul>
 
 </div>
@@ -291,7 +286,9 @@
         <article role="main" id="furo-main-content">
           <section id="deployment-selector">
 <h1>Deployment Selector<a class="headerlink" href="#deployment-selector" title="Link to this heading">¶</a></h1>
-<p>The deployment selector provides functionality for discovering and selecting Athena service deployments. It abstracts the complexities of deployment management and provides a simple interface for listing and validating deployments.</p>
+<p>The deployment selector provides functionality for discovering and selecting
+Athena service deployments. It abstracts the complexities of deployment
+management and provides a simple interface for listing deployments.</p>
 <dl class="py class" id="module-athena_client.client.deployment_selector">
 <dt class="sig sig-object py" id="athena_client.client.deployment_selector.DeploymentSelector">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DeploymentSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">channel</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/athena_client/client/deployment_selector.html#DeploymentSelector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#athena_client.client.deployment_selector.DeploymentSelector" title="Link to this definition">¶</a></dt>
@@ -396,7 +393,8 @@ the Athena service.</p>
 
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
-<p>The deployment selector is typically used as an async context manager to ensure proper resource cleanup:</p>
+<p>The deployment selector is typically used as an async context manager to ensure
+proper resource cleanup:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">with</span> <span class="n">DeploymentSelector</span><span class="p">(</span><span class="n">channel</span><span class="p">)</span> <span class="k">as</span> <span class="n">selector</span><span class="p">:</span>
     <span class="c1"># List available deployments</span>
     <span class="n">deployments</span> <span class="o">=</span> <span class="k">await</span> <span class="n">selector</span><span class="o">.</span><span class="n">list_deployments</span><span class="p">()</span>
@@ -411,19 +409,8 @@ the Athena service.</p>
 <section id="best-practices">
 <h2>Best Practices<a class="headerlink" href="#best-practices" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Always use the deployment selector as an async context manager to ensure proper cleanup</p></li>
+<li><p>Use the deployment selector as an async context manager to ensure proper cleanup</p></li>
 <li><p>Cache deployment information when appropriate to reduce API calls</p></li>
-<li><p>Validate deployment IDs before using them with the client</p></li>
-<li><p>Handle deployment-related exceptions appropriately</p></li>
-</ul>
-</section>
-<section id="error-handling">
-<h2>Error Handling<a class="headerlink" href="#error-handling" title="Link to this heading">¶</a></h2>
-<p>The deployment selector may raise the following exceptions:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">grpc.aio.AioRpcError</span></code>: For GRPC-level communication errors</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ValueError</span></code>: For invalid deployment IDs or configurations</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code>: For unexpected state or implementation errors</p></li>
 </ul>
 </section>
 </section>
@@ -496,7 +483,6 @@ the Athena service.</p>
 </li>
 <li><a class="reference internal" href="#usage">Usage</a></li>
 <li><a class="reference internal" href="#best-practices">Best Practices</a></li>
-<li><a class="reference internal" href="#error-handling">Error Handling</a></li>
 </ul>
 </li>
 </ul>

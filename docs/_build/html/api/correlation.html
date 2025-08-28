@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Contributing Guide" href="../contributing.html" /><link rel="prev" title="Deployment Selector" href="deployment_selector.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="prev" title="Deployment Selector" href="deployment_selector.html" />
         <link rel="prefetch" href="../_static/images/logo/Resolver_Lettermark_Main.png" as="image" />
         <link rel="prefetch" href="../_static/images/logo/Resolver_Lettermark_White.png" as="image" />
 
@@ -228,7 +228,6 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
 </ul>
@@ -241,10 +240,6 @@
 <li class="toctree-l1"><a class="reference internal" href="grpc_wrappers.html">GRPC Wrappers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment_selector.html">Deployment Selector</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Correlation System</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Development</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing Guide</a></li>
 </ul>
 
 </div>
@@ -291,7 +286,9 @@
         <article role="main" id="furo-main-content">
           <section id="correlation-system">
 <h1>Correlation System<a class="headerlink" href="#correlation-system" title="Link to this heading">¶</a></h1>
-<p>The correlation system provides mechanisms for generating and managing correlation IDs for requests. This system enables request tracing, deduplication, and logging correlation across the service.</p>
+<p>The correlation system provides mechanisms for generating and managing
+correlation IDs for requests. This system enables request tracing,
+deduplication, and logging correlation across the service.</p>
 <section id="correlation-providers">
 <span id="module-athena_client.client.correlation"></span><h2>Correlation Providers<a class="headerlink" href="#correlation-providers" title="Link to this heading">¶</a></h2>
 <dl class="py class">
@@ -364,14 +361,11 @@ input data’s bytes, which serves as the correlation ID.</p>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
 <p>The correlation system is used internally by the client but can also be used directly:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a correlation provider</span>
-<span class="n">provider</span> <span class="o">=</span> <span class="n">HashCorrelationProvider</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">options</span> <span class="o">=</span> <span class="n">AthenaOptions</span><span class="p">(</span>
+    <span class="n">correlation_provider</span><span class="o">=</span><span class="n">HashCorrelationProvider</span>
+<span class="p">)</span>
 
-<span class="c1"># Generate a correlation ID for some input</span>
-<span class="n">correlation_id</span> <span class="o">=</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_correlation_id</span><span class="p">(</span><span class="s2">&quot;my-input-data&quot;</span><span class="p">)</span>
-
-<span class="c1"># Use with client operations</span>
-<span class="k">async</span> <span class="k">with</span> <span class="n">AthenaClient</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">correlation_provider</span><span class="o">=</span><span class="n">provider</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+<span class="k">async</span> <span class="k">with</span> <span class="n">AthenaClient</span><span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
     <span class="c1"># The client will automatically generate correlation IDs</span>
     <span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">classify_images</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 </pre></div>
@@ -396,22 +390,13 @@ input data’s bytes, which serves as the correlation ID.</p>
 </pre></div>
 </div>
 </section>
-<section id="error-handling">
-<h2>Error Handling<a class="headerlink" href="#error-handling" title="Link to this heading">¶</a></h2>
-<p>Correlation providers may raise the following exceptions:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">ValueError</span></code>: For invalid input data or conversion errors</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">NotImplementedError</span></code>: When using abstract base class methods directly</p></li>
-</ul>
-</section>
 <section id="security-considerations">
 <h2>Security Considerations<a class="headerlink" href="#security-considerations" title="Link to this heading">¶</a></h2>
 <p>When implementing correlation systems:</p>
 <ul class="simple">
 <li><p>Avoid including sensitive data in correlation IDs</p></li>
-<li><p>Use cryptographically secure hashing when needed</p></li>
-<li><p>Consider the uniqueness requirements of your use case</p></li>
 <li><p>Be mindful of correlation ID length and format</p></li>
+<li><p>Make sure each image has a unique correlation ID</p></li>
 </ul>
 </section>
 </section>
@@ -421,15 +406,7 @@ input data’s bytes, which serves as the correlation ID.</p>
       <footer>
 
         <div class="related-pages">
-          <a class="next-page" href="../contributing.html">
-              <div class="page-info">
-                <div class="context">
-                  <span>Next</span>
-                </div>
-                <div class="title">Contributing Guide</div>
-              </div>
-              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
-            </a>
+
           <a class="prev-page" href="deployment_selector.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
@@ -486,7 +463,6 @@ input data’s bytes, which serves as the correlation ID.</p>
 <li><a class="reference internal" href="#usage">Usage</a></li>
 <li><a class="reference internal" href="#best-practices">Best Practices</a></li>
 <li><a class="reference internal" href="#custom-providers">Custom Providers</a></li>
-<li><a class="reference internal" href="#error-handling">Error Handling</a></li>
 <li><a class="reference internal" href="#security-considerations">Security Considerations</a></li>
 </ul>
 </li>

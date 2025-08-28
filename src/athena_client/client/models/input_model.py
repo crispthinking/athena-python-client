@@ -31,7 +31,6 @@ class ImageData:
             transformations.
 
     Example:
-        ```python
         # Create ImageData from raw bytes
         image_bytes = b"\\x89PNG\\r\\n\\x1a\\n..."  # PNG file bytes
         image_data = ImageData(image_bytes)
@@ -53,7 +52,6 @@ class ImageData:
                 assert id(image_data) == original_id
                 # But hash list has grown to track transformations
                 print(f"Final transformations: {len(image_data.sha256_hashes)}")
-        ```
 
     """
 

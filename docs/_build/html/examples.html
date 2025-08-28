@@ -228,7 +228,6 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation Guide</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Examples</a></li>
 </ul>
@@ -241,10 +240,6 @@
 <li class="toctree-l1"><a class="reference internal" href="api/grpc_wrappers.html">GRPC Wrappers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/deployment_selector.html">Deployment Selector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/correlation.html">Correlation System</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Development</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing Guide</a></li>
 </ul>
 
 </div>
@@ -292,128 +287,42 @@
           <section id="examples">
 <h1>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h1>
 <p>This section provides detailed examples of using the Athena Client library in various scenarios.</p>
-<section id="basic-usage-examples">
-<h2>Basic Usage Examples<a class="headerlink" href="#basic-usage-examples" title="Link to this heading">¶</a></h2>
+<section id="usage-examples">
+<h2>Usage Examples<a class="headerlink" href="#usage-examples" title="Link to this heading">¶</a></h2>
 <section id="simple-client-setup">
 <h3>Simple Client Setup<a class="headerlink" href="#simple-client-setup" title="Link to this heading">¶</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">athena_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">AthenaClient</span>
 
 <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-    <span class="k">async</span> <span class="k">with</span> <span class="n">AthenaClient</span><span class="p">()</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
-        <span class="c1"># Your code here</span>
-        <span class="k">pass</span>
-</pre></div>
-</div>
-</section>
-<section id="error-handling">
-<h3>Error Handling<a class="headerlink" href="#error-handling" title="Link to this heading">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">athena_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">AthenaClient</span><span class="p">,</span> <span class="n">AthenaError</span>
+    <span class="n">host</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ATHENA_HOST&quot;</span><span class="p">)</span>
+    <span class="n">client_id</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ATHENA_CLIENT_ID&quot;</span><span class="p">)</span>
+    <span class="n">client_secret</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ATHENA_CLIENT_SECRET&quot;</span><span class="p">)</span>
+    <span class="n">auth_url</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ATHENA_AUTH_URL&quot;</span><span class="p">)</span>
+    <span class="n">audience</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ATHENA_AUDIENCE&quot;</span><span class="p">)</span>
 
-<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">handle_errors</span><span class="p">():</span>
-    <span class="n">client</span> <span class="o">=</span> <span class="n">AthenaClient</span><span class="p">()</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="c1"># Your operations here</span>
-        <span class="k">pass</span>
-    <span class="k">except</span> <span class="n">AthenaError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;An error occurred: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="k">finally</span><span class="p">:</span>
-        <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-</div>
-</section>
-</section>
-<section id="advanced-usage-examples">
-<h2>Advanced Usage Examples<a class="headerlink" href="#advanced-usage-examples" title="Link to this heading">¶</a></h2>
-<section id="parallel-processing">
-<h3>Parallel Processing<a class="headerlink" href="#parallel-processing" title="Link to this heading">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">athena_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">AthenaClient</span>
-
-<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">process_multiple_items</span><span class="p">(</span><span class="n">items</span><span class="p">):</span>
-    <span class="k">async</span> <span class="k">with</span> <span class="n">AthenaClient</span><span class="p">()</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
-        <span class="n">tasks</span> <span class="o">=</span> <span class="p">[</span><span class="n">client</span><span class="o">.</span><span class="n">process_item</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">]</span>
-        <span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">tasks</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">results</span>
-</pre></div>
-</div>
-</section>
-<section id="custom-configuration">
-<h3>Custom Configuration<a class="headerlink" href="#custom-configuration" title="Link to this heading">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">athena_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">AthenaClient</span>
-
-<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">custom_setup</span><span class="p">():</span>
-    <span class="n">client</span> <span class="o">=</span> <span class="n">AthenaClient</span><span class="p">(</span>
-        <span class="n">timeout</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
-        <span class="n">max_retries</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-        <span class="n">retry_delay</span><span class="o">=</span><span class="mf">1.0</span>
+    <span class="n">credential_helper</span> <span class="o">=</span> <span class="n">CredentialHelper</span><span class="p">(</span>
+        <span class="n">client_id</span><span class="o">=</span><span class="n">client_id</span><span class="p">,</span>
+        <span class="n">client_secret</span><span class="o">=</span><span class="n">client_secret</span><span class="p">,</span>
+        <span class="n">auth_url</span><span class="o">=</span><span class="n">auth_url</span><span class="p">,</span>
+        <span class="n">audience</span><span class="o">=</span><span class="n">audience</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">try</span><span class="p">:</span>
+
+    <span class="n">channel</span> <span class="o">=</span> <span class="k">await</span> <span class="n">create_channel_with_credentials</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">credential_helper</span><span class="p">)</span>
+
+    <span class="n">options</span> <span class="o">=</span> <span class="n">AthenaOptions</span><span class="p">(</span>
+        <span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span>
+        <span class="n">deployment_id</span><span class="o">=</span><span class="n">deployment_id</span><span class="p">,</span>
+        <span class="n">resize_images</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">compress_images</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">affiliate</span><span class="o">=</span><span class="s2">&quot;crisp&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">with</span> <span class="n">AthenaClient</span><span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
         <span class="c1"># Your code here</span>
         <span class="k">pass</span>
-    <span class="k">finally</span><span class="p">:</span>
-        <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 </div>
 </section>
-</section>
-<section id="real-world-scenarios">
-<h2>Real-World Scenarios<a class="headerlink" href="#real-world-scenarios" title="Link to this heading">¶</a></h2>
-<p>These examples demonstrate common real-world use cases for the Athena Client.</p>
-<section id="batch-processing">
-<h3>Batch Processing<a class="headerlink" href="#batch-processing" title="Link to this heading">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">athena_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">AthenaClient</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
-
-<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">batch_process</span><span class="p">(</span><span class="n">items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
-    <span class="k">async</span> <span class="k">with</span> <span class="n">AthenaClient</span><span class="p">()</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
-        <span class="n">batches</span> <span class="o">=</span> <span class="p">[</span><span class="n">items</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">batch_size</span><span class="p">]</span>
-                  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">),</span> <span class="n">batch_size</span><span class="p">)]</span>
-
-        <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">batches</span><span class="p">:</span>
-            <span class="n">batch_results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span>
-                <span class="o">*</span><span class="p">[</span><span class="n">client</span><span class="o">.</span><span class="n">process_item</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">]</span>
-            <span class="p">)</span>
-            <span class="n">results</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">batch_results</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">results</span>
-</pre></div>
-</div>
-</section>
-<section id="error-retry-pattern">
-<h3>Error Retry Pattern<a class="headerlink" href="#error-retry-pattern" title="Link to this heading">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">athena_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">AthenaClient</span><span class="p">,</span> <span class="n">AthenaError</span>
-
-<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">retry_operation</span><span class="p">(</span><span class="n">max_retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">delay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">):</span>
-    <span class="n">client</span> <span class="o">=</span> <span class="n">AthenaClient</span><span class="p">()</span>
-
-    <span class="k">for</span> <span class="n">attempt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_retries</span><span class="p">):</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">some_operation</span><span class="p">()</span>
-            <span class="k">return</span> <span class="n">result</span>
-        <span class="k">except</span> <span class="n">AthenaError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">attempt</span> <span class="o">==</span> <span class="n">max_retries</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="k">raise</span>
-            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span> <span class="o">*</span> <span class="p">(</span><span class="n">attempt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
-
-    <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-</div>
-</section>
-</section>
-<section id="best-practices">
-<h2>Best Practices<a class="headerlink" href="#best-practices" title="Link to this heading">¶</a></h2>
-<p>When using the Athena Client, keep these best practices in mind:</p>
-<ol class="arabic simple">
-<li><p>Always use async context managers (<code class="docutils literal notranslate"><span class="pre">async</span> <span class="pre">with</span></code>) when possible</p></li>
-<li><p>Implement proper error handling</p></li>
-<li><p>Close clients when done</p></li>
-<li><p>Use batching for large operations</p></li>
-<li><p>Configure appropriate timeouts</p></li>
-<li><p>Implement retry logic for unreliable operations</p></li>
-</ol>
-<p>For more detailed API documentation, see the <a class="reference internal" href="api/index.html"><span class="doc">API Reference</span></a> section.</p>
 </section>
 </section>
 
@@ -473,22 +382,10 @@
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Examples</a><ul>
-<li><a class="reference internal" href="#basic-usage-examples">Basic Usage Examples</a><ul>
+<li><a class="reference internal" href="#usage-examples">Usage Examples</a><ul>
 <li><a class="reference internal" href="#simple-client-setup">Simple Client Setup</a></li>
-<li><a class="reference internal" href="#error-handling">Error Handling</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#advanced-usage-examples">Advanced Usage Examples</a><ul>
-<li><a class="reference internal" href="#parallel-processing">Parallel Processing</a></li>
-<li><a class="reference internal" href="#custom-configuration">Custom Configuration</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#real-world-scenarios">Real-World Scenarios</a><ul>
-<li><a class="reference internal" href="#batch-processing">Batch Processing</a></li>
-<li><a class="reference internal" href="#error-retry-pattern">Error Retry Pattern</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#best-practices">Best Practices</a></li>
 </ul>
 </li>
 </ul>

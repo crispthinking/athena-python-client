@@ -227,7 +227,6 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quickstart Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
 </ul>
@@ -240,10 +239,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../api/grpc_wrappers.html">GRPC Wrappers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api/deployment_selector.html">Deployment Selector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api/correlation.html">Correlation System</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Development</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing Guide</a></li>
 </ul>
 
 </div>
@@ -304,6 +299,10 @@
 <span class="sd">        resize_images: Whether to automatically resize images before sending.</span>
 <span class="sd">            When True, images will be resized to the optimal size for the model.</span>
 <span class="sd">            Defaults to False.</span>
+<span class="sd">        convert_jpeg: Whether to convert images to JPEG format before sending.</span>
+<span class="sd">            When True, images will be converted to JPEG with quality=85.</span>
+<span class="sd">            Enabling this ensures consistent image format and can reduce size.</span>
+<span class="sd">            Defaults to True.</span>
 <span class="sd">        compress_images: Whether to compress images using Brotli compression.</span>
 <span class="sd">            Enabling this reduces network bandwidth usage but adds slight CPU</span>
 <span class="sd">            overhead.</span>
@@ -320,16 +319,29 @@
 <span class="sd">        correlation_provider: Class that generates correlation IDs for requests.</span>
 <span class="sd">            Used for request tracing and debugging.</span>
 <span class="sd">            Defaults to HashCorrelationProvider.</span>
+<span class="sd">        timeout: Optional timeout in seconds for receiving responses.</span>
+<span class="sd">            When None, allows infinite streaming with no timeout.</span>
+<span class="sd">            When set to a float value, stream will stop after that many seconds</span>
+<span class="sd">            without receiving a response.</span>
+<span class="sd">            Defaults to 120.0 seconds.</span>
+<span class="sd">        keepalive_interval: Optional interval in seconds for sending keepalive</span>
+<span class="sd">            requests to maintain stream connection. When None, uses a sensible</span>
+<span class="sd">            default based on server configuration. When set to a float value,</span>
+<span class="sd">            sends empty requests at this interval to prevent stream timeouts.</span>
+<span class="sd">            Defaults to None (auto-detect).</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;localhost&quot;</span>
     <span class="n">resize_images</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">convert_jpeg</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">compress_images</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">deployment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span>
     <span class="n">affiliate</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span>
     <span class="n">max_batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
-    <span class="n">correlation_provider</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">CorrelationProvider</span><span class="p">]</span> <span class="o">=</span> <span class="n">HashCorrelationProvider</span></div>
+    <span class="n">correlation_provider</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">CorrelationProvider</span><span class="p">]</span> <span class="o">=</span> <span class="n">HashCorrelationProvider</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mf">120.0</span>
+    <span class="n">keepalive_interval</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 </pre></div>
         </article>

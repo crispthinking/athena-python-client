@@ -64,7 +64,6 @@ class AthenaClient:
             Classification responses from the service.
 
         Example:
-            ```python
             # Create ImageData from raw bytes
             image_data = ImageData(image_bytes)
             print(f"Initial hashes: {len(image_data.sha256_hashes)}")  # 1
@@ -77,7 +76,6 @@ class AthenaClient:
                     # Process classification response
                     # ImageData will have accumulated transformation hashes
                     pass
-            ```
 
         """
         request_batcher = self._create_request_pipeline(images)

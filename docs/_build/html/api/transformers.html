@@ -228,7 +228,6 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
 </ul>
@@ -241,10 +240,6 @@
 <li class="toctree-l1"><a class="reference internal" href="grpc_wrappers.html">GRPC Wrappers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment_selector.html">Deployment Selector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="correlation.html">Correlation System</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Development</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing Guide</a></li>
 </ul>
 
 </div>
@@ -301,12 +296,12 @@ specific functionality in the image processing pipeline.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="athena_client.client.transformers.ClassificationInputTransformer">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ClassificationInputTransformer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deployment_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affiliate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_encoding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correlation_provider</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/athena_client/client/transformers/classification_input.html#ClassificationInputTransformer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#athena_client.client.transformers.ClassificationInputTransformer" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#athena_client.client.transformers.async_transformer.AsyncTransformer" title="athena_client.client.transformers.async_transformer.AsyncTransformer"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncTransformer</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationInput</span></code>]</p>
-<p>Transform image bytes into ClassifyRequests.</p>
+<dd><p>Bases: <a class="reference internal" href="#athena_client.client.transformers.async_transformer.AsyncTransformer" title="athena_client.client.transformers.async_transformer.AsyncTransformer"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncTransformer</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ImageData</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationInput</span></code>]</p>
+<p>Transform ImageData into ClassifyRequests.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>source</strong> (<em>AsyncIterator</em><em>[</em><em>bytes</em><em>]</em>)</p></li>
+<li><p><strong>source</strong> (<em>AsyncIterator</em><em>[</em><em>ImageData</em><em>]</em>)</p></li>
 <li><p><strong>deployment_id</strong> (<em>str</em>)</p></li>
 <li><p><strong>affiliate</strong> (<em>str</em>)</p></li>
 <li><p><strong>request_encoding</strong> (<em>int</em>)</p></li>
@@ -321,7 +316,7 @@ specific functionality in the image processing pipeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>source</strong> (<em>AsyncIterator</em><em>[</em><em>bytes</em><em>]</em>) – Image bytes source iterator</p></li>
+<li><p><strong>source</strong> (<em>AsyncIterator</em><em>[</em><em>ImageData</em><em>]</em>) – ImageData source iterator</p></li>
 <li><p><strong>deployment_id</strong> (<em>str</em>) – Model deployment ID for classification</p></li>
 <li><p><strong>affiliate</strong> (<em>str</em>) – Affiliate identifier</p></li>
 <li><p><strong>request_encoding</strong> (<em>int</em>) – Compression type for image bytes</p></li>
@@ -337,10 +332,10 @@ specific functionality in the image processing pipeline.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="athena_client.client.transformers.ClassificationInputTransformer.transform">
 <em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/athena_client/client/transformers/classification_input.html#ClassificationInputTransformer.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#athena_client.client.transformers.ClassificationInputTransformer.transform" title="Link to this definition">¶</a></dt>
-<dd><p>Transform image bytes into a ClassifyRequest.</p>
+<dd><p>Transform ImageData into a ClassifyRequest.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>data</strong> (<em>bytes</em>)</p>
+<dd class="field-odd"><p><strong>data</strong> (<em>ImageData</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>ClassificationInput</em></p>
@@ -357,11 +352,11 @@ specific functionality in the image processing pipeline.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="athena_client.client.transformers.ImageResizer">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ImageResizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/athena_client/client/transformers/image_resizer.html#ImageResizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#athena_client.client.transformers.ImageResizer" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#athena_client.client.transformers.async_transformer.AsyncTransformer" title="athena_client.client.transformers.async_transformer.AsyncTransformer"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncTransformer</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]</p>
-<p>Transform image bytes to ensure expected dimensions.</p>
+<dd><p>Bases: <a class="reference internal" href="#athena_client.client.transformers.async_transformer.AsyncTransformer" title="athena_client.client.transformers.async_transformer.AsyncTransformer"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncTransformer</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ImageData</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ImageData</span></code>]</p>
+<p>Transform ImageData to ensure expected dimensions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>source</strong> (<em>AsyncIterator</em><em>[</em><em>bytes</em><em>]</em>)</p>
+<dd class="field-odd"><p><strong>source</strong> (<em>AsyncIterator</em><em>[</em><em>ImageData</em><em>]</em>)</p>
 </dd>
 </dl>
 <dl class="py method">
@@ -370,7 +365,7 @@ specific functionality in the image processing pipeline.</p>
 <dd><p>Initialize with source iterator and optional size overrides.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>source</strong> (<em>AsyncIterator</em><em>[</em><em>bytes</em><em>]</em>) – Iterator yielding image bytes</p>
+<dd class="field-odd"><p><strong>source</strong> (<em>AsyncIterator</em><em>[</em><em>ImageData</em><em>]</em>) – Iterator yielding ImageData objects</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
@@ -381,13 +376,13 @@ specific functionality in the image processing pipeline.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="athena_client.client.transformers.ImageResizer.transform">
 <em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/athena_client/client/transformers/image_resizer.html#ImageResizer.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#athena_client.client.transformers.ImageResizer.transform" title="Link to this definition">¶</a></dt>
-<dd><p>Transform image bytes by resizing to expected dimensions.</p>
+<dd><p>Transform ImageData by resizing to expected dimensions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>data</strong> (<em>bytes</em>)</p>
+<dd class="field-odd"><p><strong>data</strong> (<em>ImageData</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>bytes</p>
+<dd class="field-even"><p><em>ImageData</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -404,8 +399,8 @@ specific functionality in the image processing pipeline.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="athena_client.client.transformers.BrotliCompressor">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BrotliCompressor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/athena_client/client/transformers/brotli_compressor.html#BrotliCompressor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#athena_client.client.transformers.BrotliCompressor" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#athena_client.client.transformers.async_transformer.AsyncTransformer" title="athena_client.client.transformers.async_transformer.AsyncTransformer"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncTransformer</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]</p>
-<p>Middleware for compressing bytes.</p>
+<dd><p>Bases: <a class="reference internal" href="#athena_client.client.transformers.async_transformer.AsyncTransformer" title="athena_client.client.transformers.async_transformer.AsyncTransformer"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncTransformer</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ImageData</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ImageData</span></code>]</p>
+<p>Middleware for compressing ImageData.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>source</strong> (<em>AsyncIterator</em><em>[</em><em>TInput</em><em>]</em>)</p>
@@ -414,16 +409,16 @@ specific functionality in the image processing pipeline.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="athena_client.client.transformers.BrotliCompressor.transform">
 <em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/athena_client/client/transformers/brotli_compressor.html#BrotliCompressor.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#athena_client.client.transformers.BrotliCompressor.transform" title="Link to this definition">¶</a></dt>
-<dd><p>Compress the image.</p>
+<dd><p>Compress the image bytes in ImageData.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>data</strong> (<em>bytes</em>) – The bytes to compress.</p>
+<dd class="field-odd"><p><strong>data</strong> (<em>ImageData</em>) – The ImageData containing bytes to compress.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The compressed bytes.</p>
+<dd class="field-even"><p>ImageData with compressed bytes but original hashes preserved.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bytes</p>
+<dd class="field-odd"><p><em>ImageData</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -439,9 +434,9 @@ specific functionality in the image processing pipeline.</p>
 <h3>RequestBatcher<a class="headerlink" href="#requestbatcher" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="athena_client.client.transformers.RequestBatcher">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RequestBatcher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deployment_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/athena_client/client/transformers/request_batcher.html#RequestBatcher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#athena_client.client.transformers.RequestBatcher" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RequestBatcher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deployment_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keepalive_interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/athena_client/client/transformers/request_batcher.html#RequestBatcher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#athena_client.client.transformers.RequestBatcher" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Batches ClassificationInputs into ClassifyRequests.</p>
+<p>Batches ClassificationInputs into ClassifyRequests with keepalive.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -449,12 +444,13 @@ specific functionality in the image processing pipeline.</p>
 <li><p><strong>deployment_id</strong> (<em>str</em>)</p></li>
 <li><p><strong>max_batch_size</strong> (<em>int</em>)</p></li>
 <li><p><strong>timeout</strong> (<em>float</em>)</p></li>
+<li><p><strong>keepalive_interval</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="athena_client.client.transformers.RequestBatcher.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deployment_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/athena_client/client/transformers/request_batcher.html#RequestBatcher.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#athena_client.client.transformers.RequestBatcher.__init__" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deployment_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keepalive_interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/athena_client/client/transformers/request_batcher.html#RequestBatcher.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#athena_client.client.transformers.RequestBatcher.__init__" title="Link to this definition">¶</a></dt>
 <dd><p>Initialize the batcher.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -463,12 +459,19 @@ specific functionality in the image processing pipeline.</p>
 <li><p><strong>deployment_id</strong> (<em>str</em>) – Deployment ID to use in requests</p></li>
 <li><p><strong>max_batch_size</strong> (<em>int</em>) – Maximum number of inputs per batch</p></li>
 <li><p><strong>timeout</strong> (<em>float</em>) – Max seconds to wait for additional items before batching</p></li>
+<li><p><strong>keepalive_interval</strong> (<em>float</em><em> | </em><em>None</em>) – Seconds between keepalive requests</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="athena_client.client.transformers.RequestBatcher.source_exhausted">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">source_exhausted</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#athena_client.client.transformers.RequestBatcher.source_exhausted" title="Link to this definition">¶</a></dt>
+<dd><p>Check if the input source is exhausted.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -533,8 +536,8 @@ specific functionality in the image processing pipeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>bytes</em>) – The input data to be transformed, typically</p></li>
-<li><p><strong>bytes.</strong> (<em>representing image</em>)</p></li>
+<li><p><strong>data</strong> (<em>TInput</em>) – The input data to be transformed, typically an ImageData</p></li>
+<li><p><strong>hashes.</strong> (<em>object containing image bytes and calculated</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -544,11 +547,11 @@ specific functionality in the image processing pipeline.</p>
 </dl>
 </p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>T</p>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>NotImplementedError</strong> – If the method is not implemented by a subclass.</p>
 </dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>NotImplementedError</strong> – If the method is not implemented by a subclass.</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>TOutput</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -556,7 +559,7 @@ specific functionality in the image processing pipeline.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="athena_client.client.transformers.async_transformer.AsyncTransformer.__anext__">
 <em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__anext__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/athena_client/client/transformers/async_transformer.html#AsyncTransformer.__anext__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#athena_client.client.transformers.async_transformer.AsyncTransformer.__anext__" title="Link to this definition">¶</a></dt>
-<dd><p>Get next transformed bytes.</p>
+<dd><p>Get next transformed data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>TOutput</em></p>
@@ -568,41 +571,6 @@ specific functionality in the image processing pipeline.</p>
 
 <p>Base class that all transformers inherit from, implementing the async iteration protocol.</p>
 </section>
-</section>
-<section id="usage-example">
-<h2>Usage Example<a class="headerlink" href="#usage-example" title="Link to this heading">¶</a></h2>
-<p>Here’s an example of how to use transformers in a pipeline:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">athena_client.client.transformers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">ImageResizer</span><span class="p">,</span>
-    <span class="n">BrotliCompressor</span><span class="p">,</span>
-    <span class="n">ClassificationInputTransformer</span>
-<span class="p">)</span>
-
-<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">process_images</span><span class="p">(</span><span class="n">image_bytes_iterator</span><span class="p">):</span>
-    <span class="c1"># Create processing pipeline</span>
-    <span class="n">resized</span> <span class="o">=</span> <span class="n">ImageResizer</span><span class="p">(</span>
-        <span class="n">source</span><span class="o">=</span><span class="n">image_bytes_iterator</span><span class="p">,</span>
-        <span class="n">target_size</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">)</span>
-    <span class="p">)</span>
-
-    <span class="n">compressed</span> <span class="o">=</span> <span class="n">BrotliCompressor</span><span class="p">(</span>
-        <span class="n">source</span><span class="o">=</span><span class="n">resized</span><span class="p">,</span>
-        <span class="n">quality</span><span class="o">=</span><span class="mi">4</span>
-    <span class="p">)</span>
-
-    <span class="n">classification_inputs</span> <span class="o">=</span> <span class="n">ClassificationInputTransformer</span><span class="p">(</span>
-        <span class="n">source</span><span class="o">=</span><span class="n">compressed</span><span class="p">,</span>
-        <span class="n">deployment_id</span><span class="o">=</span><span class="s2">&quot;model-v1&quot;</span><span class="p">,</span>
-        <span class="n">affiliate</span><span class="o">=</span><span class="s2">&quot;demo&quot;</span><span class="p">,</span>
-        <span class="n">request_encoding</span><span class="o">=</span><span class="n">RequestEncoding</span><span class="o">.</span><span class="n">BROTLI</span><span class="p">,</span>
-        <span class="n">correlation_provider</span><span class="o">=</span><span class="n">HashCorrelationProvider</span>
-    <span class="p">)</span>
-
-    <span class="c1"># Process images through the pipeline</span>
-    <span class="k">async</span> <span class="k">for</span> <span class="n">input_obj</span> <span class="ow">in</span> <span class="n">classification_inputs</span><span class="p">:</span>
-        <span class="k">yield</span> <span class="n">input_obj</span>
-</pre></div>
-</div>
 </section>
 </section>
 
@@ -695,6 +663,7 @@ specific functionality in the image processing pipeline.</p>
 <li><a class="reference internal" href="#requestbatcher">RequestBatcher</a><ul>
 <li><a class="reference internal" href="#athena_client.client.transformers.RequestBatcher"><code class="docutils literal notranslate"><span class="pre">RequestBatcher</span></code></a><ul>
 <li><a class="reference internal" href="#athena_client.client.transformers.RequestBatcher.__init__"><code class="docutils literal notranslate"><span class="pre">RequestBatcher.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#athena_client.client.transformers.RequestBatcher.source_exhausted"><code class="docutils literal notranslate"><span class="pre">RequestBatcher.source_exhausted</span></code></a></li>
 <li><a class="reference internal" href="#athena_client.client.transformers.RequestBatcher.__aiter__"><code class="docutils literal notranslate"><span class="pre">RequestBatcher.__aiter__()</span></code></a></li>
 <li><a class="reference internal" href="#athena_client.client.transformers.RequestBatcher.__anext__"><code class="docutils literal notranslate"><span class="pre">RequestBatcher.__anext__()</span></code></a></li>
 </ul>
@@ -715,7 +684,6 @@ specific functionality in the image processing pipeline.</p>
 </li>
 </ul>
 </li>
-<li><a class="reference internal" href="#usage-example">Usage Example</a></li>
 </ul>
 </li>
 </ul>

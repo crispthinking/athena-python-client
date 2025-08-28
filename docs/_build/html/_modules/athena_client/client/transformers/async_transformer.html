@@ -227,7 +227,6 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../quickstart.html">Quickstart Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../examples.html">Examples</a></li>
 </ul>
@@ -240,10 +239,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/grpc_wrappers.html">GRPC Wrappers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/deployment_selector.html">Deployment Selector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/correlation.html">Correlation System</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Development</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing Guide</a></li>
 </ul>
 
 </div>
@@ -312,11 +307,11 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Asynchronously transform a single chunk of input data.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            data (bytes): The input data to be transformed, typically</span>
-<span class="sd">            representing image bytes.</span>
+<span class="sd">            data: The input data to be transformed, typically an ImageData</span>
+<span class="sd">            object containing image bytes and calculated hashes.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            T: The transformed output, as defined by the subclass</span>
+<span class="sd">            The transformed output, as defined by the subclass</span>
 <span class="sd">                implementation.</span>
 
 <span class="sd">        Raises:</span>
@@ -330,7 +325,7 @@
 <div class="viewcode-block" id="AsyncTransformer.__anext__">
 <a class="viewcode-back" href="../../../../api/transformers.html#athena_client.client.transformers.async_transformer.AsyncTransformer.__anext__">[docs]</a>
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="fm">__anext__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TOutput</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get next transformed bytes.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get next transformed data.&quot;&quot;&quot;</span>
         <span class="n">data</span> <span class="o">=</span> <span class="k">await</span> <span class="n">anext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">)</span>
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
 </div>

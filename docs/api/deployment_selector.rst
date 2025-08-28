@@ -1,7 +1,9 @@
 Deployment Selector
 ==================
 
-The deployment selector provides functionality for discovering and selecting Athena service deployments. It abstracts the complexities of deployment management and provides a simple interface for listing and validating deployments.
+The deployment selector provides functionality for discovering and selecting
+Athena service deployments. It abstracts the complexities of deployment
+management and provides a simple interface for listing deployments.
 
 .. module:: athena_client.client.deployment_selector
 
@@ -13,7 +15,8 @@ The deployment selector provides functionality for discovering and selecting Ath
 Usage
 -------------------
 
-The deployment selector is typically used as an async context manager to ensure proper resource cleanup::
+The deployment selector is typically used as an async context manager to ensure
+proper resource cleanup::
 
     async with DeploymentSelector(channel) as selector:
         # List available deployments
@@ -27,16 +30,5 @@ The deployment selector is typically used as an async context manager to ensure 
 Best Practices
 --------------
 
-- Always use the deployment selector as an async context manager to ensure proper cleanup
+- Use the deployment selector as an async context manager to ensure proper cleanup
 - Cache deployment information when appropriate to reduce API calls
-- Validate deployment IDs before using them with the client
-- Handle deployment-related exceptions appropriately
-
-Error Handling
-----------------------
-
-The deployment selector may raise the following exceptions:
-
-- ``grpc.aio.AioRpcError``: For GRPC-level communication errors
-- ``ValueError``: For invalid deployment IDs or configurations
-- ``RuntimeError``: For unexpected state or implementation errors

@@ -227,7 +227,6 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../quickstart.html">Quickstart Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../examples.html">Examples</a></li>
 </ul>
@@ -240,10 +239,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/grpc_wrappers.html">GRPC Wrappers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/deployment_selector.html">Deployment Selector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/correlation.html">Correlation System</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Development</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing Guide</a></li>
 </ul>
 
 </div>
@@ -283,6 +278,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">brotli</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">athena_client.client.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">athena_client.client.transformers.async_transformer</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">AsyncTransformer</span><span class="p">,</span>
 <span class="p">)</span>
@@ -290,22 +286,26 @@
 
 <div class="viewcode-block" id="BrotliCompressor">
 <a class="viewcode-back" href="../../../../api/transformers.html#athena_client.client.transformers.BrotliCompressor">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">BrotliCompressor</span><span class="p">(</span><span class="n">AsyncTransformer</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Middleware for compressing bytes.&quot;&quot;&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BrotliCompressor</span><span class="p">(</span><span class="n">AsyncTransformer</span><span class="p">[</span><span class="n">ImageData</span><span class="p">,</span> <span class="n">ImageData</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Middleware for compressing ImageData.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="BrotliCompressor.transform">
 <a class="viewcode-back" href="../../../../api/transformers.html#athena_client.client.transformers.BrotliCompressor.transform">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compress the image.</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">ImageData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImageData</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compress the image bytes in ImageData.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            data: The bytes to compress.</span>
+<span class="sd">            data: The ImageData containing bytes to compress.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            The compressed bytes.</span>
+<span class="sd">            ImageData with compressed bytes but original hashes preserved.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">brotli</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
+        <span class="n">compressed_bytes</span> <span class="o">=</span> <span class="n">brotli</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="c1"># Modify existing ImageData with compressed bytes but preserve hashes</span>
+        <span class="c1"># since compression doesn&#39;t change image content</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">compressed_bytes</span>
+        <span class="k">return</span> <span class="n">data</span></div>
 </div>
 
 </pre></div>

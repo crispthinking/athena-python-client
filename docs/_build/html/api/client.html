@@ -228,7 +228,6 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
 </ul>
@@ -241,10 +240,6 @@
 <li class="toctree-l1"><a class="reference internal" href="grpc_wrappers.html">GRPC Wrappers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment_selector.html">Deployment Selector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="correlation.html">Correlation System</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Development</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing Guide</a></li>
 </ul>
 
 </div>
@@ -307,17 +302,6 @@ Athena service.</p>
 </ul>
 </dd>
 </dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="athena_client.client.athena_client.AthenaClient.options">
-<span class="sig-name descname"><span class="pre">options</span></span><a class="headerlink" href="#athena_client.client.athena_client.AthenaClient.options" title="Link to this definition">¶</a></dt>
-<dd><p>Configuration options for the Athena client.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="options.html#athena_client.client.athena_options.AthenaOptions" title="athena_client.client.athena_options.AthenaOptions">AthenaOptions</a></p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="athena_client.client.athena_client.AthenaClient.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">channel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/athena_client/client/athena_client.html#AthenaClient.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#athena_client.client.athena_client.AthenaClient.__init__" title="Link to this definition">¶</a></dt>
@@ -325,10 +309,8 @@ Athena service.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>channel</strong> (<em>grpc.aio.Channel</em>) – The gRPC channel to use for
-communication.</p></li>
-<li><p><strong>options</strong> (<a class="reference internal" href="options.html#athena_client.client.athena_options.AthenaOptions" title="athena_client.client.athena_options.AthenaOptions"><em>AthenaOptions</em></a>) – Configuration options for the
-Athena client.</p></li>
+<li><p><strong>channel</strong> (<em>Channel</em>) – The gRPC channel to use for communication.</p></li>
+<li><p><strong>options</strong> (<a class="reference internal" href="options.html#athena_client.client.athena_options.AthenaOptions" title="athena_client.client.athena_options.AthenaOptions"><em>AthenaOptions</em></a>) – Configuration options for the Athena client.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -340,29 +322,47 @@ Athena client.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="athena_client.client.athena_client.AthenaClient.classify_images">
 <em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">classify_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/athena_client/client/athena_client.html#AthenaClient.classify_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#athena_client.client.athena_client.AthenaClient.classify_images" title="Link to this definition">¶</a></dt>
-<dd><p>Classify an image using the Athena service.</p>
+<dd><p>Classify images using the Athena service.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>images</strong> (<em>AsyncIterator</em><em>[</em><em>Image</em><em>]</em>) – The images to classify in an
-asynchronous iterator.</p>
+<dd class="field-odd"><p><strong>images</strong> (<em>AsyncIterator</em><em>[</em><em>ImageData</em><em>]</em>) – An async iterator of ImageData objects containing image
+bytes and hash lists tracking transformations. Users must create
+ImageData objects from raw image bytes before passing to this
+method. The transformation pipeline will automatically track
+hash changes for operations that modify visual content (resize,
+format conversion) while preserving hashes for compression
+operations.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>An async iterator yielding</dt><dd><p>classification responses from the server.</p>
-</dd>
-</dl>
-</p>
+<dt class="field-even">Yields<span class="colon">:</span></dt>
+<dd class="field-even"><p>Classification responses from the service.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>AsyncIterator[ClassifyResponse]</p>
+<dd class="field-odd"><p><em>AsyncIterator</em>[<em>ClassifyResponse</em>]</p>
 </dd>
 </dl>
+<div class="admonition-example admonition">
+<p class="admonition-title">Example</p>
+<p># Create ImageData from raw bytes
+image_data = ImageData(image_bytes)
+print(f”Initial hashes: {len(image_data.sha256_hashes)}”)  # 1</p>
+<dl class="simple">
+<dt>async def image_stream():</dt><dd><p>yield image_data</p>
+</dd>
+<dt>async with AthenaClient(channel, options) as client:</dt><dd><dl class="simple">
+<dt>async for response in client.classify_images(image_stream()):</dt><dd><p># Process classification response
+# ImageData will have accumulated transformation hashes
+pass</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="athena_client.client.athena_client.AthenaClient.close">
 <em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/athena_client/client/athena_client.html#AthenaClient.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#athena_client.client.athena_client.AthenaClient.close" title="Link to this definition">¶</a></dt>
-<dd><p>Close the client and GRPC channel.</p>
+<dd><p>Close the client and gRPC channel.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None</p>
@@ -373,9 +373,7 @@ asynchronous iterator.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="athena_client.client.athena_client.AthenaClient.__aenter__">
 <em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__aenter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/athena_client/client/athena_client.html#AthenaClient.__aenter__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#athena_client.client.athena_client.AthenaClient.__aenter__" title="Link to this definition">¶</a></dt>
-<dd><p>Context manager entrypoint.</p>
-<p>Registers the client with the server by sending a
-classification request. With a deployment ID.</p>
+<dd><p>Context manager entry point.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#athena_client.client.athena_client.AthenaClient" title="athena_client.client.athena_client.AthenaClient"><em>AthenaClient</em></a></p>
@@ -386,7 +384,7 @@ classification request. With a deployment ID.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="athena_client.client.athena_client.AthenaClient.__aexit__">
 <em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__aexit__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exc_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exc_val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exc_tb</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/athena_client/client/athena_client.html#AthenaClient.__aexit__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#athena_client.client.athena_client.AthenaClient.__aexit__" title="Link to this definition">¶</a></dt>
-<dd><p>Context manager exit.</p>
+<dd><p>Context manager exit point.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -462,7 +460,6 @@ classification request. With a deployment ID.</p>
             <ul>
 <li><a class="reference internal" href="#">Client Interface</a><ul>
 <li><a class="reference internal" href="#athena_client.client.athena_client.AthenaClient"><code class="docutils literal notranslate"><span class="pre">AthenaClient</span></code></a><ul>
-<li><a class="reference internal" href="#athena_client.client.athena_client.AthenaClient.options"><code class="docutils literal notranslate"><span class="pre">AthenaClient.options</span></code></a></li>
 <li><a class="reference internal" href="#athena_client.client.athena_client.AthenaClient.__init__"><code class="docutils literal notranslate"><span class="pre">AthenaClient.__init__()</span></code></a></li>
 <li><a class="reference internal" href="#athena_client.client.athena_client.AthenaClient.classify_images"><code class="docutils literal notranslate"><span class="pre">AthenaClient.classify_images()</span></code></a></li>
 <li><a class="reference internal" href="#athena_client.client.athena_client.AthenaClient.close"><code class="docutils literal notranslate"><span class="pre">AthenaClient.close()</span></code></a></li>

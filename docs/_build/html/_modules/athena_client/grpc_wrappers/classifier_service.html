@@ -227,7 +227,6 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quickstart Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
 </ul>
@@ -240,10 +239,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../api/grpc_wrappers.html">GRPC Wrappers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api/deployment_selector.html">Deployment Selector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api/correlation.html">Correlation System</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Development</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing Guide</a></li>
 </ul>
 
 </div>
@@ -319,20 +314,28 @@
 <div class="viewcode-block" id="ClassifierServiceClient.classify">
 <a class="viewcode-back" href="../../../api/grpc_wrappers.html#athena_client.grpc_wrappers.classifier_service.ClassifierServiceClient.classify">[docs]</a>
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">classify</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">request_iter</span><span class="p">:</span> <span class="n">AsyncIterable</span><span class="p">[</span><span class="n">ClassifyRequest</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">request_iter</span><span class="p">:</span> <span class="n">AsyncIterable</span><span class="p">[</span><span class="n">ClassifyRequest</span><span class="p">],</span>
+        <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;StreamStreamCall[ClassifyRequest, ClassifyResponse]&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform image classification in a deployment-based streaming context.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            request_iter (AsyncIterable[ClassifyRequest]): An async</span>
-<span class="sd">            iterable of classify requests to be streamed to the server.</span>
+<span class="sd">                iterable of classify requests to be streamed to the server.</span>
+<span class="sd">            timeout (float | None): RPC timeout in seconds. None for no timeout.</span>
+<span class="sd">                The overall duration for receiving all responses.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            StreamStreamCall[ClassifyRequest, ClassifyResponse]: A gRPC stream</span>
 <span class="sd">            call object that can be used as an async iterator of responses.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stub</span><span class="o">.</span><span class="n">Classify</span><span class="p">(</span><span class="n">request_iter</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stub</span><span class="o">.</span><span class="n">Classify</span><span class="p">(</span>
+            <span class="n">request_iter</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+            <span class="n">wait_for_ready</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ClassifierServiceClient.list_deployments">

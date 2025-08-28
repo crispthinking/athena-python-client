@@ -227,7 +227,6 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../quickstart.html">Quickstart Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../examples.html">Examples</a></li>
 </ul>
@@ -240,10 +239,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/grpc_wrappers.html">GRPC Wrappers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/deployment_selector.html">Deployment Selector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/correlation.html">Correlation System</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Development</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing Guide</a></li>
 </ul>
 
 </div>
@@ -284,11 +279,13 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncIterator</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">athena_client.client.correlation</span><span class="w"> </span><span class="kn">import</span> <span class="n">CorrelationProvider</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">athena_client.client.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">athena_client.client.transformers.async_transformer</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">AsyncTransformer</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">athena_client.generated.athena.athena_pb2</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ClassificationInput</span><span class="p">,</span>
+    <span class="n">ImageFormat</span><span class="p">,</span>
     <span class="n">RequestEncoding</span><span class="p">,</span>
 <span class="p">)</span>
 
@@ -296,15 +293,15 @@
 <div class="viewcode-block" id="ClassificationInputTransformer">
 <a class="viewcode-back" href="../../../../api/transformers.html#athena_client.client.transformers.ClassificationInputTransformer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ClassificationInputTransformer</span><span class="p">(</span>
-    <span class="n">AsyncTransformer</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">ClassificationInput</span><span class="p">]</span>
+    <span class="n">AsyncTransformer</span><span class="p">[</span><span class="n">ImageData</span><span class="p">,</span> <span class="n">ClassificationInput</span><span class="p">]</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Transform image bytes into ClassifyRequests.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Transform ImageData into ClassifyRequests.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="ClassificationInputTransformer.__init__">
 <a class="viewcode-back" href="../../../../api/transformers.html#athena_client.client.transformers.ClassificationInputTransformer.__init__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">source</span><span class="p">:</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="nb">bytes</span><span class="p">],</span>
+        <span class="n">source</span><span class="p">:</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">ImageData</span><span class="p">],</span>
         <span class="n">deployment_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">affiliate</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">request_encoding</span><span class="p">:</span> <span class="n">RequestEncoding</span><span class="o">.</span><span class="n">ValueType</span><span class="p">,</span>
@@ -313,7 +310,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize with source iterator and request configuration.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            source: Image bytes source iterator</span>
+<span class="sd">            source: ImageData source iterator</span>
 <span class="sd">            deployment_id: Model deployment ID for classification</span>
 <span class="sd">            affiliate: Affiliate identifier</span>
 <span class="sd">            request_encoding: Compression type for image bytes</span>
@@ -328,22 +325,23 @@
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_create_classification_input</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">image_bytes</span><span class="p">:</span> <span class="nb">bytes</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">image_data</span><span class="p">:</span> <span class="n">ImageData</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClassificationInput</span><span class="p">:</span>
         <span class="c1"># Get image format and data</span>
         <span class="k">return</span> <span class="n">ClassificationInput</span><span class="p">(</span>
             <span class="n">affiliate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">affiliate</span><span class="p">,</span>
             <span class="n">correlation_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">correlation_provider</span><span class="o">.</span><span class="n">get_correlation_id</span><span class="p">(</span>
-                <span class="n">image_bytes</span>
+                <span class="n">image_data</span><span class="o">.</span><span class="n">data</span>
             <span class="p">),</span>
-            <span class="n">data</span><span class="o">=</span><span class="n">image_bytes</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">image_data</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
             <span class="n">encoding</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">request_encoding</span><span class="p">,</span>
+            <span class="nb">format</span><span class="o">=</span><span class="n">ImageFormat</span><span class="o">.</span><span class="n">IMAGE_FORMAT_JPEG</span><span class="p">,</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="ClassificationInputTransformer.transform">
 <a class="viewcode-back" href="../../../../api/transformers.html#athena_client.client.transformers.ClassificationInputTransformer.transform">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClassificationInput</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform image bytes into a ClassifyRequest.&quot;&quot;&quot;</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">ImageData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClassificationInput</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform ImageData into a ClassifyRequest.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_classification_input</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
 </div>
 

@@ -228,7 +228,6 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
 </ul>
@@ -241,10 +240,6 @@
 <li class="toctree-l1"><a class="reference internal" href="grpc_wrappers.html">GRPC Wrappers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment_selector.html">Deployment Selector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="correlation.html">Correlation System</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Development</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing Guide</a></li>
 </ul>
 
 </div>
@@ -294,7 +289,7 @@
 <p>The main configuration options for the Athena client.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="athena_client.client.athena_options.AthenaOptions">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AthenaOptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host='localhost'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize_images=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress_images=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deployment_id='default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affiliate='default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batch_size=100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correlation_provider=&lt;class</span> <span class="pre">'athena_client.client.correlation.HashCorrelationProvider'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/athena_client/client/athena_options.html#AthenaOptions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#athena_client.client.athena_options.AthenaOptions" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AthenaOptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host='localhost'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize_images=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convert_jpeg=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress_images=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deployment_id='default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affiliate='default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batch_size=100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correlation_provider=&lt;class</span> <span class="pre">'athena_client.client.correlation.HashCorrelationProvider'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout=120.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keepalive_interval=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/athena_client/client/athena_options.html#AthenaOptions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#athena_client.client.athena_options.AthenaOptions" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Options for configuring the Athena client behavior.</p>
 <p>This class provides configuration options for controlling how the client
@@ -304,11 +299,14 @@ connects to and interacts with the Athena service.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>host</strong> (<em>str</em>)</p></li>
 <li><p><strong>resize_images</strong> (<em>bool</em>)</p></li>
+<li><p><strong>convert_jpeg</strong> (<em>bool</em>)</p></li>
 <li><p><strong>compress_images</strong> (<em>bool</em>)</p></li>
 <li><p><strong>deployment_id</strong> (<em>str</em>)</p></li>
 <li><p><strong>affiliate</strong> (<em>str</em>)</p></li>
 <li><p><strong>max_batch_size</strong> (<em>int</em>)</p></li>
 <li><p><strong>correlation_provider</strong> (<em>type</em><em>[</em><a class="reference internal" href="correlation.html#athena_client.client.correlation.CorrelationProvider" title="athena_client.client.correlation.CorrelationProvider"><em>CorrelationProvider</em></a><em>]</em>)</p></li>
+<li><p><strong>timeout</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>keepalive_interval</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -330,6 +328,20 @@ Defaults to “localhost”.</p>
 <dd><p>Whether to automatically resize images before sending.
 When True, images will be resized to the optimal size for the model.
 Defaults to False.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="athena_client.client.athena_options.AthenaOptions.convert_jpeg">
+<span class="sig-name descname"><span class="pre">convert_jpeg</span></span><a class="headerlink" href="#athena_client.client.athena_options.AthenaOptions.convert_jpeg" title="Link to this definition">¶</a></dt>
+<dd><p>Whether to convert images to JPEG format before sending.
+When True, images will be converted to JPEG with quality=85.
+Enabling this ensures consistent image format and can reduce size.
+Defaults to True.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
@@ -404,6 +416,36 @@ Defaults to HashCorrelationProvider.</p>
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="athena_client.client.athena_options.AthenaOptions.timeout">
+<span class="sig-name descname"><span class="pre">timeout</span></span><a class="headerlink" href="#athena_client.client.athena_options.AthenaOptions.timeout" title="Link to this definition">¶</a></dt>
+<dd><p>Optional timeout in seconds for receiving responses.
+When None, allows infinite streaming with no timeout.
+When set to a float value, stream will stop after that many seconds
+without receiving a response.
+Defaults to 120.0 seconds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="athena_client.client.athena_options.AthenaOptions.keepalive_interval">
+<span class="sig-name descname"><span class="pre">keepalive_interval</span></span><a class="headerlink" href="#athena_client.client.athena_options.AthenaOptions.keepalive_interval" title="Link to this definition">¶</a></dt>
+<dd><p>Optional interval in seconds for sending keepalive
+requests to maintain stream connection. When None, uses a sensible
+default based on server configuration. When set to a float value,
+sends empty requests at this interval to prevent stream timeouts.
+Defaults to None (auto-detect).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="id0">
 <span class="sig-name descname"><span class="pre">host</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'localhost'</span></em><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -415,43 +457,61 @@ Defaults to HashCorrelationProvider.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id2">
-<span class="sig-name descname"><span class="pre">compress_images</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">convert_jpeg</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id3">
-<span class="sig-name descname"><span class="pre">deployment_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'default'</span></em><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">compress_images</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id4">
-<span class="sig-name descname"><span class="pre">affiliate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'default'</span></em><a class="headerlink" href="#id4" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">deployment_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'default'</span></em><a class="headerlink" href="#id4" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id5">
-<span class="sig-name descname"><span class="pre">max_batch_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">100</span></em><a class="headerlink" href="#id5" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">affiliate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'default'</span></em><a class="headerlink" href="#id5" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id6">
-<span class="sig-name descname"><span class="pre">correlation_provider</span></span><a class="headerlink" href="#id6" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">max_batch_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">100</span></em><a class="headerlink" href="#id6" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id7">
+<span class="sig-name descname"><span class="pre">correlation_provider</span></span><a class="headerlink" href="#id7" title="Link to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="correlation.html#athena_client.client.correlation.HashCorrelationProvider" title="athena_client.client.correlation.HashCorrelationProvider"><code class="xref py py-class docutils literal notranslate"><span class="pre">HashCorrelationProvider</span></code></a></p>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id8">
+<span class="sig-name descname"><span class="pre">timeout</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">120.0</span></em><a class="headerlink" href="#id8" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id9">
+<span class="sig-name descname"><span class="pre">keepalive_interval</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#id9" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="athena_client.client.athena_options.AthenaOptions.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host='localhost'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize_images=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress_images=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deployment_id='default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affiliate='default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batch_size=100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correlation_provider=&lt;class</span> <span class="pre">'athena_client.client.correlation.HashCorrelationProvider'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#athena_client.client.athena_options.AthenaOptions.__init__" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host='localhost'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize_images=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convert_jpeg=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress_images=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deployment_id='default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affiliate='default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batch_size=100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correlation_provider=&lt;class</span> <span class="pre">'athena_client.client.correlation.HashCorrelationProvider'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout=120.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keepalive_interval=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#athena_client.client.athena_options.AthenaOptions.__init__" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>host</strong> (<em>str</em>)</p></li>
 <li><p><strong>resize_images</strong> (<em>bool</em>)</p></li>
+<li><p><strong>convert_jpeg</strong> (<em>bool</em>)</p></li>
 <li><p><strong>compress_images</strong> (<em>bool</em>)</p></li>
 <li><p><strong>deployment_id</strong> (<em>str</em>)</p></li>
 <li><p><strong>affiliate</strong> (<em>str</em>)</p></li>
 <li><p><strong>max_batch_size</strong> (<em>int</em>)</p></li>
 <li><p><strong>correlation_provider</strong> (<em>type</em><em>[</em><a class="reference internal" href="correlation.html#athena_client.client.correlation.CorrelationProvider" title="athena_client.client.correlation.CorrelationProvider"><em>CorrelationProvider</em></a><em>]</em>)</p></li>
+<li><p><strong>timeout</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>keepalive_interval</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -523,18 +583,24 @@ Defaults to HashCorrelationProvider.</p>
 <li><a class="reference internal" href="#athena_client.client.athena_options.AthenaOptions"><code class="docutils literal notranslate"><span class="pre">AthenaOptions</span></code></a><ul>
 <li><a class="reference internal" href="#athena_client.client.athena_options.AthenaOptions.host"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.host</span></code></a></li>
 <li><a class="reference internal" href="#athena_client.client.athena_options.AthenaOptions.resize_images"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.resize_images</span></code></a></li>
+<li><a class="reference internal" href="#athena_client.client.athena_options.AthenaOptions.convert_jpeg"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.convert_jpeg</span></code></a></li>
 <li><a class="reference internal" href="#athena_client.client.athena_options.AthenaOptions.compress_images"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.compress_images</span></code></a></li>
 <li><a class="reference internal" href="#athena_client.client.athena_options.AthenaOptions.deployment_id"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.deployment_id</span></code></a></li>
 <li><a class="reference internal" href="#athena_client.client.athena_options.AthenaOptions.affiliate"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.affiliate</span></code></a></li>
 <li><a class="reference internal" href="#athena_client.client.athena_options.AthenaOptions.max_batch_size"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.max_batch_size</span></code></a></li>
 <li><a class="reference internal" href="#athena_client.client.athena_options.AthenaOptions.correlation_provider"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.correlation_provider</span></code></a></li>
+<li><a class="reference internal" href="#athena_client.client.athena_options.AthenaOptions.timeout"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.timeout</span></code></a></li>
+<li><a class="reference internal" href="#athena_client.client.athena_options.AthenaOptions.keepalive_interval"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.keepalive_interval</span></code></a></li>
 <li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.host</span></code></a></li>
 <li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.resize_images</span></code></a></li>
-<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.compress_images</span></code></a></li>
-<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.deployment_id</span></code></a></li>
-<li><a class="reference internal" href="#id4"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.affiliate</span></code></a></li>
-<li><a class="reference internal" href="#id5"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.max_batch_size</span></code></a></li>
-<li><a class="reference internal" href="#id6"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.correlation_provider</span></code></a></li>
+<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.convert_jpeg</span></code></a></li>
+<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.compress_images</span></code></a></li>
+<li><a class="reference internal" href="#id4"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.deployment_id</span></code></a></li>
+<li><a class="reference internal" href="#id5"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.affiliate</span></code></a></li>
+<li><a class="reference internal" href="#id6"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.max_batch_size</span></code></a></li>
+<li><a class="reference internal" href="#id7"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.correlation_provider</span></code></a></li>
+<li><a class="reference internal" href="#id8"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.timeout</span></code></a></li>
+<li><a class="reference internal" href="#id9"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.keepalive_interval</span></code></a></li>
 <li><a class="reference internal" href="#athena_client.client.athena_options.AthenaOptions.__init__"><code class="docutils literal notranslate"><span class="pre">AthenaOptions.__init__()</span></code></a></li>
 </ul>
 </li>

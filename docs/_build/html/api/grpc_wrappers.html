@@ -228,7 +228,6 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
 </ul>
@@ -241,10 +240,6 @@
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">GRPC Wrappers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment_selector.html">Deployment Selector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="correlation.html">Correlation System</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Development</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing Guide</a></li>
 </ul>
 
 </div>
@@ -291,19 +286,13 @@
         <article role="main" id="furo-main-content">
           <section id="grpc-wrappers">
 <h1>GRPC Wrappers<a class="headerlink" href="#grpc-wrappers" title="Link to this heading">¶</a></h1>
-<p>The GRPC wrappers module provides low-level components for interacting with the Athena service via GRPC.</p>
-<section id="channel-management">
-<span id="module-athena_client.grpc_wrappers"></span><h2>Channel Management<a class="headerlink" href="#channel-management" title="Link to this heading">¶</a></h2>
-<p>The Channel class manages GRPC channel lifecycle and configuration:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">with</span> <span class="n">Channel</span><span class="p">(</span><span class="n">endpoint</span><span class="p">)</span> <span class="k">as</span> <span class="n">channel</span><span class="p">:</span>
-    <span class="c1"># Channel is initialized and ready for use</span>
-    <span class="o">...</span>
-    <span class="c1"># Channel is automatically closed on context exit</span>
-</pre></div>
-</div>
-</section>
+<p>The GRPC wrappers module provides low-level components for interacting with the
+Athena service via GRPC. These are consumed by the higher-level clients, you
+should only use them directly if you are implementing a new client.</p>
+<p>// TODO – write GRPC docs.
+See the protobuf documentation for more information.</p>
 <section id="service-clients">
-<h2>Service Clients<a class="headerlink" href="#service-clients" title="Link to this heading">¶</a></h2>
+<span id="module-athena_client.grpc_wrappers"></span><h2>Service Clients<a class="headerlink" href="#service-clients" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="athena_client.grpc_wrappers.classifier_service.ClassifierServiceClient">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ClassifierServiceClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">channel</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/athena_client/grpc_wrappers/classifier_service.html#ClassifierServiceClient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#athena_client.grpc_wrappers.classifier_service.ClassifierServiceClient" title="Link to this definition">¶</a></dt>
@@ -333,13 +322,15 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="athena_client.grpc_wrappers.classifier_service.ClassifierServiceClient.classify">
-<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">classify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_iter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/athena_client/grpc_wrappers/classifier_service.html#ClassifierServiceClient.classify"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#athena_client.grpc_wrappers.classifier_service.ClassifierServiceClient.classify" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">classify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/athena_client/grpc_wrappers/classifier_service.html#ClassifierServiceClient.classify"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#athena_client.grpc_wrappers.classifier_service.ClassifierServiceClient.classify" title="Link to this definition">¶</a></dt>
 <dd><p>Perform image classification in a deployment-based streaming context.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>request_iter</strong> (<em>AsyncIterable</em><em>[</em><em>ClassifyRequest</em><em>]</em>) – An async</p></li>
-<li><p><strong>server.</strong> (<em>iterable</em><em> of </em><em>classify requests to be streamed to the</em>)</p></li>
+<li><p><strong>request_iter</strong> (<em>AsyncIterable</em><em>[</em><em>ClassifyRequest</em><em>]</em>) – An async
+iterable of classify requests to be streamed to the server.</p></li>
+<li><p><strong>timeout</strong> (<em>float</em><em> | </em><em>None</em>) – RPC timeout in seconds. None for no timeout.
+The overall duration for receiving all responses.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -371,51 +362,8 @@ deployments response.</p>
 
 <p>The ClassifierServiceClient provides direct access to Athena service methods:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">client</span> <span class="o">=</span> <span class="n">ClassifierServiceClient</span><span class="p">(</span><span class="n">channel</span><span class="p">)</span>
-<span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">classify</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="error-handling">
-<h2>Error Handling<a class="headerlink" href="#error-handling" title="Link to this heading">¶</a></h2>
-<p>GRPC wrappers may raise the following exceptions:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">grpc.aio.AioRpcError</span></code>: For GRPC-level communication errors</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ValueError</span></code>: For invalid configurations or parameters</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code>: For unexpected states or implementation errors</p></li>
-</ul>
-<p>All GRPC errors include:</p>
-<ul class="simple">
-<li><p>Status codes indicating the type of failure</p></li>
-<li><p>Detailed error messages</p></li>
-<li><p>Metadata about the failed request</p></li>
-</ul>
-</section>
-<section id="best-practices">
-<h2>Best Practices<a class="headerlink" href="#best-practices" title="Link to this heading">¶</a></h2>
-<p>When using GRPC wrappers:</p>
-<ul class="simple">
-<li><p>Always use channels with async context managers</p></li>
-<li><p>Handle GRPC errors appropriately</p></li>
-<li><p>Monitor channel health and connectivity</p></li>
-<li><p>Configure appropriate timeouts and retries</p></li>
-<li><p>Use proper error handling and logging</p></li>
-</ul>
-</section>
-<section id="protocol-buffers">
-<h2>Protocol Buffers<a class="headerlink" href="#protocol-buffers" title="Link to this heading">¶</a></h2>
-<p>The module integrates with generated protocol buffer code:</p>
-<ul class="simple">
-<li><p>Request and response message types</p></li>
-<li><p>Service definitions and stubs</p></li>
-<li><p>Enumeration types and constants</p></li>
-</ul>
-<p>For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">athena_client.generated.athena</span><span class="w"> </span><span class="kn">import</span> <span class="n">athena_pb2</span>
-
-<span class="n">request</span> <span class="o">=</span> <span class="n">athena_pb2</span><span class="o">.</span><span class="n">ClassifyRequest</span><span class="p">(</span>
-    <span class="n">deployment_id</span><span class="o">=</span><span class="s2">&quot;my-deployment&quot;</span><span class="p">,</span>
-    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="o">...</span><span class="p">],</span>
-<span class="p">)</span>
+<span class="n">deployment_response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">get_deployment</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+<span class="n">classify_response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">classify</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -477,7 +425,6 @@ deployments response.</p>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">GRPC Wrappers</a><ul>
-<li><a class="reference internal" href="#channel-management">Channel Management</a></li>
 <li><a class="reference internal" href="#service-clients">Service Clients</a><ul>
 <li><a class="reference internal" href="#athena_client.grpc_wrappers.classifier_service.ClassifierServiceClient"><code class="docutils literal notranslate"><span class="pre">ClassifierServiceClient</span></code></a><ul>
 <li><a class="reference internal" href="#athena_client.grpc_wrappers.classifier_service.ClassifierServiceClient.__init__"><code class="docutils literal notranslate"><span class="pre">ClassifierServiceClient.__init__()</span></code></a></li>
@@ -487,9 +434,6 @@ deployments response.</p>
 </li>
 </ul>
 </li>
-<li><a class="reference internal" href="#error-handling">Error Handling</a></li>
-<li><a class="reference internal" href="#best-practices">Best Practices</a></li>
-<li><a class="reference internal" href="#protocol-buffers">Protocol Buffers</a></li>
 </ul>
 </li>
 </ul>

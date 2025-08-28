@@ -227,7 +227,6 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quickstart Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
 </ul>
@@ -240,10 +239,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../api/grpc_wrappers.html">GRPC Wrappers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api/deployment_selector.html">Deployment Selector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api/correlation.html">Correlation System</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Development</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing Guide</a></li>
 </ul>
 
 </div>
@@ -281,6 +276,8 @@
           <h1>Source code for athena_client.client.athena_client</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;The Athena Client Class.&quot;&quot;&quot;</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">types</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncIterator</span>
 
@@ -288,14 +285,13 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">athena_client.client.athena_options</span><span class="w"> </span><span class="kn">import</span> <span class="n">AthenaOptions</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">athena_client.client.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">AthenaError</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">athena_client.client.transformers.brotli_compressor</span><span class="w"> </span><span class="kn">import</span> <span class="n">BrotliCompressor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">athena_client.client.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">athena_client.client.transformers.classification_input</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ClassificationInputTransformer</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">athena_client.client.transformers.image_resizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageResizer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">athena_client.client.transformers.jpeg_converter</span><span class="w"> </span><span class="kn">import</span> <span class="n">JpegConverter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">athena_client.client.transformers.request_batcher</span><span class="w"> </span><span class="kn">import</span> <span class="n">RequestBatcher</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">athena_client.generated.athena.athena_pb2</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">ClassifyRequest</span><span class="p">,</span>
     <span class="n">ClassifyResponse</span><span class="p">,</span>
     <span class="n">RequestEncoding</span><span class="p">,</span>
 <span class="p">)</span>
@@ -311,10 +307,6 @@
 
 <span class="sd">    This class provides coroutine methods for interacting with the</span>
 <span class="sd">    Athena service.</span>
-
-<span class="sd">    Attributes:</span>
-<span class="sd">        options (AthenaOptions): Configuration options for the Athena client.</span>
-
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="AthenaClient.__init__">
@@ -325,80 +317,173 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the Athena Client.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            channel (grpc.aio.Channel): The gRPC channel to use for</span>
-<span class="sd">                communication.</span>
-<span class="sd">            options (AthenaOptions): Configuration options for the</span>
-<span class="sd">                Athena client.</span>
+<span class="sd">            channel: The gRPC channel to use for communication.</span>
+<span class="sd">            options: Configuration options for the Athena client.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="n">options</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">channel</span> <span class="o">=</span> <span class="n">channel</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">ClassifierServiceClient</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channel</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">deployment_id</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">deployment_id</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">max_batch_size</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">max_batch_size</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">ClassifierServiceClient</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channel</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="AthenaClient.classify_images">
 <a class="viewcode-back" href="../../../api/client.html#athena_client.client.athena_client.AthenaClient.classify_images">[docs]</a>
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">classify_images</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">:</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">:</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">ImageData</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">ClassifyResponse</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Classify an image using the Athena service.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Classify images using the Athena service.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            images (AsyncIterator[Image]): The images to classify in an</span>
-<span class="sd">                asynchronous iterator.</span>
+<span class="sd">            images: An async iterator of ImageData objects containing image</span>
+<span class="sd">                bytes and hash lists tracking transformations. Users must create</span>
+<span class="sd">                ImageData objects from raw image bytes before passing to this</span>
+<span class="sd">                method. The transformation pipeline will automatically track</span>
+<span class="sd">                hash changes for operations that modify visual content (resize,</span>
+<span class="sd">                format conversion) while preserving hashes for compression</span>
+<span class="sd">                operations.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            AsyncIterator[ClassifyResponse]: An async iterator yielding</span>
-<span class="sd">                classification responses from the server.</span>
+<span class="sd">        Yields:</span>
+<span class="sd">            Classification responses from the service.</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            # Create ImageData from raw bytes</span>
+<span class="sd">            image_data = ImageData(image_bytes)</span>
+<span class="sd">            print(f&quot;Initial hashes: {len(image_data.sha256_hashes)}&quot;)  # 1</span>
+
+<span class="sd">            async def image_stream():</span>
+<span class="sd">                yield image_data</span>
+
+<span class="sd">            async with AthenaClient(channel, options) as client:</span>
+<span class="sd">                async for response in client.classify_images(image_stream()):</span>
+<span class="sd">                    # Process classification response</span>
+<span class="sd">                    # ImageData will have accumulated transformation hashes</span>
+<span class="sd">                    pass</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Build middleware pipeline</span>
+        <span class="n">request_batcher</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_request_pipeline</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_running_loop</span><span class="p">()</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Starting persistent classification with max timeout: </span><span class="si">%.1f</span><span class="s2">s&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">timeout</span> <span class="ow">or</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Single persistent stream with keepalives</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">async</span> <span class="k">for</span> <span class="n">response</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_persistent_stream</span><span class="p">(</span>
+                <span class="n">request_batcher</span><span class="p">,</span> <span class="n">start_time</span>
+            <span class="p">):</span>
+                <span class="k">yield</span> <span class="n">response</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="c1"># Log final stats</span>
+            <span class="n">total_duration</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_running_loop</span><span class="p">()</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Classification completed after </span><span class="si">%.1f</span><span class="s2">s&quot;</span><span class="p">,</span>
+                <span class="n">total_duration</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_request_pipeline</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">:</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">ImageData</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RequestBatcher</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create the request processing pipeline.&quot;&quot;&quot;</span>
         <span class="n">image_stream</span> <span class="o">=</span> <span class="n">images</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">resize_images</span><span class="p">:</span>
-            <span class="n">image_stream</span> <span class="o">=</span> <span class="n">ImageResizer</span><span class="p">(</span><span class="n">image_stream</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">compress_images</span><span class="p">:</span>
-            <span class="n">image_stream</span> <span class="o">=</span> <span class="n">BrotliCompressor</span><span class="p">(</span><span class="n">image_stream</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">convert_jpeg</span><span class="p">:</span>
+            <span class="n">image_stream</span> <span class="o">=</span> <span class="n">JpegConverter</span><span class="p">(</span><span class="n">image_stream</span><span class="p">)</span>
 
         <span class="n">input_transformer</span> <span class="o">=</span> <span class="n">ClassificationInputTransformer</span><span class="p">(</span>
             <span class="n">image_stream</span><span class="p">,</span>
             <span class="n">deployment_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">deployment_id</span><span class="p">,</span>
             <span class="n">affiliate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">affiliate</span><span class="p">,</span>
-            <span class="n">request_encoding</span><span class="o">=</span><span class="n">RequestEncoding</span><span class="o">.</span><span class="n">REQUEST_ENCODING_BROTLI</span><span class="p">,</span>
+            <span class="n">request_encoding</span><span class="o">=</span><span class="n">RequestEncoding</span><span class="o">.</span><span class="n">REQUEST_ENCODING_UNCOMPRESSED</span><span class="p">,</span>
             <span class="n">correlation_provider</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">correlation_provider</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">request_batcher</span> <span class="o">=</span> <span class="n">RequestBatcher</span><span class="p">(</span>
+        <span class="k">return</span> <span class="n">RequestBatcher</span><span class="p">(</span>
             <span class="n">input_transformer</span><span class="p">,</span>
-            <span class="n">deployment_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">deployment_id</span><span class="p">,</span>
-            <span class="n">max_batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_batch_size</span><span class="p">,</span>
+            <span class="n">deployment_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">deployment_id</span><span class="p">,</span>
+            <span class="n">max_batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">max_batch_size</span><span class="p">,</span>
+            <span class="n">keepalive_interval</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">keepalive_interval</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="c1"># Stream responses directly from the classifier</span>
-        <span class="k">async</span> <span class="k">for</span> <span class="n">response</span> <span class="ow">in</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span><span class="o">.</span><span class="n">classify</span><span class="p">(</span><span class="n">request_batcher</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">global_error</span> <span class="ow">and</span> <span class="n">response</span><span class="o">.</span><span class="n">global_error</span><span class="o">.</span><span class="n">message</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">AthenaError</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">global_error</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
-            <span class="k">yield</span> <span class="n">response</span></div>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_process_persistent_stream</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">request_batcher</span><span class="p">:</span> <span class="n">RequestBatcher</span><span class="p">,</span>
+        <span class="n">start_time</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">ClassifyResponse</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process a persistent gRPC stream with keepalives.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;Starting persistent stream (max duration: </span><span class="si">%.1f</span><span class="s2">s)&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">timeout</span> <span class="ow">or</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
 
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Never apply timeout at gRPC level - handle timeout logic ourselves</span>
+            <span class="n">response_stream</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span><span class="o">.</span><span class="n">classify</span><span class="p">(</span>
+                <span class="n">request_batcher</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span>
+            <span class="p">)</span>
+
+            <span class="n">last_response_time</span> <span class="o">=</span> <span class="n">start_time</span>
+
+            <span class="k">async</span> <span class="k">for</span> <span class="n">response</span> <span class="ow">in</span> <span class="n">response_stream</span><span class="p">:</span>
+                <span class="n">current_time</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_running_loop</span><span class="p">()</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+                <span class="c1"># Only check timeout if input source is still active</span>
+                <span class="c1"># Timeout is based on time since last response, not total time</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="ow">not</span> <span class="n">request_batcher</span><span class="o">.</span><span class="n">source_exhausted</span>
+                    <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">timeout</span>
+                    <span class="ow">and</span> <span class="p">(</span><span class="n">current_time</span> <span class="o">-</span> <span class="n">last_response_time</span><span class="p">)</span>
+                    <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">timeout</span>
+                <span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                        <span class="s2">&quot;No response received for </span><span class="si">%.1f</span><span class="s2">s while input active, &quot;</span>
+                        <span class="s2">&quot;ending stream&quot;</span><span class="p">,</span>
+                        <span class="n">current_time</span> <span class="o">-</span> <span class="n">last_response_time</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">return</span>
+
+                <span class="c1"># Update last response time</span>
+                <span class="n">last_response_time</span> <span class="o">=</span> <span class="n">current_time</span>
+
+                <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">global_error</span> <span class="ow">and</span> <span class="n">response</span><span class="o">.</span><span class="n">global_error</span><span class="o">.</span><span class="n">message</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">AthenaError</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">global_error</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+
+                <span class="k">yield</span> <span class="n">response</span>
+
+        <span class="k">except</span> <span class="n">grpc</span><span class="o">.</span><span class="n">aio</span><span class="o">.</span><span class="n">AioRpcError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">elapsed</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_running_loop</span><span class="p">()</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;Persistent stream ended after </span><span class="si">%.1f</span><span class="s2">s (</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span>
+                <span class="n">elapsed</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_get_error_code_name</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="c1"># Let the stream end naturally - no restarts for persistent streams</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_error_code_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error</span><span class="p">:</span> <span class="n">grpc</span><span class="o">.</span><span class="n">aio</span><span class="o">.</span><span class="n">AioRpcError</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get error code name safely.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">error</span><span class="o">.</span><span class="n">code</span><span class="p">()</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;UNKNOWN&quot;</span>
 
 <div class="viewcode-block" id="AthenaClient.close">
 <a class="viewcode-back" href="../../../api/client.html#athena_client.client.athena_client.AthenaClient.close">[docs]</a>
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Close the client and GRPC channel.&quot;&quot;&quot;</span>
-        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Close the client and gRPC channel.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">grpc</span><span class="o">.</span><span class="n">aio</span><span class="o">.</span><span class="n">AioRpcError</span><span class="p">,</span> <span class="ne">ConnectionError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Error closing channel: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="AthenaClient.__aenter__">
 <a class="viewcode-back" href="../../../api/client.html#athena_client.client.athena_client.AthenaClient.__aenter__">[docs]</a>
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="fm">__aenter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;AthenaClient&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Context manager entrypoint.</span>
-
-<span class="sd">        Registers the client with the server by sending a</span>
-<span class="sd">        classification request. With a deployment ID.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Context manager entry point.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
 
@@ -410,15 +495,9 @@
         <span class="n">exc_val</span><span class="p">:</span> <span class="ne">BaseException</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">exc_tb</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">TracebackType</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Context manager exit.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Context manager exit point.&quot;&quot;&quot;</span>
         <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
-
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_init_request_generator</span><span class="p">(</span>
-        <span class="n">deployment_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">ClassifyRequest</span><span class="p">]:</span>
-        <span class="k">yield</span> <span class="n">ClassifyRequest</span><span class="p">(</span><span class="n">deployment_id</span><span class="o">=</span><span class="n">deployment_id</span><span class="p">)</span></div>
+</div>
 
 </pre></div>
         </article>
