@@ -33,12 +33,10 @@ class JpegConverter(AsyncTransformer[ImageData, ImageData]):
         optimize: Whether to optimize the JPEG output (default True)
 
     Example:
-        ```python
         async with Client() as client:
             pipeline = JpegConverter(client.process_images())
             async for jpeg_bytes in pipeline:
                 print(f"Processed JPEG image: {len(jpeg_bytes)} bytes")
-        ```
 
     """
 
