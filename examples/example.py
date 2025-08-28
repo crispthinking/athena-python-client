@@ -134,7 +134,7 @@ async def main() -> int:
     load_dotenv()
 
     # Configuration
-    max_test_images = 100
+    max_test_images = None
 
     # OAuth credentials from environment
     client_id = os.getenv("OAUTH_CLIENT_ID")
@@ -188,7 +188,7 @@ async def main() -> int:
         compress_images=True,
         timeout=120.0,  # Maximum duration, not forced timeout
         keepalive_interval=30.0,  # Longer intervals for persistent streams
-        affiliate="crisp",
+        affiliate="test-affiliate",
     )
 
     sent, received = await run_oauth_example(
@@ -204,7 +204,7 @@ async def main() -> int:
 
 if __name__ == "__main__":
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         format="%(asctime)s.%(msecs)03d %(levelname)s: %(message)s",
         datefmt="%H:%M:%S",
     )

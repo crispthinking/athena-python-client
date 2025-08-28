@@ -1,83 +1,167 @@
-"""Random image creation utilities."""
+"""Ultra-fast random image creation utilities for maximum throughput."""
 
 import io
-import secrets
+import random
 from collections.abc import AsyncIterator
 
 from PIL import Image, ImageDraw
 
 from athena_client.client.models import ImageData
 
+# Global cache for reusable objects and constants
+_MAX_BUFFER_POOL_SIZE = 10
+_image_cache = {}
+_buffer_pool = []
+_rng = random.Random()  # noqa: S311 - Not used for cryptographic purposes
 
-def create_random_image(width: int = 640, height: int = 480) -> bytes:
-    """Create a random test image with random shapes and colors.
+
+def _get_buffer() -> io.BytesIO:
+    """Get a reusable BytesIO buffer from pool."""
+    if _buffer_pool:
+        buffer = _buffer_pool.pop()
+        buffer.seek(0)
+        buffer.truncate(0)
+        return buffer
+    return io.BytesIO()
+
+
+def _return_buffer(buffer: io.BytesIO) -> None:
+    """Return buffer to pool for reuse."""
+    if len(_buffer_pool) < _MAX_BUFFER_POOL_SIZE:
+        _buffer_pool.append(buffer)
+
+
+def _get_cached_image(
+    width: int, height: int
+) -> tuple[Image.Image, ImageDraw.ImageDraw]:
+    """Get cached image and draw objects, creating if needed."""
+    key = (width, height)
+    if key not in _image_cache:
+        img = Image.new("RGB", (width, height), (0, 0, 0))
+        draw = ImageDraw.Draw(img)
+        _image_cache[key] = (img, draw)
+    return _image_cache[key]
+
+
+def create_random_image(width: int = 160, height: int = 120) -> bytes:
+    """Create a minimal random image optimized for maximum speed.
 
     Args:
-        width: Width of the test image in pixels
-        height: Height of the test image in pixels
+        width: Width of the test image in pixels (default: 160)
+        height: Height of the test image in pixels (default: 120)
 
     Returns:
         JPEG image bytes
 
     """
-    # Create a new image with random background color
-    image = Image.new(
-        "RGB",
-        (width, height),
-        (
-            secrets.randbits(8),
-            secrets.randbits(8),
-            secrets.randbits(8),
-        ),
+    # Get cached image and draw objects
+    image, draw = _get_cached_image(width, height)
+
+    # Random background color
+    bg_r, bg_g, bg_b = (
+        _rng.randint(0, 255),
+        _rng.randint(0, 255),
+        _rng.randint(0, 255),
     )
 
-    draw = ImageDraw.Draw(image)
+    # Fill with background color
+    draw.rectangle([0, 0, width, height], fill=(bg_r, bg_g, bg_b))
 
-    # Draw some random shapes
-    for _ in range(3):
-        # Random coordinates
-        x0 = secrets.randbelow(width)
-        y0 = secrets.randbelow(height)
-        x1 = secrets.randbelow(width)
-        y1 = secrets.randbelow(height)
+    # Add single accent rectangle for visual variation
+    accent_color = (255 - bg_r, 255 - bg_g, 255 - bg_b)
+    x1, y1 = width // 4, height // 4
+    x2, y2 = (width * 3) // 4, (height * 3) // 4
+    draw.rectangle([x1, y1, x2, y2], fill=accent_color)
 
-        # Random color
-        color = (
-            secrets.randbits(8),
-            secrets.randbits(8),
-            secrets.randbits(8),
-        )
+    # Fast JPEG encoding
+    buffer = _get_buffer()
+    try:
+        image.save(buffer, format="JPEG", quality=50, optimize=False)
+        return buffer.getvalue()
+    finally:
+        _return_buffer(buffer)
 
-        draw.rectangle(
-            [min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1)], fill=color
-        )
 
-    # Convert to JPEG bytes
-    img_byte_arr = io.BytesIO()
-    image.save(img_byte_arr, format="JPEG")
-    return img_byte_arr.getvalue()
+def create_batch_images(
+    count: int, width: int = 160, height: int = 120
+) -> list[bytes]:
+    """Create multiple images in a batch for maximum efficiency.
+
+    Args:
+        count: Number of images to generate
+        width: Width of the test images in pixels
+        height: Height of the test images in pixels
+
+    Returns:
+        List of JPEG image bytes
+
+    """
+    images = []
+    image, draw = _get_cached_image(width, height)
+    buffer = _get_buffer()
+
+    # Pre-calculate accent rectangle coordinates
+    x1, y1 = width // 4, height // 4
+    x2, y2 = (width * 3) // 4, (height * 3) // 4
+
+    try:
+        for _ in range(count):
+            # Random background
+            bg_r, bg_g, bg_b = (
+                _rng.randint(0, 255),
+                _rng.randint(0, 255),
+                _rng.randint(0, 255),
+            )
+            draw.rectangle([0, 0, width, height], fill=(bg_r, bg_g, bg_b))
+
+            # Complement accent color
+            accent_color = (255 - bg_r, 255 - bg_g, 255 - bg_b)
+            draw.rectangle([x1, y1, x2, y2], fill=accent_color)
+
+            # Fast encoding
+            buffer.seek(0)
+            buffer.truncate(0)
+            image.save(buffer, format="JPEG", quality=50, optimize=False)
+            images.append(buffer.getvalue())
+    finally:
+        _return_buffer(buffer)
+
+    return images
 
 
 async def iter_images(
-    max_images: int | None = None, counter: list[int] | None = None
+    max_images: int | None = None,
+    counter: list[int] | None = None,
 ) -> AsyncIterator[ImageData]:
-    """Generate random test images.
+    """Generate random test images with maximum throughput optimization.
 
     Args:
         max_images: Maximum number of images to generate. If None, generates
             infinitely.
         counter: Optional list with single integer to track number of images
             sent.
-            The first element will be incremented for each image generated.
 
     Yields:
         ImageData objects containing JPEG image bytes with random content
 
     """
     count = 0
+    batch_size = 100  # Large batches for maximum efficiency
+
     while max_images is None or count < max_images:
-        img = create_random_image()
-        if counter is not None:
-            counter[0] = counter[0] + 1
-        yield ImageData(img)
-        count += 1
+        # Calculate batch size for this iteration
+        if max_images is not None:
+            remaining = max_images - count
+            current_batch_size = min(batch_size, remaining)
+        else:
+            current_batch_size = batch_size
+
+        # Generate batch of images
+        images = create_batch_images(current_batch_size, 160, 120)
+
+        # Yield each image
+        for img_bytes in images:
+            if counter is not None:
+                counter[0] += 1
+            yield ImageData(img_bytes)
+            count += 1
