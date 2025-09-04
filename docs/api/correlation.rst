@@ -8,20 +8,22 @@ deduplication, and logging correlation across the service.
 .. module:: athena_client.client.correlation
 
 Correlation Providers
--------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: CorrelationProvider
    :members:
    :special-members: __init__
    :show-inheritance:
+   :no-index:
 
 .. autoclass:: HashCorrelationProvider
    :members:
    :special-members: __init__
    :show-inheritance:
+   :no-index:
 
 Usage
-----------------
+~~~~~
 
 The correlation system is used internally by the client but can also be used directly::
 
@@ -34,7 +36,7 @@ The correlation system is used internally by the client but can also be used dir
         results = await client.classify_images(...)
 
 Best Practices
--------------
+~~~~~~~~~~~~~~
 
 - Use a consistent correlation provider across related operations
 - Consider data privacy when selecting correlation strategies
@@ -42,7 +44,7 @@ Best Practices
 - Implement custom providers for specific needs
 
 Custom Providers
---------------
+~~~~~~~~~~~~~~~~
 
 You can implement custom correlation providers by subclassing CorrelationProvider::
 
@@ -52,7 +54,7 @@ You can implement custom correlation providers by subclassing CorrelationProvide
             return f"{time.time_ns()}-{hash(input_data)}"
 
 Security Considerations
----------------------
+~~~~~~~~~~~~~~~~~~~~~~~
 
 When implementing correlation systems:
 

@@ -10,7 +10,6 @@ from grpc.aio import Channel
 
 from athena_client.client.exceptions import (
     CredentialError,
-    InvalidAuthError,
     InvalidHostError,
     OAuthError,
 )
@@ -187,64 +186,6 @@ class CredentialHelper:
         async with self._lock:
             self._token = None
             self._token_expires_at = None
-
-
-def create_channel(host: str, auth_token: str) -> Channel:
-    """Create a gRPC channel with optional authentication.
-
-    Args:
-        host: The host address to connect to
-        auth_token: Optional authentication token. If provided, creates a secure
-            channel with token-based authentication. If not provided, creates an
-            insecure channel.
-
-    Returns:
-        A gRPC channel (either secure or insecure)
-
-    Raises:
-        InvalidHostError: If host is empty
-        InvalidAuthError: If auth_token is empty
-
-    """
-    if not host:
-        raise InvalidHostError(InvalidHostError.default_message)
-    if not auth_token:
-        raise InvalidAuthError(InvalidAuthError.default_message)
-
-    # Create credentials with token authentication
-    credentials = grpc.composite_channel_credentials(
-        grpc.ssl_channel_credentials(),
-        grpc.access_token_call_credentials(auth_token),
-    )
-
-    # Configure gRPC options for persistent connections
-    options = [
-        # Keep connections alive longer
-        ("grpc.keepalive_time_ms", 60000),  # Send keepalive every 60s
-        ("grpc.keepalive_timeout_ms", 30000),  # Wait 30s for keepalive ack
-        (
-            "grpc.keepalive_permit_without_calls",
-            1,
-        ),  # Allow keepalive when idle
-        # Optimize for persistent streams
-        ("grpc.http2.max_pings_without_data", 0),  # Allow unlimited pings
-        (
-            "grpc.http2.min_time_between_pings_ms",
-            60000,
-        ),  # Min 60s between pings
-        (
-            "grpc.http2.min_ping_interval_without_data_ms",
-            30000,
-        ),  # Min 30s when idle
-        # Increase buffer sizes for better performance
-        ("grpc.http2.write_buffer_size", 1024 * 1024),  # 1MB write buffer
-        (
-            "grpc.max_receive_message_length",
-            64 * 1024 * 1024,
-        ),  # 64MB max message
-    ]
-
-    return grpc.aio.secure_channel(host, credentials, options=options)
 
 
 async def create_channel_with_credentials(

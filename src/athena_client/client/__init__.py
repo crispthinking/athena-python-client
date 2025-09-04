@@ -5,7 +5,6 @@ This module provides a client for interacting with the Athena API.
 
 from athena_client.client.channel import (
     CredentialHelper,
-    create_channel,
     create_channel_with_credentials,
 )
 from athena_client.client.exceptions import (
@@ -28,7 +27,6 @@ __all__ = [
     "CredentialHelper",
     "OAuthError",
     "TokenExpiredError",
-    "create_channel",
     "create_channel_with_credentials",
     "get_output_error_summary",
     "get_successful_outputs",

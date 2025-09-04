@@ -62,6 +62,21 @@ class RequestBatcher:
 
         # Build batch
         await self._ensure_batch_has_items()
+
+        # If source is exhausted and no batch items, wait for keepalive interval
+        if self._source_exhausted and not self._batch:
+            # Sleep until next keepalive time
+            time_to_next_keepalive = self.keepalive_interval - (
+                current_time - self._last_send_time
+            )
+            if time_to_next_keepalive > 0:
+                await asyncio.sleep(time_to_next_keepalive)
+
+            self.logger.info(
+                "Source exhausted, sending keepalive to maintain stream"
+            )
+            return self._create_keepalive_request(time.time())
+
         await self._fill_batch()
 
         self._last_send_time = current_time
@@ -81,12 +96,12 @@ class RequestBatcher:
         self._last_send_time = current_time
 
         if not self._stream_started:
-            self.logger.debug(
+            self.logger.info(
                 "Sending initial keepalive to establish persistent stream"
             )
             self._stream_started = True
         else:
-            self.logger.debug(
+            self.logger.info(
                 "Sending keepalive after %.1fs to maintain connection",
                 time_since_last,
             )
@@ -97,12 +112,14 @@ class RequestBatcher:
         """Ensure the batch has at least one item."""
         if not self._batch:
             try:
-                self._batch.append(await anext(self.source))
+                item = await anext(self.source)
+                self._batch.append(item)
             except StopAsyncIteration:
                 self._source_exhausted = True
                 if self._batch:
                     return
-                raise
+                # Don't raise StopAsyncIteration yet - let keepalives continue
+                return
 
     async def _fill_batch(self) -> None:
         """Fill the batch up to max_batch_size."""

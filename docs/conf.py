@@ -1,15 +1,10 @@
 # Configuration file for the Sphinx documentation builder.
 """Sphinx configuration file for Athena Client documentation."""
 
-import os
 import sys
 from datetime import datetime, timezone
 from importlib.metadata import metadata
 from pathlib import Path
-
-# Configure SSL verification for intersphinx
-# Disable SSL verification for documentation builds
-os.environ["SSL_CERT_VERIFY"] = "0"
 
 # Add the project source directory to the Python path
 sys.path.insert(0, str(Path("../src").resolve()))
@@ -29,8 +24,6 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
-    "sphinx.ext.autosummary",
-    "sphinx.ext.inheritance_diagram",
     "sphinx.ext.intersphinx",
 ]
 
@@ -38,7 +31,7 @@ extensions = [
 templates_path = ["_templates"]
 
 # Template configuration
-autosummary_generate = True
+autosummary_generate = False
 add_module_names = False
 autodoc_typehints = "description"
 autodoc_preserve_defaults = True
@@ -63,7 +56,7 @@ html_theme = "furo"
 html_theme_options = {
     "sidebar_hide_name": False,
     "navigation_with_keys": True,
-    "source_repository": "https://github.com/your-org/athena-client/",
+    "source_repository": "https://github.com/crispthinking/athena-python-client/",
     "source_branch": "main",
     "source_directory": "docs/",
     "light_css_variables": {
@@ -90,7 +83,6 @@ html_theme_options = {
             "Helvetica, Arial, sans-serif"
         ),
     },
-    "persistent_theme_switcher": True,
     "light_logo": "images/logo/Resolver_Lettermark_Main.png",
     "dark_logo": "images/logo/Resolver_Lettermark_White.png",
 }
@@ -105,6 +97,10 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "aiohttp": ("https://docs.aiohttp.org/en/stable/", None),
     "grpc": ("https://grpc.github.io/grpc/python/", None),
+    "athena_protobufs": (
+        "https://crispthinking.github.io/athena-protobufs/",
+        None,
+    ),
 }
 
 # Create required directories if they don't exist
@@ -132,6 +128,6 @@ autodoc_default_options = {
     "member-order": "bysource",
     "special-members": "__init__",
     "undoc-members": True,
-    "exclude-members": "__weakref__",
+    "exclude-members": "__weakref__,__aenter__,__aexit__",
     "show-inheritance": True,
 }

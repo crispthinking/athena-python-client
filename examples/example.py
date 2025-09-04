@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 import time
+import uuid
 
 from create_image import iter_images
 from dotenv import load_dotenv
@@ -134,7 +135,7 @@ async def main() -> int:
     load_dotenv()
 
     # Configuration
-    max_test_images = None
+    max_test_images = 10_000
 
     # OAuth credentials from environment
     client_id = os.getenv("OAUTH_CLIENT_ID")
@@ -173,11 +174,11 @@ async def main() -> int:
     async with DeploymentSelector(channel) as deployment_selector:
         deployments = await deployment_selector.list_deployments()
 
-    if not deployments.deployments:
-        logger.error("No deployments available")
-        return 1
+    if deployments.deployments:
+        deployment_id = deployments.deployments[0].deployment_id
+    else:
+        deployment_id = uuid.uuid4().hex
 
-    deployment_id = deployments.deployments[0].deployment_id
     logger.info("Using deployment: %s", deployment_id)
 
     # Run classification with OAuth authentication
@@ -188,7 +189,7 @@ async def main() -> int:
         compress_images=True,
         timeout=120.0,  # Maximum duration, not forced timeout
         keepalive_interval=30.0,  # Longer intervals for persistent streams
-        affiliate="test-affiliate",
+        affiliate="crisp",
     )
 
     sent, received = await run_oauth_example(

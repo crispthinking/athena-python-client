@@ -3,7 +3,7 @@
 import asyncio
 import logging
 import types
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator, AsyncIterator
 
 import grpc
 
@@ -16,12 +16,16 @@ from athena_client.client.transformers.classification_input import (
 from athena_client.client.transformers.jpeg_converter import JpegConverter
 from athena_client.client.transformers.request_batcher import RequestBatcher
 from athena_client.generated.athena.athena_pb2 import (
+    ClassifyRequest,
     ClassifyResponse,
     RequestEncoding,
 )
 from athena_client.grpc_wrappers.classifier_service import (
     ClassifierServiceClient,
 )
+
+# Constants
+MINIMUM_TIMEOUT_SECONDS = 60.0
 
 
 class AthenaClient:
@@ -87,19 +91,62 @@ class AthenaClient:
             self.options.timeout or -1,
         )
 
-        # Single persistent stream with keepalives
-        try:
-            async for response in self._process_persistent_stream(
-                request_batcher, start_time
-            ):
-                yield response
-        finally:
-            # Log final stats
-            total_duration = asyncio.get_running_loop().time() - start_time
-            self.logger.info(
-                "Classification completed after %.1fs",
-                total_duration,
-            )
+        # Single persistent stream with keepalives and reconnection handling
+        max_reconnects = 3
+        reconnect_count = 0
+
+        while reconnect_count <= max_reconnects:
+            try:
+                async for response in self._process_persistent_stream(
+                    request_batcher, start_time
+                ):
+                    yield response
+                # Stream ended normally, no need to reconnect
+                break
+
+            except grpc.aio.AioRpcError as e:
+                elapsed = asyncio.get_running_loop().time() - start_time
+
+                if (
+                    e.code() == grpc.StatusCode.INTERNAL
+                    and "RST_STREAM" in str(e)
+                    and reconnect_count < max_reconnects
+                ):
+                    reconnect_count += 1
+                    self.logger.info(
+                        "RST_STREAM error after %.1fs, reconnecting "
+                        "(attempt %d/%d): %s",
+                        elapsed,
+                        reconnect_count,
+                        max_reconnects,
+                        str(e),
+                    )
+
+                    # Send empty keepalive request to reopen stream
+                    await self._reopen_stream_with_keepalive()
+                    continue
+                else:
+                    # Other gRPC errors or max reconnects reached
+                    self.logger.info(
+                        "Stream ended after %.1fs (%s), reconnects: %d/%d",
+                        elapsed,
+                        self._get_error_code_name(e),
+                        reconnect_count,
+                        max_reconnects,
+                    )
+                    break
+
+            except Exception:
+                raise
+
+        # Log final stats
+        total_duration = asyncio.get_running_loop().time() - start_time
+        self.logger.info(
+            "Classification completed after %.1fs (reconnects: %d/%d)",
+            total_duration,
+            reconnect_count,
+            max_reconnects,
+        )
 
     def _create_request_pipeline(
         self, images: AsyncIterator[ImageData]
@@ -131,53 +178,98 @@ class AthenaClient:
         start_time: float,
     ) -> AsyncIterator[ClassifyResponse]:
         """Process a persistent gRPC stream with keepalives."""
-        self.logger.debug(
+        self.logger.info(
             "Starting persistent stream (max duration: %.1fs)",
             self.options.timeout or -1,
         )
 
         try:
             # Never apply timeout at gRPC level - handle timeout logic ourselves
+            self.logger.debug("Creating gRPC classify stream...")
             response_stream = await self.classifier.classify(
                 request_batcher, timeout=None
             )
+            self.logger.debug("gRPC classify stream created successfully")
 
-            last_response_time = start_time
+            last_result_time = start_time
+            response_count = 0
 
+            self.logger.debug("Starting to iterate over response stream...")
             async for response in response_stream:
+                response_count += 1
                 current_time = asyncio.get_running_loop().time()
 
-                # Only check timeout if input source is still active
-                # Timeout is based on time since last response, not total time
-                if (
-                    not request_batcher.source_exhausted
-                    and self.options.timeout
-                    and (current_time - last_response_time)
-                    >= self.options.timeout
-                ):
+                # Check if this response contains actual results
+                has_results = response.outputs and len(response.outputs) > 0
+
+                # If we have results, reset the countdown timer
+                if has_results:
+                    last_result_time = current_time
                     self.logger.debug(
-                        "No response received for %.1fs while input active, "
-                        "ending stream",
-                        current_time - last_response_time,
+                        "Received %d results, resetting timeout countdown",
+                        len(response.outputs),
+                    )
+
+                time_since_last_result = current_time - last_result_time
+
+                should_timeout = (
+                    self.options.timeout
+                    and time_since_last_result >= self.options.timeout
+                    and (current_time - start_time) >= MINIMUM_TIMEOUT_SECONDS
+                )
+
+                if should_timeout:
+                    self.logger.info(
+                        "No results received for %.1fs (timeout=%.1fs)"
+                        "closing stream after %.1fs total",
+                        time_since_last_result,
+                        self.options.timeout,
+                        current_time - start_time,
                     )
                     return
 
-                # Update last response time
-                last_response_time = current_time
-
                 if response.global_error and response.global_error.message:
-                    raise AthenaError(response.global_error.message)
+                    self._raise_athena_error(response.global_error.message)
 
                 yield response
 
-        except grpc.aio.AioRpcError as e:
+        except grpc.aio.AioRpcError:
+            # Re-raise gRPC errors to be handled by outer reconnection logic
+            raise
+        except Exception:
             elapsed = asyncio.get_running_loop().time() - start_time
-            self.logger.debug(
-                "Persistent stream ended after %.1fs (%s)",
-                elapsed,
-                self._get_error_code_name(e),
+            self.logger.exception(
+                "Unexpected error in stream after %.1fs", elapsed
             )
-            # Let the stream end naturally - no restarts for persistent streams
+            raise
+
+    async def _reopen_stream_with_keepalive(self) -> None:
+        """Reopen the stream by sending an empty keepalive request."""
+        try:
+            # Create an empty keepalive request with just deployment_id
+            keepalive_request = ClassifyRequest(
+                deployment_id=self.options.deployment_id, inputs=[]
+            )
+
+            # Send single keepalive to reestablish connection
+            async def keepalive_stream() -> AsyncGenerator[
+                ClassifyRequest, None
+            ]:
+                yield keepalive_request
+
+            # Create new stream with the keepalive
+            response_stream = await self.classifier.classify(
+                keepalive_stream(), timeout=None
+            )
+
+            # Consume one response to establish connection, then close
+            async for _ in response_stream:
+                break
+
+            self.logger.debug("Stream reopened successfully with keepalive")
+
+        except (grpc.aio.AioRpcError, ConnectionError, OSError) as e:
+            self.logger.warning("Failed to reopen stream: %s", str(e))
 
     def _get_error_code_name(self, error: grpc.aio.AioRpcError) -> str:
         """Get error code name safely."""
@@ -192,6 +284,10 @@ class AthenaClient:
             await self.channel.close()
         except (grpc.aio.AioRpcError, ConnectionError, OSError) as e:
             self.logger.debug("Error closing channel: %s", str(e))
+
+    def _raise_athena_error(self, message: str) -> None:
+        """Raise an AthenaError with the given message."""
+        raise AthenaError(message)
 
     async def __aenter__(self) -> "AthenaClient":
         """Context manager entry point."""

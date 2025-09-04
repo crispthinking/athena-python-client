@@ -3,7 +3,9 @@ name = "athena_client"
 version = "0.1.0"
 description = "Athena Client Library"
 readme = "README.md"
-authors = [{ name = "Resolver Global", email = "opensource@kroll.com" }]
+authors = [
+    { name = "Crisp Thinking Group Ltd", email = "opensource@kroll.com" },
+]
 requires-python = ">=3.10"
 dependencies = [
     "anyio>=4.10.0",

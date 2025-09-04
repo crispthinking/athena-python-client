@@ -9,73 +9,54 @@ from grpc.aio import Channel
 
 from athena_client.client.channel import (
     CredentialHelper,
-    create_channel,
+    TokenMetadataPlugin,
     create_channel_with_credentials,
 )
 from athena_client.client.exceptions import (
     CredentialError,
-    InvalidAuthError,
     InvalidHostError,
     OAuthError,
 )
 
 
-def test_create_channel() -> None:
-    """Test channel creation with authentication token."""
-    test_host = "test-host:50051"
+def test_token_metadata_plugin() -> None:
+    """Test TokenMetadataPlugin functionality."""
     test_token = "test-token"
+    plugin = TokenMetadataPlugin(test_token)
 
-    # Mock the credentials and channel creation
-    mock_credentials = mock.Mock()
-    mock_channel = mock.Mock(spec=Channel)
+    # Mock callback
+    mock_callback = mock.Mock()
+    mock_context = mock.Mock()
 
-    with (
-        mock.patch("grpc.ssl_channel_credentials") as mock_ssl_creds,
-        mock.patch("grpc.access_token_call_credentials") as mock_token_creds,
-        mock.patch(
-            "grpc.composite_channel_credentials"
-        ) as mock_composite_creds,
-        mock.patch("grpc.aio.secure_channel") as mock_secure_channel,
-    ):
-        # Set up mocks
-        mock_ssl_creds.return_value = mock.Mock()
-        mock_token_creds.return_value = mock.Mock()
-        mock_composite_creds.return_value = mock_credentials
-        mock_secure_channel.return_value = mock_channel
+    # Call the plugin
+    plugin(mock_context, mock_callback)
 
-        # Create channel
-        channel = create_channel(test_host, test_token)
-
-        # Verify channel creation
-        assert channel == mock_channel
-
-        # Verify credentials were created correctly
-        mock_ssl_creds.assert_called_once()
-        mock_token_creds.assert_called_once_with(test_token)
-        mock_composite_creds.assert_called_once_with(
-            mock_ssl_creds.return_value, mock_token_creds.return_value
-        )
-        mock_secure_channel.assert_called_once_with(
-            test_host, mock_credentials, options=mock.ANY
-        )
+    # Verify the callback was called with correct metadata
+    expected_metadata = (("authorization", f"Token {test_token}"),)
+    mock_callback.assert_called_once_with(expected_metadata, None)
 
 
-def test_create_channel_with_invalid_host() -> None:
-    """Test channel creation with invalid host raises error."""
+@pytest.mark.asyncio
+async def test_create_channel_with_credentials_validation() -> None:
+    """Test channel creation with credentials validates input properly."""
     test_host = ""  # Invalid host
-    test_token = "test-token"
+
+    mock_helper = mock.Mock(spec=CredentialHelper)
 
     with pytest.raises(InvalidHostError, match="host cannot be empty"):
-        create_channel(test_host, test_token)
+        await create_channel_with_credentials(test_host, mock_helper)
 
 
-def test_create_channel_with_empty_token() -> None:
-    """Test channel creation with empty auth token raises error."""
+@pytest.mark.asyncio
+async def test_create_channel_with_credentials_oauth_failure() -> None:
+    """Test channel creation when OAuth token acquisition fails."""
     test_host = "test-host:50051"
-    test_token = ""  # Empty token
 
-    with pytest.raises(InvalidAuthError, match="auth_token cannot be empty"):
-        create_channel(test_host, test_token)
+    mock_helper = mock.Mock(spec=CredentialHelper)
+    mock_helper.get_token.side_effect = OAuthError("Token acquisition failed")
+
+    with pytest.raises(OAuthError, match="Token acquisition failed"):
+        await create_channel_with_credentials(test_host, mock_helper)
 
 
 class TestCredentialHelper:
