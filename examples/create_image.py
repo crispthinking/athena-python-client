@@ -9,26 +9,8 @@ from PIL import Image, ImageDraw
 from athena_client.client.models import ImageData
 
 # Global cache for reusable objects and constants
-_MAX_BUFFER_POOL_SIZE = 10
 _image_cache = {}
-_buffer_pool = []
 _rng = random.Random()  # noqa: S311 - Not used for cryptographic purposes
-
-
-def _get_buffer() -> io.BytesIO:
-    """Get a reusable BytesIO buffer from pool."""
-    if _buffer_pool:
-        buffer = _buffer_pool.pop()
-        buffer.seek(0)
-        buffer.truncate(0)
-        return buffer
-    return io.BytesIO()
-
-
-def _return_buffer(buffer: io.BytesIO) -> None:
-    """Return buffer to pool for reuse."""
-    if len(_buffer_pool) < _MAX_BUFFER_POOL_SIZE:
-        _buffer_pool.append(buffer)
 
 
 def _get_cached_image(
@@ -51,7 +33,7 @@ def create_random_image(width: int = 160, height: int = 120) -> bytes:
         height: Height of the test image in pixels (default: 120)
 
     Returns:
-        JPEG image bytes
+        PNG image bytes
 
     """
     # Get cached image and draw objects
@@ -73,13 +55,10 @@ def create_random_image(width: int = 160, height: int = 120) -> bytes:
     x2, y2 = (width * 3) // 4, (height * 3) // 4
     draw.rectangle([x1, y1, x2, y2], fill=accent_color)
 
-    # Fast JPEG encoding
-    buffer = _get_buffer()
-    try:
-        image.save(buffer, format="JPEG", quality=50, optimize=False)
-        return buffer.getvalue()
-    finally:
-        _return_buffer(buffer)
+    # Convert to PNG bytes
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+    return buffer.getvalue()
 
 
 def create_batch_images(
@@ -93,38 +72,33 @@ def create_batch_images(
         height: Height of the test images in pixels
 
     Returns:
-        List of JPEG image bytes
+        List of PNG image bytes
 
     """
     images = []
     image, draw = _get_cached_image(width, height)
-    buffer = _get_buffer()
 
     # Pre-calculate accent rectangle coordinates
     x1, y1 = width // 4, height // 4
     x2, y2 = (width * 3) // 4, (height * 3) // 4
 
-    try:
-        for _ in range(count):
-            # Random background
-            bg_r, bg_g, bg_b = (
-                _rng.randint(0, 255),
-                _rng.randint(0, 255),
-                _rng.randint(0, 255),
-            )
-            draw.rectangle([0, 0, width, height], fill=(bg_r, bg_g, bg_b))
+    for _ in range(count):
+        # Random background
+        bg_r, bg_g, bg_b = (
+            _rng.randint(0, 255),
+            _rng.randint(0, 255),
+            _rng.randint(0, 255),
+        )
+        draw.rectangle([0, 0, width, height], fill=(bg_r, bg_g, bg_b))
 
-            # Complement accent color
-            accent_color = (255 - bg_r, 255 - bg_g, 255 - bg_b)
-            draw.rectangle([x1, y1, x2, y2], fill=accent_color)
+        # Complement accent color
+        accent_color = (255 - bg_r, 255 - bg_g, 255 - bg_b)
+        draw.rectangle([x1, y1, x2, y2], fill=accent_color)
 
-            # Fast encoding
-            buffer.seek(0)
-            buffer.truncate(0)
-            image.save(buffer, format="JPEG", quality=50, optimize=False)
-            images.append(buffer.getvalue())
-    finally:
-        _return_buffer(buffer)
+        # Convert to PNG bytes
+        buffer = io.BytesIO()
+        image.save(buffer, format="PNG")
+        images.append(buffer.getvalue())
 
     return images
 
@@ -142,7 +116,7 @@ async def iter_images(
             sent.
 
     Yields:
-        ImageData objects containing JPEG image bytes with random content
+        ImageData objects containing PNG image bytes with random content
 
     """
     count = 0

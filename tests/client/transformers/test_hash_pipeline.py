@@ -10,13 +10,12 @@ from athena_client.client.consts import EXPECTED_HEIGHT, EXPECTED_WIDTH
 from athena_client.client.models import ImageData
 from athena_client.client.transformers.brotli_compressor import BrotliCompressor
 from athena_client.client.transformers.image_resizer import ImageResizer
-from athena_client.client.transformers.jpeg_converter import JpegConverter
 from tests.utils.mock_async_iterator import MockAsyncIterator
 
 # Constants for hash count assertions
 ORIGINAL_HASH_COUNT = 1
 AFTER_RESIZE_COUNT = 2
-AFTER_JPEG_COUNT = 3
+AFTER_SECOND_RESIZE_COUNT = 3
 
 
 def create_test_png_image(width: int = 200, height: int = 200) -> bytes:
@@ -52,67 +51,40 @@ async def test_hash_pipeline_complete_flow() -> None:
     )  # Original preserved
     assert resized_image.md5_hashes[0] == original_md5  # Original preserved
 
-    # New hash should match the resized data
+    # New hash should match the resized data (raw RGB bytes)
     expected_resize_sha256 = hashlib.sha256(resized_image.data).hexdigest()
     expected_resize_md5 = hashlib.md5(resized_image.data).hexdigest()
     assert resized_image.sha256_hashes[1] == expected_resize_sha256
     assert resized_image.md5_hashes[1] == expected_resize_md5
 
-    # Step 2: Convert to JPEG (should add new hashes)
-    jpeg_converter = JpegConverter(MockAsyncIterator([]))
-    # Store JPEG data size before compression for comparison
-    jpeg_image = await jpeg_converter.transform(resized_image)
-
-    # Note: jpeg_image is the same object as resized_image (modified in place)
-    assert jpeg_image is resized_image  # Same object reference
-
-    # Verify JPEG conversion added new hashes
-    assert len(jpeg_image.sha256_hashes) == AFTER_JPEG_COUNT
-    assert len(jpeg_image.md5_hashes) == AFTER_JPEG_COUNT
-    assert jpeg_image.sha256_hashes[0] == original_sha256  # Original preserved
-    assert jpeg_image.md5_hashes[0] == original_md5  # Original preserved
-    assert (
-        jpeg_image.sha256_hashes[1] == expected_resize_sha256
-    )  # Resize preserved
-    assert jpeg_image.md5_hashes[1] == expected_resize_md5  # Resize preserved
-
-    # New hash should match the JPEG data
-    expected_jpeg_sha256 = hashlib.sha256(jpeg_image.data).hexdigest()
-    expected_jpeg_md5 = hashlib.md5(jpeg_image.data).hexdigest()
-    assert jpeg_image.sha256_hashes[2] == expected_jpeg_sha256
-    assert jpeg_image.md5_hashes[2] == expected_jpeg_md5
-
     # Store data before compression for comparison
-    jpeg_data_before_compression = jpeg_image.data
-    jpeg_data_size_before = len(jpeg_image.data)
+    raw_data_before_compression = resized_image.data
+    raw_data_size_before = len(resized_image.data)
 
-    # Step 3: Compress with Brotli (should preserve all hashes)
+    # Step 2: Compress with Brotli (should preserve all hashes)
     compressor = BrotliCompressor(MockAsyncIterator([]))
-    compressed_image = await compressor.transform(jpeg_image)
+    compressed_image = await compressor.transform(resized_image)
 
-    # Note: compressed_image is the same object as jpeg_image (modified)
-    assert compressed_image is jpeg_image  # Same object reference
+    # Note: compressed_image is the same object as resized_image (modified)
+    assert compressed_image is resized_image  # Same object reference
 
     # Verify compression preserved all existing hashes
     assert (
-        len(compressed_image.sha256_hashes) == AFTER_JPEG_COUNT
+        len(compressed_image.sha256_hashes) == AFTER_RESIZE_COUNT
     )  # No new hashes added
     assert (
-        len(compressed_image.md5_hashes) == AFTER_JPEG_COUNT
+        len(compressed_image.md5_hashes) == AFTER_RESIZE_COUNT
     )  # No new hashes added
 
     # Verify data was actually compressed
-    assert compressed_image.data != jpeg_data_before_compression
-    assert len(compressed_image.data) < jpeg_data_size_before
+    assert compressed_image.data != raw_data_before_compression
+    assert len(compressed_image.data) < raw_data_size_before
 
     # Final verification: Hash history tells the story
     assert compressed_image.sha256_hashes[0] == original_sha256  # Original PNG
     assert (
         compressed_image.sha256_hashes[1] == expected_resize_sha256
-    )  # After resize
-    assert (
-        compressed_image.sha256_hashes[2] == expected_jpeg_sha256
-    )  # After JPEG conversion
+    )  # After resize to raw RGB
     # No hash for compression since it doesn't change visual content
 
 
@@ -134,14 +106,14 @@ async def test_hash_pipeline_multiple_transformations() -> None:
     assert image.sha256_hashes[0] == original_hash
     first_resize_hash = image.sha256_hashes[1]
 
-    # Second resize (from already resized image)
+    # Second resize (from already resized raw RGB image)
     same_image_again = await resizer.transform(image)
     assert same_image_again is image  # Same object reference
-    assert len(image.sha256_hashes) == AFTER_JPEG_COUNT
+    # Since it's already raw RGB of correct size, no additional hash
+    # should be added
+    assert len(image.sha256_hashes) == AFTER_RESIZE_COUNT
     assert image.sha256_hashes[0] == original_hash  # Original preserved
     assert image.sha256_hashes[1] == first_resize_hash  # First resize preserved
-    # Third hash should be the new resize
-    assert image.sha256_hashes[2] == hashlib.sha256(image.data).hexdigest()
 
 
 @pytest.mark.asyncio
@@ -175,36 +147,31 @@ async def test_hash_pipeline_compression_only() -> None:
 
 @pytest.mark.asyncio
 async def test_hash_pipeline_format_conversion_only() -> None:
-    """Test hash behavior with format conversion but no resizing."""
-    # Create PNG image at exact expected size (no resizing needed)
-
+    """Test hash behavior with format conversion from PNG to raw RGB."""
+    # Create PNG image at exact expected size
     original_bytes = create_test_png_image(EXPECTED_WIDTH, EXPECTED_HEIGHT)
     original_image = ImageData(original_bytes)
     original_sha256 = original_image.sha256_hashes[0]
 
-    # Convert to JPEG (no resizing since it's already the right size)
-    # First pass through resizer (should not change since size is correct)
+    # Convert to raw RGB via resizer
     resizer = ImageResizer(MockAsyncIterator([]))
-    maybe_resized = await resizer.transform(original_image)
+    rgb_image = await resizer.transform(original_image)
 
-    # Note: maybe_resized is the same object as original_image (in-place)
-    assert maybe_resized is original_image  # Same object reference
+    # Note: rgb_image is the same object as original_image (in-place)
+    assert rgb_image is original_image  # Same object reference
 
-    # Then convert to JPEG
-    jpeg_converter = JpegConverter(MockAsyncIterator([]))
-    jpeg_image = await jpeg_converter.transform(maybe_resized)
+    # Should have hashes for: original + conversion to raw RGB
+    assert len(rgb_image.sha256_hashes) == AFTER_RESIZE_COUNT
+    assert rgb_image.sha256_hashes[0] == original_sha256  # Original preserved
 
-    # Note: jpeg_image is the same object as original_image (modified in place)
-    assert jpeg_image is original_image  # Same object reference
-
-    # Should have hashes for: original + resize + jpeg conversion
-    assert len(jpeg_image.sha256_hashes) >= AFTER_RESIZE_COUNT
-    assert jpeg_image.sha256_hashes[0] == original_sha256  # Original preserved
-
-    # Final hash should match the JPEG data
-    final_hash = jpeg_image.sha256_hashes[-1]
-    expected_hash = hashlib.sha256(jpeg_image.data).hexdigest()
+    # Final hash should match the raw RGB data
+    final_hash = rgb_image.sha256_hashes[-1]
+    expected_hash = hashlib.sha256(rgb_image.data).hexdigest()
     assert final_hash == expected_hash
+
+    # Verify the data is now raw RGB format
+    expected_size = EXPECTED_WIDTH * EXPECTED_HEIGHT * 3
+    assert len(rgb_image.data) == expected_size
 
 
 @pytest.mark.asyncio

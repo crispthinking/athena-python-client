@@ -6,7 +6,6 @@ from athena_client.client.transformers.classification_input import (
     ClassificationInputTransformer,
 )
 from athena_client.client.transformers.image_resizer import ImageResizer
-from athena_client.client.transformers.jpeg_converter import JpegConverter
 from athena_client.client.transformers.request_batcher import RequestBatcher
 
 __all__ = [
@@ -14,6 +13,5 @@ __all__ = [
     "BrotliCompressor",
     "ClassificationInputTransformer",
     "ImageResizer",
-    "JpegConverter",
     "RequestBatcher",
 ]

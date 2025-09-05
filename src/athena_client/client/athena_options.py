@@ -20,10 +20,6 @@ class AthenaOptions:
             Defaults to "localhost".
         resize_images: Whether to automatically resize images before sending.
             When True, images will be resized to the optimal size for the model.
-            Defaults to False.
-        convert_jpeg: Whether to convert images to JPEG format before sending.
-            When True, images will be converted to JPEG with quality=85.
-            Enabling this ensures consistent image format and can reduce size.
             Defaults to True.
         compress_images: Whether to compress images using Brotli compression.
             Enabling this reduces network bandwidth usage but adds slight CPU
@@ -55,12 +51,11 @@ class AthenaOptions:
     """
 
     host: str = "localhost"
-    resize_images: bool = False
-    convert_jpeg: bool = True
+    resize_images: bool = True
     compress_images: bool = True
     deployment_id: str = "default"
     affiliate: str = "default"
-    max_batch_size: int = 100
+    max_batch_size: int = 10
     correlation_provider: type[CorrelationProvider] = HashCorrelationProvider
     timeout: float | None = 120.0
     keepalive_interval: float | None = None

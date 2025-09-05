@@ -54,7 +54,7 @@ class ClassificationInputTransformer(
             ),
             data=image_data.data,
             encoding=self.request_encoding,
-            format=ImageFormat.IMAGE_FORMAT_JPEG,
+            format=ImageFormat.IMAGE_FORMAT_RAW_UINT8,
         )
 
     async def transform(self, data: ImageData) -> ClassificationInput:

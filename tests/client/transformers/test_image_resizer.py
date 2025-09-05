@@ -12,6 +12,9 @@ from athena_client.client.models import ImageData
 from athena_client.client.transformers.image_resizer import ImageResizer
 from tests.utils.mock_async_iterator import MockAsyncIterator
 
+# Test constants
+EXPECTED_HASH_COUNT_AFTER_TRANSFORM = 2  # Original + transformed
+
 
 def create_test_image(width: int, height: int, mode: str = "RGB") -> bytes:
     """Create a test image with specified dimensions."""
@@ -50,27 +53,35 @@ async def test_image_resizer_transform() -> None:
     # Test with smaller image
     small_image = ImageData(create_test_image(100, 100))
     resized_small = await resizer.transform(small_image)
-    # Verify output is valid PNG with expected dimensions
-    with Image.open(io.BytesIO(resized_small.data)) as img:
-        assert img.format == "PNG"
-        assert img.size == (EXPECTED_WIDTH, EXPECTED_HEIGHT)
-        assert img.mode == "RGB"
+    # Verify output is raw RGB bytes with expected dimensions
+    expected_size = EXPECTED_WIDTH * EXPECTED_HEIGHT * 3
+    assert len(resized_small.data) == expected_size
+    # Verify it can be converted back to an image
+    img = Image.frombytes(
+        "RGB", (EXPECTED_WIDTH, EXPECTED_HEIGHT), resized_small.data
+    )
+    assert img.size == (EXPECTED_WIDTH, EXPECTED_HEIGHT)
+    assert img.mode == "RGB"
 
     # Test with larger image
     large_image = ImageData(create_test_image(1000, 1000))
     resized_large = await resizer.transform(large_image)
-    with Image.open(io.BytesIO(resized_large.data)) as img:
-        assert img.format == "PNG"
-        assert img.size == (EXPECTED_WIDTH, EXPECTED_HEIGHT)
-        assert img.mode == "RGB"
+    assert len(resized_large.data) == expected_size
+    img = Image.frombytes(
+        "RGB", (EXPECTED_WIDTH, EXPECTED_HEIGHT), resized_large.data
+    )
+    assert img.size == (EXPECTED_WIDTH, EXPECTED_HEIGHT)
+    assert img.mode == "RGB"
 
     # Test with exactly sized image
     exact_image = ImageData(create_test_image(EXPECTED_WIDTH, EXPECTED_HEIGHT))
     resized_exact = await resizer.transform(exact_image)
-    with Image.open(io.BytesIO(resized_exact.data)) as img:
-        assert img.format == "PNG"
-        assert img.size == (EXPECTED_WIDTH, EXPECTED_HEIGHT)
-        assert img.mode == "RGB"
+    assert len(resized_exact.data) == expected_size
+    img = Image.frombytes(
+        "RGB", (EXPECTED_WIDTH, EXPECTED_HEIGHT), resized_exact.data
+    )
+    assert img.size == (EXPECTED_WIDTH, EXPECTED_HEIGHT)
+    assert img.mode == "RGB"
 
 
 @pytest.mark.asyncio
@@ -81,12 +92,16 @@ async def test_image_resizer_iteration(
     resizer = ImageResizer(source)
 
     # Process all images
+    expected_size = EXPECTED_WIDTH * EXPECTED_HEIGHT * 3
     async for resized in resizer:
-        # Verify output is valid PNG image
-        with Image.open(io.BytesIO(resized.data)) as img:
-            assert img.format == "PNG"
-            assert img.size == (EXPECTED_WIDTH, EXPECTED_HEIGHT)
-            assert img.mode == "RGB"
+        # Verify output is raw RGB bytes
+        assert len(resized.data) == expected_size
+        # Verify it can be converted back to an image
+        img = Image.frombytes(
+            "RGB", (EXPECTED_WIDTH, EXPECTED_HEIGHT), resized.data
+        )
+        assert img.size == (EXPECTED_WIDTH, EXPECTED_HEIGHT)
+        assert img.mode == "RGB"
 
 
 @pytest.mark.asyncio
@@ -96,29 +111,35 @@ async def test_grayscale_conversion(grayscale_image: bytes) -> None:
     grayscale_data = ImageData(grayscale_image)
     resized = await resizer.transform(grayscale_data)
 
-    # Verify output is valid PNG and converted to RGB
-    with Image.open(io.BytesIO(resized.data)) as img:
-        assert img.size == (EXPECTED_WIDTH, EXPECTED_HEIGHT)
-        assert img.mode == "RGB"  # Should be converted from grayscale
+    # Verify output is raw RGB bytes and converted from grayscale
+    expected_size = EXPECTED_WIDTH * EXPECTED_HEIGHT * 3
+    assert len(resized.data) == expected_size
+    # Verify it can be converted back to an image
+    img = Image.frombytes(
+        "RGB", (EXPECTED_WIDTH, EXPECTED_HEIGHT), resized.data
+    )
+    assert img.size == (EXPECTED_WIDTH, EXPECTED_HEIGHT)
+    assert img.mode == "RGB"  # Should be converted from grayscale
 
 
 @pytest.mark.asyncio
 async def test_output_format() -> None:
-    """Test that the output is valid PNG image format."""
+    """Test that the output is valid raw RGB format."""
     resizer = ImageResizer(MockAsyncIterator([]))
     test_image = ImageData(create_test_image(100, 100))
 
     result = await resizer.transform(test_image)
 
-    # The output should be valid PNG format
+    # The output should be raw RGB bytes
     assert isinstance(result, ImageData)
     assert isinstance(result.data, bytes)
+    expected_size = EXPECTED_WIDTH * EXPECTED_HEIGHT * 3
+    assert len(result.data) == expected_size
 
-    # Verify it's a valid PNG image
-    with Image.open(io.BytesIO(result.data)) as img:
-        assert img.format == "PNG"
-        assert img.size == (EXPECTED_WIDTH, EXPECTED_HEIGHT)
-        assert img.mode == "RGB"
+    # Verify it's valid raw RGB data
+    img = Image.frombytes("RGB", (EXPECTED_WIDTH, EXPECTED_HEIGHT), result.data)
+    assert img.size == (EXPECTED_WIDTH, EXPECTED_HEIGHT)
+    assert img.mode == "RGB"
 
 
 @pytest.mark.asyncio
@@ -160,3 +181,60 @@ async def test_image_resizer_recalculates_hashes() -> None:
     expected_md5 = hashlib.md5(resized.data).hexdigest()
     assert resized.sha256_hashes[-1] == expected_sha256
     assert resized.md5_hashes[-1] == expected_md5
+
+
+@pytest.mark.asyncio
+async def test_raw_rgb_fast_path() -> None:
+    """Test that raw RGB arrays of correct size are passed through unchanged."""
+    resizer = ImageResizer(MockAsyncIterator([]))
+
+    # Create raw RGB data of expected size
+    expected_size = EXPECTED_WIDTH * EXPECTED_HEIGHT * 3
+    raw_rgb_data = b"\x00" * expected_size  # Black image
+
+    test_image = ImageData(raw_rgb_data)
+    original_data = test_image.data
+
+    result = await resizer.transform(test_image)
+
+    # Should be unchanged (fast path)
+    assert result.data is original_data  # Same object reference
+    assert len(result.data) == expected_size
+
+    # Verify it's still valid RGB data
+    img = Image.frombytes("RGB", (EXPECTED_WIDTH, EXPECTED_HEIGHT), result.data)
+    assert img.size == (EXPECTED_WIDTH, EXPECTED_HEIGHT)
+    assert img.mode == "RGB"
+
+
+@pytest.mark.asyncio
+async def test_160x120_png_resize() -> None:
+    """Test that 160x120 PNG data gets properly resized."""
+    resizer = ImageResizer(MockAsyncIterator([]))
+
+    # Create 160x120 PNG data (same as create_image.py)
+    width, height = 160, 120
+    img = Image.new("RGB", (width, height), color=(255, 0, 0))
+
+    # Convert to PNG bytes
+    buffer = io.BytesIO()
+    img.save(buffer, format="PNG")
+    png_data = buffer.getvalue()
+
+    test_image = ImageData(png_data)
+    result = await resizer.transform(test_image)
+
+    # Should be resized to expected dimensions
+    expected_size = EXPECTED_WIDTH * EXPECTED_HEIGHT * 3
+    assert len(result.data) == expected_size
+
+    # Verify it can be converted back to an image with correct dimensions
+    resized_img = Image.frombytes(
+        "RGB", (EXPECTED_WIDTH, EXPECTED_HEIGHT), result.data
+    )
+    assert resized_img.size == (EXPECTED_WIDTH, EXPECTED_HEIGHT)
+    assert resized_img.mode == "RGB"
+
+    # Verify hashes were recalculated (transformation occurred)
+    assert len(result.sha256_hashes) == EXPECTED_HASH_COUNT_AFTER_TRANSFORM
+    assert len(result.md5_hashes) == EXPECTED_HASH_COUNT_AFTER_TRANSFORM

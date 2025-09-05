@@ -7,7 +7,10 @@ from athena_client.client.models import ImageData
 from athena_client.client.transformers.classification_input import (
     ClassificationInputTransformer,
 )
-from athena_client.generated.athena.athena_pb2 import RequestEncoding
+from athena_client.generated.athena.athena_pb2 import (
+    ImageFormat,
+    RequestEncoding,
+)
 from tests.utils.mock_async_iterator import MockAsyncIterator
 
 
@@ -46,6 +49,7 @@ async def test_classification_input_transform(
     )  # Should be a non-empty string
     assert result.data == test_data.data
     assert result.encoding == RequestEncoding.REQUEST_ENCODING_BROTLI
+    assert result.format == ImageFormat.IMAGE_FORMAT_RAW_UINT8
 
 
 @pytest.mark.asyncio
@@ -65,6 +69,7 @@ async def test_classification_input_iteration(
     assert result.data == b"test1"
     assert result.affiliate == transformer_config.affiliate
     assert result.encoding == RequestEncoding.REQUEST_ENCODING_BROTLI
+    assert result.format == ImageFormat.IMAGE_FORMAT_RAW_UINT8
 
     # Test second item
     result = await anext(transformer)
@@ -101,6 +106,7 @@ async def test_classification_input_empty(
     assert result.data == b""
     assert result.affiliate == transformer_config.affiliate
     assert result.encoding == RequestEncoding.REQUEST_ENCODING_BROTLI
+    assert result.format == ImageFormat.IMAGE_FORMAT_RAW_UINT8
 
 
 @pytest.mark.parametrize(
@@ -127,3 +133,4 @@ async def test_classification_input_encodings(
     test_data = ImageData(b"test")
     result = await transformer.transform(test_data)
     assert result.encoding == encoding
+    assert result.format == ImageFormat.IMAGE_FORMAT_RAW_UINT8

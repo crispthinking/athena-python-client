@@ -164,8 +164,7 @@ async def test_client_transformers_disabled(
     mock_options: AthenaOptions,
 ) -> None:
     """Test client with image transformers disabled."""
-    # Explicitly override options to ensure jpeg conversion is disabled
-    mock_options.convert_jpeg = False
+    # Test with default options (no JPEG conversion)
 
     test_response = ClassifyResponse(
         outputs=[ClassificationOutput(correlation_id="1")]
@@ -203,9 +202,8 @@ async def test_client_transformers_enabled(
     mock_channel: mock.Mock,
     mock_options: AthenaOptions,
 ) -> None:
-    """Test client with image transformers enabled."""
-    # Enable jpeg conversion
-    mock_options.convert_jpeg = True
+    """Test client with raw image data."""
+    # Test with raw image data (no JPEG conversion needed)
 
     test_response = ClassifyResponse(
         outputs=[ClassificationOutput(correlation_id="1")]

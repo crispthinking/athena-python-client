@@ -10,10 +10,11 @@ import grpc
 from athena_client.client.athena_options import AthenaOptions
 from athena_client.client.exceptions import AthenaError
 from athena_client.client.models import ImageData
+from athena_client.client.transformers.brotli_compressor import BrotliCompressor
 from athena_client.client.transformers.classification_input import (
     ClassificationInputTransformer,
 )
-from athena_client.client.transformers.jpeg_converter import JpegConverter
+from athena_client.client.transformers.image_resizer import ImageResizer
 from athena_client.client.transformers.request_batcher import RequestBatcher
 from athena_client.generated.athena.athena_pb2 import (
     ClassifyRequest,
@@ -154,14 +155,26 @@ class AthenaClient:
         """Create the request processing pipeline."""
         image_stream = images
 
-        if self.options.convert_jpeg:
-            image_stream = JpegConverter(image_stream)
+        # Apply image resizing if enabled
+        if self.options.resize_images:
+            image_stream = ImageResizer(image_stream)
+
+        # Apply compression if enabled
+        if self.options.compress_images:
+            image_stream = BrotliCompressor(image_stream)
+
+        # Set request encoding based on compression setting
+        request_encoding = (
+            RequestEncoding.REQUEST_ENCODING_BROTLI
+            if self.options.compress_images
+            else RequestEncoding.REQUEST_ENCODING_UNCOMPRESSED
+        )
 
         input_transformer = ClassificationInputTransformer(
             image_stream,
             deployment_id=self.options.deployment_id,
             affiliate=self.options.affiliate,
-            request_encoding=RequestEncoding.REQUEST_ENCODING_UNCOMPRESSED,
+            request_encoding=request_encoding,
             correlation_provider=self.options.correlation_provider,
         )
 
