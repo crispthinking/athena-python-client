@@ -1,12 +1,25 @@
 [project]
 name = "athena_client"
-version = "0.1.0"
-description = "Athena Client Library"
+version = "0.0.0"
+description = "Python client library for Athena API - CSAM detection and content classification"
 readme = "README.md"
 authors = [
     { name = "Crisp Thinking Group Ltd", email = "opensource@kroll.com" },
 ]
+license = { text = "MIT" }
+keywords = ["csam", "content-detection", "image-classification", "api-client", "grpc"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
 requires-python = ">=3.10"
+repository = "https://github.com/crispthinking/athena-client"
+homepage = "https://github.com/crispthinking/athena-client"
+documentation = "https://crispthinking.github.io/athena-python-client/"
 dependencies = [
     "anyio>=4.10.0",
     "brotli>=1.1.0",
