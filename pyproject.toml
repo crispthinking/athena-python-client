@@ -3,17 +3,37 @@ name = "athena_client"
 version = "0.1.0"
 description = "Athena Client Library"
 readme = "README.md"
-authors = [{ name = "Resolver Global", email = "opensource@kroll.com" }]
+authors = [
+    { name = "Crisp Thinking Group Ltd", email = "opensource@kroll.com" },
+]
 requires-python = ">=3.10"
-dependencies = ["grpcio-tools>=1.74.0"]
+dependencies = [
+    "anyio>=4.10.0",
+    "brotli>=1.1.0",
+    "grpcio-tools>=1.74.0",
+    "httpx>=0.25.0",
+    "numpy>=2.2.6",
+    "pillow>=11.3.0",
+]
 
+[project.optional-dependencies]
 [dependency-groups]
+docs = [
+    "sphinx>=7.1.0",
+    "furo>=2024.1.29",
+    "sphinx-autodoc-typehints>=1.25.0",
+    "sphinx-copybutton>=0.5.0",
+    "myst-parser>=2.0.0",
+]
+
 dev = [
+    "load-dotenv>=0.1.0",
     "mypy-protobuf>=3.6.0",
     "pre-commit>=4.2.0",
     "pyright>=1.1.403",
     "pytest>=8.4.1",
     "pytest-asyncio>=1.1.0",
+    "pytest-cov>=6.2.1",
     "ruff>=0.12.7",
     "types-protobuf>=6.30.2.20250703",
 ]
@@ -28,11 +48,16 @@ exclude = ["src/athena_client/generated/*"]
 
 [tool.ruff.lint]
 select = ["ALL"]
-ignore = ["COM812", "D213", "D211", "D203", "S101"]
+ignore = ["COM812", "D213", "D211", "D203", "S324"]
 
 [tool.ruff.lint.per-file-ignores]
 # Ignore doc lint rules in tests.
-"tests/**" = ["D"]
+"tests/**" = ["D", "S106", "S105", "S101", "SLF001"]
 
 [tool.pyright]
 exclude = ["src/athena_client/generated/*", ".venv"]
+venvPath = "."
+venv = ".venv"
+
+[tool.coverage.run]
+omit = ["src/athena_client/generated/*"]

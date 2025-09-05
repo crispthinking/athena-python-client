@@ -1,0 +1,180 @@
+/* Import Nunito Sans from Google Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap");
+
+/* Custom theme colors */
+:root {
+    /* Light mode */
+    --brand-primary-light: #20539e;
+    --brand-primary-hover-light: #286ac8;
+    --status-success-light: #007264;
+    --status-danger-light: #961414;
+    --status-caution-light: #ffb340;
+    --text-heading-light: #092030;
+    --text-body-light: #4e585f;
+    --background-main-light: #fefefe;
+    --background-surface-light: #f7f7f7;
+
+    /* Dark mode */
+    --brand-primary-dark: #b6cbe9;
+    --brand-primary-hover-dark: #dce6f4;
+    --status-success-dark: #a3c7c2;
+    --status-danger-dark: #ffb3b3;
+    --status-caution-dark: #fcdaa6;
+    --text-heading-dark: #e8eaec;
+    --text-body-dark: #d5d5d5;
+    --background-main-dark: #393939;
+    --background-surface-dark: #434343;
+
+    /* Font families */
+    --font-stack:
+        "Nunito Sans", -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica,
+        Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji;
+}
+
+/* Apply custom fonts */
+body {
+    font-family: var(--font-stack);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-stack);
+    font-weight: 700;
+}
+
+.sidebar-brand {
+    font-family: var(--font-stack);
+}
+
+.toc-tree {
+    font-family: var(--font-stack);
+}
+
+/* Apply custom colors to Furo theme elements */
+[data-theme="light"] {
+    /* Brand colors */
+    --color-brand-primary: var(--brand-primary-light);
+    --color-brand-content: var(--brand-primary-light);
+
+    /* Links */
+    --color-link: var(--brand-primary-light);
+    --color-link-hover: var(--brand-primary-hover-light);
+
+    /* Headings */
+    --color-sidebar-caption-text: var(--text-heading-light);
+    --color-content-foreground: var(--text-heading-light);
+    --color-api-name: var(--brand-primary-light);
+
+    /* Content */
+    --color-foreground-primary: var(--text-body-light);
+    --color-background-primary: var(--background-main-light);
+    --color-background-secondary: var(--background-surface-light);
+
+    /* Admonitions */
+    --color-admonition-title--note: var(--brand-primary-light);
+    --color-admonition-title--tip: var(--status-success-light);
+    --color-admonition-title--warning: var(--status-caution-light);
+    --color-admonition-title--danger: var(--status-danger-light);
+
+    /* Code blocks */
+    --color-code-background: var(--background-surface-light);
+    --color-code-foreground: var(--text-body-light);
+}
+
+[data-theme="dark"] {
+    /* Brand colors */
+    --color-brand-primary: var(--brand-primary-dark);
+    --color-brand-content: var(--brand-primary-dark);
+
+    /* Links */
+    --color-link: var(--brand-primary-dark);
+    --color-link-hover: var(--brand-primary-hover-dark);
+
+    /* Headings */
+    --color-sidebar-caption-text: var(--text-heading-dark);
+    --color-content-foreground: var(--text-heading-dark);
+    --color-api-name: var(--brand-primary-dark);
+
+    /* Content */
+    --color-foreground-primary: var(--text-body-dark);
+    --color-background-primary: var(--background-main-dark);
+    --color-background-secondary: var(--background-surface-dark);
+
+    /* Admonitions */
+    --color-admonition-title--note: var(--brand-primary-dark);
+    --color-admonition-title--tip: var(--status-success-dark);
+    --color-admonition-title--warning: var(--status-caution-dark);
+    --color-admonition-title--danger: var(--status-danger-dark);
+
+    /* Code blocks */
+    --color-code-background: var(--background-surface-dark);
+    --color-code-foreground: var(--text-body-dark);
+}
+
+/* Improve readability of code blocks */
+.highlight {
+    background: var(--background-surface);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+/* Make sure sidebar nav is clearly visible */
+.sidebar-tree .reference:hover {
+    background: var(--color-background-secondary);
+}
+
+.sidebar-tree .current-page > .reference {
+    background: var(--color-background-secondary);
+    border-left: 3px solid var(--color-brand-primary);
+}
+
+/* Improve buttons */
+.button {
+    background-color: var(--brand-primary);
+    color: white;
+    transition: background-color 0.2s ease;
+}
+
+.button:hover {
+    background-color: var(--brand-primary-hover);
+}
+
+/* Improve table styling */
+table.docutils {
+    border: 1px solid var(--background-surface);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+table.docutils thead {
+    background-color: var(--background-surface);
+}
+
+/* Add subtle hover effect to navigation */
+.toc-tree .reference:hover {
+    color: var(--brand-primary-hover);
+}
+
+/* Style search box */
+.search-input {
+    border: 1px solid var(--background-surface);
+    background: var(--background-main);
+}
+
+.search-input:focus {
+    border-color: var(--brand-primary);
+}
+
+/* Version selector styling */
+.version-switcher__button {
+    background: var(--background-surface);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.version-switcher__button:hover {
+    background: var(--background-main);
+    border-color: var(--brand-primary);
+}

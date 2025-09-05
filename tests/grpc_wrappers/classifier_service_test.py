@@ -10,7 +10,7 @@ from athena_client.generated.athena.athena_pb2 import (
 from athena_client.grpc_wrappers.classifier_service import (
     ClassifierServiceClient,
 )
-from tests.utils.mock_async_iterator import MockAsyncIterator
+from tests.utils.mock_stream_call import MockStreamCall
 
 
 @pytest.fixture
@@ -32,13 +32,21 @@ async def test_list_deployments(client: ClassifierServiceClient) -> None:
 @pytest.mark.asyncio
 async def test_classify(client: ClassifierServiceClient) -> None:
     mock_request_iter = AsyncMock()
-
     mock_response = ClassifyResponse()
-    client.stub.Classify = lambda _: MockAsyncIterator([mock_response])
 
-    responses = [
-        response async for response in client.classify(mock_request_iter)
-    ]
+    # Create stream call mock that will return our response
+    mock_stream = MockStreamCall([mock_response])
 
+    # Replace stub's Classify method with our mock
+    client.stub.Classify = mock_stream
+
+    # Get stream from classify call
+    stream = await client.classify(mock_request_iter)
+
+    # Collect responses from stream
+    responses = [response async for response in stream]
+
+    # Verify response
     assert len(responses) == 1
     assert isinstance(responses[0], ClassifyResponse)
+    assert mock_stream.call_count == 1

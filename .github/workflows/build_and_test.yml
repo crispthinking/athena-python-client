@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Initialize submodules
         env:
@@ -72,7 +72,19 @@ jobs:
 
       - name: Run tests
         run: |
-          uv run pytest
+          uv run pytest --junitxml=pytest.xml --tb=auto --cov-report=term-missing:skip-covered --cov=src tests/ | tee pytest-coverage.txt
+
+      - name: Pytest Coverage Comment
+        uses: MishaKav/pytest-coverage-comment@v1.1.56
+        with:
+          junitxml-path: ./pytest.xml
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4 # upload test results
+        if: ${{ !cancelled() }} # run this step even if previous step failed
+        with:
+          name: test-results
+          path: pytest.xml
 
       - name: Build package
         run: |
