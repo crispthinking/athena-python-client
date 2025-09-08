@@ -206,5 +206,40 @@ jobs:
           name: dist
           path: dist/
 
+      - name: Verify package version matches release tag
+        run: |
+          # Extract version from release tag (remove leading 'v' if present)
+          TAG_VERSION="${GITHUB_REF#refs/tags/}"
+          TAG_VERSION="${TAG_VERSION#v}"
+          echo "Release tag version: $TAG_VERSION"
+          # Find the first wheel or sdist in dist/
+          FILE=$(ls dist/*.whl 2>/dev/null || ls dist/*.tar.gz 2>/dev/null)
+          if [[ -z "$FILE" ]]; then
+            echo "No distribution file found in dist/"
+            exit 1
+          fi
+          echo "Checking version in: $FILE"
+          if [[ "$FILE" == *.whl ]]; then
+            # Extract version from wheel filename: name-version-*.whl
+            FILENAME=$(basename "$FILE")
+            # Remove extension
+            FILENAME="${FILENAME%.whl}"
+            # Extract version (assumes format: name-version-...)
+            PKG_VERSION=$(echo "$FILENAME" | awk -F'-' '{print $(NF-2)}')
+          elif [[ "$FILE" == *.tar.gz ]]; then
+            # Extract version from sdist filename: name-version.tar.gz
+            FILENAME=$(basename "$FILE")
+            FILENAME="${FILENAME%.tar.gz}"
+            PKG_VERSION=$(echo "$FILENAME" | awk -F'-' '{print $NF}')
+          else
+            echo "Unknown distribution file type: $FILE"
+            exit 1
+          fi
+          echo "Package version: $PKG_VERSION"
+          if [[ "$PKG_VERSION" != "$TAG_VERSION" ]]; then
+            echo "Version mismatch: tag version is $TAG_VERSION, package version is $PKG_VERSION"
+            exit 1
+          fi
+          echo "Version check passed."
       - name: Publish package distributions to PyPI
         run: uv publish --trusted-publishing always
