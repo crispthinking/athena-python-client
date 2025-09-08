@@ -15,10 +15,11 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 requires-python = ">=3.10"
-repository = "https://github.com/crispthinking/athena-client"
-homepage = "https://github.com/crispthinking/athena-client"
+repository = "https://github.com/crispthinking/athena-python-client"
+homepage = "https://github.com/crispthinking/athena-python-client"
 documentation = "https://crispthinking.github.io/athena-python-client/"
 dependencies = [
     "anyio>=4.10.0",
