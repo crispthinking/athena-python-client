@@ -113,13 +113,6 @@ jobs:
       contents: write
 
     steps:
-      - name: Determine version
-        id: version
-        run: |
-          VERSION="${GITHUB_REF#refs/tags/}"
-          VERSION="${VERSION#v}"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
