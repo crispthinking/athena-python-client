@@ -1,0 +1,200 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    permissions:
+      contents: read
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Test all Python versions on Ubuntu (primary platform)
+          - os: ubuntu-latest
+            python-version: "3.10"
+          - os: ubuntu-latest
+            python-version: "3.11"
+          - os: ubuntu-latest
+            python-version: "3.12"
+          - os: ubuntu-latest
+            python-version: "3.13"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Initialize submodules
+        env:
+          GIT_ASKPASS: /bin/echo
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          git config --global url."https://${GH_PAT}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init --recursive
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
+
+      - name: Ensure no differences in generated code (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          source .venv/bin/activate
+          GENERATED_DIR="src/athena_client/generated"
+          BACKUP_DIR="src/athena_client/generated_backup"
+
+          cp -r $GENERATED_DIR $BACKUP_DIR
+
+          ./scripts/compile_proto.sh || (echo "Protobuf compilation failed. Ensure submodules are initialized and the proto file exists." && exit 1)
+
+          # Fix imports in generated files
+          if [[ -f "$GENERATED_DIR/athena/athena_pb2_grpc.py" && -f "$GENERATED_DIR/athena/athena_pb2.py" ]]; then
+            sed -i.bak 's/^from athena /from athena_client.generated.athena /' "$GENERATED_DIR/athena/athena_pb2_grpc.py"
+            sed -i.bak 's/^from athena /from athena_client.generated.athena /' "$GENERATED_DIR/athena/athena_pb2.py"
+            rm -f "$GENERATED_DIR/athena/athena_pb2_grpc.py.bak" "$GENERATED_DIR/athena/athena_pb2.py.bak"
+          else
+            echo "Error: Expected files not found in $GENERATED_DIR/athena"
+            exit 1
+          fi
+
+          diff -r $GENERATED_DIR $BACKUP_DIR || (echo "Generated code differs. Please commit the changes after running compile_proto.sh." && exit 1)
+
+          rm -rf $BACKUP_DIR
+
+      - name: Ensure no differences in generated code (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          & .venv\Scripts\Activate.ps1
+          $GENERATED_DIR = "src\athena_client\generated"
+          $BACKUP_DIR = "src\athena_client\generated_backup"
+
+          Copy-Item -Recurse -Path $GENERATED_DIR -Destination $BACKUP_DIR
+
+          # Compile protobuf files directly since compile_proto.sh won't work on Windows
+          if (!(Test-Path "athena-protobufs\athena\athena.proto")) {
+            Write-Host "Error: Protobuf file not found at athena-protobufs\athena\athena.proto. Ensure the submodule is initialized and updated."
+            exit 1
+          }
+
+          New-Item -ItemType Directory -Force -Path $GENERATED_DIR | Out-Null
+
+          python -m grpc_tools.protoc --proto_path="athena-protobufs" --python_out=$GENERATED_DIR --grpc_python_out=$GENERATED_DIR --mypy_out=$GENERATED_DIR "athena-protobufs\athena\athena.proto"
+
+          # Fix imports in generated files
+          if ((Test-Path "$GENERATED_DIR\athena\athena_pb2_grpc.py") -and (Test-Path "$GENERATED_DIR\athena\athena_pb2.py")) {
+            (Get-Content "$GENERATED_DIR\athena\athena_pb2_grpc.py") -replace '^from athena ', 'from athena_client.generated.athena ' | Set-Content "$GENERATED_DIR\athena\athena_pb2_grpc.py"
+            (Get-Content "$GENERATED_DIR\athena\athena_pb2.py") -replace '^from athena ', 'from athena_client.generated.athena ' | Set-Content "$GENERATED_DIR\athena\athena_pb2.py"
+          } else {
+            Write-Host "Error: Expected files not found in $GENERATED_DIR\athena"
+            exit 1
+          }
+
+          # Simple directory comparison for Windows
+          $differences = Compare-Object -ReferenceObject (Get-ChildItem -Recurse $GENERATED_DIR) -DifferenceObject (Get-ChildItem -Recurse $BACKUP_DIR) -Property Name, Length
+          if ($differences) {
+            Write-Host "Generated code differs. Please commit the changes after running compile_proto.sh."
+            exit 1
+          }
+
+          Remove-Item -Recurse -Force $BACKUP_DIR
+
+      - name: Run linter
+        run: |
+          uv run ruff check
+
+      - name: Run code formatting check
+        run: |
+          uv run ruff format --check
+
+      - name: Run type checking
+        run: |
+          uv run pyright
+
+      - name: Run tests
+        run: |
+          uv run pytest --junitxml=pytest.xml --tb=auto --cov-report=term-missing:skip-covered --cov=src tests/ | tee pytest-coverage.txt
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: test-results-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: pytest.xml
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize submodules
+        env:
+          GIT_ASKPASS: /bin/echo
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          git config --global url."https://${GH_PAT}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init --recursive
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Build package
+        run: uv build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: [test, build]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'published'
+    environment:
+      name: pypi
+      url: https://pypi.org/p/athena-client
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish package distributions to PyPI
+        run: uv publish --trusted-publishing always
