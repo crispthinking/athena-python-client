@@ -10,7 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path("../src").resolve()))
 
 # Project information
-pkg_metadata = metadata("resolver-athena-client")
+pkg_metadata = metadata("resolver_athena_client")
 project = pkg_metadata["Name"].replace("-", " ").title()
 
 copyright = str(datetime.now(timezone.utc).year)  # noqa: A001 - required Sphinx config variable
