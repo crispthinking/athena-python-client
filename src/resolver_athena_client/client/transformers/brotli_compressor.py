@@ -1,11 +1,10 @@
 """Compression middleware for images."""
 
-import brotli
-
 from resolver_athena_client.client.models import ImageData
 from resolver_athena_client.client.transformers.async_transformer import (
     AsyncTransformer,
 )
+from resolver_athena_client.client.transformers.core import compress_image
 
 
 class BrotliCompressor(AsyncTransformer[ImageData, ImageData]):
@@ -21,8 +20,4 @@ class BrotliCompressor(AsyncTransformer[ImageData, ImageData]):
             ImageData with compressed bytes but original hashes preserved.
 
         """
-        compressed_bytes = brotli.compress(data.data)
-        # Modify existing ImageData with compressed bytes but preserve hashes
-        # since compression doesn't change image content
-        data.data = compressed_bytes
-        return data
+        return compress_image(data)

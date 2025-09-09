@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from resolver_athena_client.generated.athena import athena_pb2 as athena_dot_athena__pb2
+from resolver_athena_client.generated.athena import models_pb2 as athena_dot_models__pb2
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 GRPC_GENERATED_VERSION = '1.74.0'
@@ -40,13 +40,18 @@ class ClassifierServiceStub(object):
         """
         self.Classify = channel.stream_stream(
                 '/athena.ClassifierService/Classify',
-                request_serializer=athena_dot_athena__pb2.ClassifyRequest.SerializeToString,
-                response_deserializer=athena_dot_athena__pb2.ClassifyResponse.FromString,
+                request_serializer=athena_dot_models__pb2.ClassifyRequest.SerializeToString,
+                response_deserializer=athena_dot_models__pb2.ClassifyResponse.FromString,
                 _registered_method=True)
         self.ListDeployments = channel.unary_unary(
                 '/athena.ClassifierService/ListDeployments',
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-                response_deserializer=athena_dot_athena__pb2.ListDeploymentsResponse.FromString,
+                response_deserializer=athena_dot_models__pb2.ListDeploymentsResponse.FromString,
+                _registered_method=True)
+        self.ClassifySingle = channel.unary_unary(
+                '/athena.ClassifierService/ClassifySingle',
+                request_serializer=athena_dot_models__pb2.ClassificationInput.SerializeToString,
+                response_deserializer=athena_dot_models__pb2.ClassificationOutput.FromString,
                 _registered_method=True)
 
 
@@ -74,18 +79,42 @@ class ClassifierServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ClassifySingle(self, request, context):
+        """Classifies a single image synchronously without deployment context
+        Returns classification results immediately in a single request-response cycle
+        Unlike the streaming Classify method, this operates independently of deployments
+        and does not require session management or deployment coordination
+
+        Use this for:
+        - Low-throughput, low-latency classification scenarios
+        - Simple one-off image classifications
+        - Applications where immediate synchronous responses are preferred over streaming
+        - Testing and debugging individual image classifications
+
+        The response will contain either classification results or error information
+        No deployment_id coordination is required or supported
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ClassifierServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Classify': grpc.stream_stream_rpc_method_handler(
                     servicer.Classify,
-                    request_deserializer=athena_dot_athena__pb2.ClassifyRequest.FromString,
-                    response_serializer=athena_dot_athena__pb2.ClassifyResponse.SerializeToString,
+                    request_deserializer=athena_dot_models__pb2.ClassifyRequest.FromString,
+                    response_serializer=athena_dot_models__pb2.ClassifyResponse.SerializeToString,
             ),
             'ListDeployments': grpc.unary_unary_rpc_method_handler(
                     servicer.ListDeployments,
                     request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                    response_serializer=athena_dot_athena__pb2.ListDeploymentsResponse.SerializeToString,
+                    response_serializer=athena_dot_models__pb2.ListDeploymentsResponse.SerializeToString,
+            ),
+            'ClassifySingle': grpc.unary_unary_rpc_method_handler(
+                    servicer.ClassifySingle,
+                    request_deserializer=athena_dot_models__pb2.ClassificationInput.FromString,
+                    response_serializer=athena_dot_models__pb2.ClassificationOutput.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -116,8 +145,8 @@ class ClassifierService(object):
             request_iterator,
             target,
             '/athena.ClassifierService/Classify',
-            athena_dot_athena__pb2.ClassifyRequest.SerializeToString,
-            athena_dot_athena__pb2.ClassifyResponse.FromString,
+            athena_dot_models__pb2.ClassifyRequest.SerializeToString,
+            athena_dot_models__pb2.ClassifyResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -144,7 +173,34 @@ class ClassifierService(object):
             target,
             '/athena.ClassifierService/ListDeployments',
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            athena_dot_athena__pb2.ListDeploymentsResponse.FromString,
+            athena_dot_models__pb2.ListDeploymentsResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ClassifySingle(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/athena.ClassifierService/ClassifySingle',
+            athena_dot_models__pb2.ClassificationInput.SerializeToString,
+            athena_dot_models__pb2.ClassificationOutput.FromString,
             options,
             channel_credentials,
             insecure,

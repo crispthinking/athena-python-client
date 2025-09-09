@@ -5,7 +5,7 @@ from types import TracebackType
 
 import grpc
 
-from resolver_athena_client.generated.athena.athena_pb2 import (
+from resolver_athena_client.generated.athena.models_pb2 import (
     ListDeploymentsResponse,
 )
 from resolver_athena_client.grpc_wrappers.classifier_service import (

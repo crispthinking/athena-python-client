@@ -19,18 +19,21 @@ python -m grpc_tools.protoc \
   --python_out="$OUT_DIR" \
   --grpc_python_out="$OUT_DIR" \
   --mypy_out="$OUT_DIR" \
+  "$PROTO_DIR/athena/models.proto" \
   "$PROTO_DIR/athena/athena.proto"
 
 # Fix imports in generated files
 if [[ "$OSTYPE" == "darwin"* ]]; then
   sed -i '' -e 's/^from athena /from resolver_athena_client.generated.athena /' "$OUT_DIR/athena/athena_pb2_grpc.py"
   sed -i '' -e 's/^from athena /from resolver_athena_client.generated.athena /' "$OUT_DIR/athena/athena_pb2.py"
+  sed -i '' -e 's/^from athena /from resolver_athena_client.generated.athena /' "$OUT_DIR/athena/models_pb2.py"
 else
   sed -i -e 's/^from athena /from resolver_athena_client.generated.athena /' "$OUT_DIR/athena/athena_pb2_grpc.py"
   sed -i -e 's/^from athena /from resolver_athena_client.generated.athena /' "$OUT_DIR/athena/athena_pb2.py"
+  sed -i -e 's/^from athena /from resolver_athena_client.generated.athena /' "$OUT_DIR/athena/models_pb2.py"
 fi
 
-if [ ! -f "$OUT_DIR/athena/athena_pb2.py" ] || [ ! -f "$OUT_DIR/athena/athena_pb2_grpc.py" ]; then
+if [ ! -f "$OUT_DIR/athena/athena_pb2.py" ] || [ ! -f "$OUT_DIR/athena/athena_pb2_grpc.py" ] || [ ! -f "$OUT_DIR/athena/models_pb2.py" ]; then
   echo "Error: Protobuf files were not generated successfully in $OUT_DIR."
   exit 1
 fi

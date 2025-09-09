@@ -9,7 +9,7 @@ from resolver_athena_client.client.athena_client import AthenaClient
 from resolver_athena_client.client.athena_options import AthenaOptions
 from resolver_athena_client.client.exceptions import AthenaError
 from resolver_athena_client.client.models import ImageData
-from resolver_athena_client.generated.athena.athena_pb2 import (
+from resolver_athena_client.generated.athena.models_pb2 import (
     ClassificationError,
     ClassificationOutput,
     ClassifyResponse,

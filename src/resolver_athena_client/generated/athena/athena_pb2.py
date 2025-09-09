@@ -23,38 +23,17 @@ _sym_db = _symbol_database.Default()
 
 
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
+from resolver_athena_client.generated.athena import models_pb2 as athena_dot_models__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13\x61thena/athena.proto\x12\x06\x61thena\x1a\x1bgoogle/protobuf/empty.proto\"B\n\x17ListDeploymentsResponse\x12\'\n\x0b\x64\x65ployments\x18\x01 \x03(\x0b\x32\x12.athena.Deployment\"4\n\nDeployment\x12\x15\n\rdeployment_id\x18\x01 \x01(\t\x12\x0f\n\x07\x62\x61\x63klog\x18\x02 \x01(\x05\"U\n\x0f\x43lassifyRequest\x12\x15\n\rdeployment_id\x18\x01 \x01(\t\x12+\n\x06inputs\x18\x02 \x03(\x0b\x32\x1b.athena.ClassificationInput\"\x9e\x01\n\x13\x43lassificationInput\x12\x11\n\taffiliate\x18\x01 \x01(\t\x12\x16\n\x0e\x63orrelation_id\x18\x02 \x01(\t\x12)\n\x08\x65ncoding\x18\x03 \x01(\x0e\x32\x17.athena.RequestEncoding\x12\x0c\n\x04\x64\x61ta\x18\x04 \x01(\x0c\x12#\n\x06\x66ormat\x18\x05 \x01(\x0e\x32\x13.athena.ImageFormat\"t\n\x10\x43lassifyResponse\x12\x31\n\x0cglobal_error\x18\x01 \x01(\x0b\x32\x1b.athena.ClassificationError\x12-\n\x07outputs\x18\x02 \x03(\x0b\x32\x1c.athena.ClassificationOutput\"\x8b\x01\n\x14\x43lassificationOutput\x12\x16\n\x0e\x63orrelation_id\x18\x01 \x01(\t\x12/\n\x0f\x63lassifications\x18\x02 \x03(\x0b\x32\x16.athena.Classification\x12*\n\x05\x65rror\x18\x03 \x01(\x0b\x32\x1b.athena.ClassificationError\"/\n\x0e\x43lassification\x12\r\n\x05label\x18\x01 \x01(\t\x12\x0e\n\x06weight\x18\x02 \x01(\x02\"X\n\x13\x43lassificationError\x12\x1f\n\x04\x63ode\x18\x01 \x01(\x0e\x32\x11.athena.ErrorCode\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x0f\n\x07\x64\x65tails\x18\x03 \x01(\t*\x8b\x01\n\tErrorCode\x12\x1a\n\x16\x45RROR_CODE_UNSPECIFIED\x10\x00\x12\x1e\n\x1a\x45RROR_CODE_IMAGE_TOO_LARGE\x10\x02\x12\x1a\n\x16\x45RROR_CODE_MODEL_ERROR\x10\x03\x12&\n\"ERROR_CODE_AFFILIATE_NOT_PERMITTED\x10\x04*s\n\x0fRequestEncoding\x12 \n\x1cREQUEST_ENCODING_UNSPECIFIED\x10\x00\x12!\n\x1dREQUEST_ENCODING_UNCOMPRESSED\x10\x01\x12\x1b\n\x17REQUEST_ENCODING_BROTLI\x10\x02*\xbf\x03\n\x0bImageFormat\x12\x1c\n\x18IMAGE_FORMAT_UNSPECIFIED\x10\x00\x12\x14\n\x10IMAGE_FORMAT_GIF\x10\x01\x12\x15\n\x11IMAGE_FORMAT_JPEG\x10\x02\x12\x14\n\x10IMAGE_FORMAT_BMP\x10\x03\x12\x14\n\x10IMAGE_FORMAT_DIB\x10\x04\x12\x14\n\x10IMAGE_FORMAT_PNG\x10\x05\x12\x15\n\x11IMAGE_FORMAT_WEBP\x10\x06\x12\x14\n\x10IMAGE_FORMAT_PBM\x10\x07\x12\x14\n\x10IMAGE_FORMAT_PGM\x10\x08\x12\x14\n\x10IMAGE_FORMAT_PPM\x10\t\x12\x14\n\x10IMAGE_FORMAT_PXM\x10\n\x12\x14\n\x10IMAGE_FORMAT_PNM\x10\x0b\x12\x14\n\x10IMAGE_FORMAT_PFM\x10\x0c\x12\x13\n\x0fIMAGE_FORMAT_SR\x10\r\x12\x14\n\x10IMAGE_FORMAT_RAS\x10\x0e\x12\x15\n\x11IMAGE_FORMAT_TIFF\x10\x0f\x12\x14\n\x10IMAGE_FORMAT_HDR\x10\x10\x12\x14\n\x10IMAGE_FORMAT_PIC\x10\x11\x12\x1a\n\x16IMAGE_FORMAT_RAW_UINT8\x10\x12\x32\xa2\x01\n\x11\x43lassifierService\x12\x41\n\x08\x43lassify\x12\x17.athena.ClassifyRequest\x1a\x18.athena.ClassifyResponse(\x01\x30\x01\x12J\n\x0fListDeployments\x12\x16.google.protobuf.Empty\x1a\x1f.athena.ListDeploymentsResponseBz\n\x18\x63om.resolver.athena.grpcB\x0b\x41thenaProto\xa2\x02\x03RAT\xaa\x02\x14Resolver.Athena.Grpc\xba\x02\x03RAT\xca\x02\x14Resolver\\Athena\\Grpc\xea\x02\x16Resolver::Athena::Grpcb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13\x61thena/athena.proto\x12\x06\x61thena\x1a\x1bgoogle/protobuf/empty.proto\x1a\x13\x61thena/models.proto2\xef\x01\n\x11\x43lassifierService\x12\x41\n\x08\x43lassify\x12\x17.athena.ClassifyRequest\x1a\x18.athena.ClassifyResponse(\x01\x30\x01\x12J\n\x0fListDeployments\x12\x16.google.protobuf.Empty\x1a\x1f.athena.ListDeploymentsResponse\x12K\n\x0e\x43lassifySingle\x12\x1b.athena.ClassificationInput\x1a\x1c.athena.ClassificationOutputB\x81\x01\n\x18\x63om.resolver.athena.grpcB\x12\x41thenaServiceProto\xa2\x02\x03RAT\xaa\x02\x14Resolver.Athena.Grpc\xba\x02\x03RAT\xca\x02\x14Resolver\\Athena\\Grpc\xea\x02\x16Resolver::Athena::Grpcb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'athena.athena_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
-  _globals['DESCRIPTOR']._serialized_options = b'\n\030com.resolver.athena.grpcB\013AthenaProto\242\002\003RAT\252\002\024Resolver.Athena.Grpc\272\002\003RAT\312\002\024Resolver\\Athena\\Grpc\352\002\026Resolver::Athena::Grpc'
-  _globals['_ERRORCODE']._serialized_start=830
-  _globals['_ERRORCODE']._serialized_end=969
-  _globals['_REQUESTENCODING']._serialized_start=971
-  _globals['_REQUESTENCODING']._serialized_end=1086
-  _globals['_IMAGEFORMAT']._serialized_start=1089
-  _globals['_IMAGEFORMAT']._serialized_end=1536
-  _globals['_LISTDEPLOYMENTSRESPONSE']._serialized_start=60
-  _globals['_LISTDEPLOYMENTSRESPONSE']._serialized_end=126
-  _globals['_DEPLOYMENT']._serialized_start=128
-  _globals['_DEPLOYMENT']._serialized_end=180
-  _globals['_CLASSIFYREQUEST']._serialized_start=182
-  _globals['_CLASSIFYREQUEST']._serialized_end=267
-  _globals['_CLASSIFICATIONINPUT']._serialized_start=270
-  _globals['_CLASSIFICATIONINPUT']._serialized_end=428
-  _globals['_CLASSIFYRESPONSE']._serialized_start=430
-  _globals['_CLASSIFYRESPONSE']._serialized_end=546
-  _globals['_CLASSIFICATIONOUTPUT']._serialized_start=549
-  _globals['_CLASSIFICATIONOUTPUT']._serialized_end=688
-  _globals['_CLASSIFICATION']._serialized_start=690
-  _globals['_CLASSIFICATION']._serialized_end=737
-  _globals['_CLASSIFICATIONERROR']._serialized_start=739
-  _globals['_CLASSIFICATIONERROR']._serialized_end=827
-  _globals['_CLASSIFIERSERVICE']._serialized_start=1539
-  _globals['_CLASSIFIERSERVICE']._serialized_end=1701
+  _globals['DESCRIPTOR']._serialized_options = b'\n\030com.resolver.athena.grpcB\022AthenaServiceProto\242\002\003RAT\252\002\024Resolver.Athena.Grpc\272\002\003RAT\312\002\024Resolver\\Athena\\Grpc\352\002\026Resolver::Athena::Grpc'
+  _globals['_CLASSIFIERSERVICE']._serialized_start=82
+  _globals['_CLASSIFIERSERVICE']._serialized_end=321
 # @@protoc_insertion_point(module_scope)

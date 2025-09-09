@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from resolver_athena_client.generated.athena.athena_pb2 import (
+    from resolver_athena_client.generated.athena.models_pb2 import (
         ClassificationError,
     )
 

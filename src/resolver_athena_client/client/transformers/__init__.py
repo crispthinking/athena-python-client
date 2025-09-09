@@ -9,6 +9,10 @@ from resolver_athena_client.client.transformers.brotli_compressor import (
 from resolver_athena_client.client.transformers.classification_input import (
     ClassificationInputTransformer,
 )
+from resolver_athena_client.client.transformers.core import (
+    compress_image,
+    resize_image,
+)
 from resolver_athena_client.client.transformers.image_resizer import (
     ImageResizer,
 )
@@ -22,4 +26,6 @@ __all__ = [
     "ClassificationInputTransformer",
     "ImageResizer",
     "RequestBatcher",
+    "compress_image",
+    "resize_image",
 ]
