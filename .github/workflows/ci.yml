@@ -52,31 +52,11 @@ jobs:
       - name: Install the project
         run: uv sync --locked --all-extras --dev
 
-      - name: Ensure no differences in generated code
-        if: runner.os != 'Windows'
+      - name: Generate protobuf code
         shell: bash
         run: |
           source .venv/bin/activate
-          GENERATED_DIR="src/resolver_athena_client/generated"
-          BACKUP_DIR="src/resolver_athena_client/generated_backup"
-
-          cp -r $GENERATED_DIR $BACKUP_DIR
-
-          ./scripts/compile_proto.sh || (echo "Protobuf compilation failed. Ensure submodules are initialized and the proto file exists." && exit 1)
-
-          # Fix imports in generated files
-          if [[ -f "$GENERATED_DIR/athena/athena_pb2_grpc.py" && -f "$GENERATED_DIR/athena/athena_pb2.py" ]]; then
-            sed -i.bak 's/^from athena /from resolver_athena_client.generated.athena /' "$GENERATED_DIR/athena/athena_pb2_grpc.py"
-            sed -i.bak 's/^from athena /from resolver_athena_client.generated.athena /' "$GENERATED_DIR/athena/athena_pb2.py"
-            rm -f "$GENERATED_DIR/athena/athena_pb2_grpc.py.bak" "$GENERATED_DIR/athena/athena_pb2.py.bak"
-          else
-            echo "Error: Expected files not found in $GENERATED_DIR/athena"
-            exit 1
-          fi
-
-          diff -r $GENERATED_DIR $BACKUP_DIR || (echo "Generated code differs. Please commit the changes after running compile_proto.sh." && exit 1)
-
-          rm -rf $BACKUP_DIR
+          ./scripts/compile_proto.sh || (echo "Protobuf compilation failed. Ensure submodules are initialized and proto files exist." && exit 1)
 
       - name: Run linter
         run: |
@@ -122,6 +102,17 @@ jobs:
         uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
+
+      - name: Generate protobuf code
+        run: |
+          source .venv/bin/activate
+          ./scripts/compile_proto.sh || (echo "Protobuf compilation failed. Ensure submodules are initialized and proto files exist." && exit 1)
 
       - name: Set version from tag
         run: |

@@ -8,7 +8,7 @@
 - Format code: `ruff format`
 - Lint code: `ruff check`
 - Install git hooks: `pre-commit install`
-- Compile protobufs: `bash scripts/compile_proto.sh` (run from root)
+- Compile protobufs: `bash scripts/compile_proto.sh` (run from root, required for local development)
 
 ## Code style
 - Use Python type hints throughout
@@ -30,7 +30,7 @@
 
 ## PR instructions
 - Title format: [component] Description
-- Run `ruff check`, `pyright`, and `pytest` before committing
+- Run `bash scripts/compile_proto.sh`, `ruff check`, `pyright`, and `pytest` before committing
 - Keep PRs focused on a single change
 - Add tests for new functionality
 - Update documentation for API changes
@@ -40,7 +40,8 @@
 - Use `uv` package manager instead of pip
 - Don't use `uv pip` commands, just the base `uv` commands
 - Run formatters before committing
-- Check generated code in `src/athena_client/generated/`
+- Generated code is built automatically in CI, but run `bash scripts/compile_proto.sh` locally for development
+- Generated code in `src/resolver_athena_client/generated/` is not committed to the repo
 - Add error handling at each pipeline stage
 - Use correlation IDs for request tracing
 

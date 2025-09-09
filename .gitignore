@@ -11,3 +11,6 @@ wheels/
 .env
 
 docs/_build/
+
+# Generated protobuf code
+src/resolver_athena_client/generated/
