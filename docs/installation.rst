@@ -128,7 +128,7 @@ To verify your installation works correctly:
    .. code-block:: python
 
       import resolver_athena_client
-      print(athena_client.__version__)
+      print(resolver_athena_client.__version__)
 
 2. **Run the test suite**:
 
