@@ -6,9 +6,9 @@ from io import BytesIO
 
 from PIL import Image
 
-from athena_client.client.consts import EXPECTED_HEIGHT, EXPECTED_WIDTH
-from athena_client.client.models import ImageData
-from athena_client.client.transformers.async_transformer import (
+from resolver_athena_client.client.consts import EXPECTED_HEIGHT, EXPECTED_WIDTH
+from resolver_athena_client.client.models import ImageData
+from resolver_athena_client.client.transformers.async_transformer import (
     AsyncTransformer,
 )
 

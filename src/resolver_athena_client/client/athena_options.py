@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from athena_client.client.correlation import (
+from resolver_athena_client.client.correlation import (
     CorrelationProvider,
     HashCorrelationProvider,
 )

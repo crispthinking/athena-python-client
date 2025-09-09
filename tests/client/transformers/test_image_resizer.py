@@ -7,9 +7,11 @@ from collections.abc import AsyncIterator
 import pytest
 from PIL import Image
 
-from athena_client.client.consts import EXPECTED_HEIGHT, EXPECTED_WIDTH
-from athena_client.client.models import ImageData
-from athena_client.client.transformers.image_resizer import ImageResizer
+from resolver_athena_client.client.consts import EXPECTED_HEIGHT, EXPECTED_WIDTH
+from resolver_athena_client.client.models import ImageData
+from resolver_athena_client.client.transformers.image_resizer import (
+    ImageResizer,
+)
 from tests.utils.mock_async_iterator import MockAsyncIterator
 
 # Test constants

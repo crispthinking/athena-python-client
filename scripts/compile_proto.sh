@@ -2,7 +2,7 @@
 
 # Define paths
 PROTO_DIR="athena-protobufs"
-OUT_DIR="src/athena_client/generated"
+OUT_DIR="src/resolver_athena_client/generated"
 
 # Ensure output directory exists
 mkdir -p "$OUT_DIR"
@@ -15,6 +15,7 @@ fi
 
 python -m grpc_tools.protoc \
   --proto_path="$PROTO_DIR" \
+  --proto_path="$(python -c "import grpc_tools; print(grpc_tools.__path__[0])")" \
   --python_out="$OUT_DIR" \
   --grpc_python_out="$OUT_DIR" \
   --mypy_out="$OUT_DIR" \
@@ -22,11 +23,11 @@ python -m grpc_tools.protoc \
 
 # Fix imports in generated files
 if [[ "$OSTYPE" == "darwin"* ]]; then
-  sed -i '' -e 's/^from athena /from athena_client.generated.athena /' "$OUT_DIR/athena/athena_pb2_grpc.py"
-  sed -i '' -e 's/^from athena /from athena_client.generated.athena /' "$OUT_DIR/athena/athena_pb2.py"
+  sed -i '' -e 's/^from athena /from resolver_athena_client.generated.athena /' "$OUT_DIR/athena/athena_pb2_grpc.py"
+  sed -i '' -e 's/^from athena /from resolver_athena_client.generated.athena /' "$OUT_DIR/athena/athena_pb2.py"
 else
-  sed -i -e 's/^from athena /from athena_client.generated.athena /' "$OUT_DIR/athena/athena_pb2_grpc.py"
-  sed -i -e 's/^from athena /from athena_client.generated.athena /' "$OUT_DIR/athena/athena_pb2.py"
+  sed -i -e 's/^from athena /from resolver_athena_client.generated.athena /' "$OUT_DIR/athena/athena_pb2_grpc.py"
+  sed -i -e 's/^from athena /from resolver_athena_client.generated.athena /' "$OUT_DIR/athena/athena_pb2.py"
 fi
 
 if [ ! -f "$OUT_DIR/athena/athena_pb2.py" ] || [ ! -f "$OUT_DIR/athena/athena_pb2_grpc.py" ]; then

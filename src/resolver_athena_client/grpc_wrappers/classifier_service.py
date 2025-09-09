@@ -6,12 +6,14 @@ from typing import TYPE_CHECKING
 from google.protobuf.empty_pb2 import Empty
 from grpc import aio
 
-from athena_client.generated.athena.athena_pb2 import (
+from resolver_athena_client.generated.athena.athena_pb2 import (
     ClassifyRequest,
     ClassifyResponse,
     ListDeploymentsResponse,
 )
-from athena_client.generated.athena.athena_pb2_grpc import ClassifierServiceStub
+from resolver_athena_client.generated.athena.athena_pb2_grpc import (
+    ClassifierServiceStub,
+)
 
 if TYPE_CHECKING:
     from grpc.aio import StreamStreamCall

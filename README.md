@@ -9,7 +9,7 @@ The Athena client supports two authentication methods:
 
 ### Static Token Authentication
 ```python
-from athena_client.client.channel import create_channel
+from resolver_athena_client.client.channel import create_channel
 
 # Use a pre-existing authentication token
 channel = create_channel(host="your-host", auth_token="your-token")
@@ -20,7 +20,7 @@ The credential helper automatically handles OAuth token acquisition and refresh:
 
 ```python
 import asyncio
-from athena_client.client.channel import CredentialHelper, create_channel_with_credentials
+from resolver_athena_client.client.channel import CredentialHelper, create_channel_with_credentials
 
 async def main():
     # Create credential helper with OAuth settings

@@ -10,7 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path("../src").resolve()))
 
 # Project information
-pkg_metadata = metadata("athena_client")
+pkg_metadata = metadata("resolver-athena-client")
 project = pkg_metadata["Name"].replace("-", " ").title()
 
 copyright = str(datetime.now(timezone.utc).year)  # noqa: A001 - required Sphinx config variable
@@ -92,8 +92,8 @@ html_static_path = ["_static"]
 html_favicon = "_static/images/favicon/favicon-32x32.png"
 html_css_files = ["css/custom.css"]
 
-# Intersphinx configuration
 intersphinx_mapping = {
+    # Disabled due to SSL certificate issues in development
     "python": ("https://docs.python.org/3", None),
     "aiohttp": ("https://docs.aiohttp.org/en/stable/", None),
     "grpc": ("https://grpc.github.io/grpc/python/", None),

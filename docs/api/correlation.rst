@@ -5,7 +5,7 @@ The correlation system provides mechanisms for generating and managing
 correlation IDs for requests. This system enables request tracing,
 deduplication, and logging correlation across the service.
 
-.. module:: athena_client.client.correlation
+.. module:: resolver_athena_client.client.correlation
 
 Correlation Providers
 ~~~~~~~~~~~~~~~~~~~~~

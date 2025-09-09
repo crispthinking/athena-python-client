@@ -23,9 +23,9 @@ Quick Start
 .. code-block:: python
 
     import asyncio
-    from athena_client.client.channel import CredentialHelper, create_channel_with_credentials
-    from athena_client.client.athena_client import AthenaClient
-    from athena_client.client.athena_options import AthenaOptions
+    from resolver_athena_client.client.channel import CredentialHelper, create_channel_with_credentials
+    from resolver_athena_client.client.athena_client import AthenaClient
+    from resolver_athena_client.client.athena_options import AthenaOptions
 
     async def main():
         credential_helper = CredentialHelper(
@@ -109,7 +109,7 @@ Support
 
 * Review the :doc:`examples` for common usage patterns
 * Check the :doc:`api/index` for detailed API documentation
-* See :doc:`athena_protobufs:index` for gRPC API documentation.
+* See the gRPC protobuf definitions in the athena-protobufs repository for API details.
 * Report issues on GitHub
 * Follow development guidelines in :doc:`contributing`
 

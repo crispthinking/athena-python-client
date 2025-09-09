@@ -1,7 +1,7 @@
 Client Interface
 ================
 
-.. currentmodule:: athena_client.client
+.. currentmodule:: resolver.athena_client.client
 
 The client module provides the main interface for interacting with Athena
 services, including the primary client class and authentication helpers.
@@ -19,7 +19,7 @@ Example:
     ...         print(result.outputs)
 
 
-.. currentmodule:: athena_client.client.athena_client
+.. currentmodule:: resolver_athena_client.client.athena_client
 
 .. autoclass:: AthenaClient
    :members:
@@ -30,7 +30,7 @@ Example:
 Channel Management
 ------------------
 
-.. currentmodule:: athena_client.client.channel
+.. currentmodule:: resolver_athena_client.client.channel
 
 .. autofunction:: create_channel_with_credentials
 
@@ -55,14 +55,14 @@ Channel Management
 Deployment Selection
 --------------------
 
-.. currentmodule:: athena_client.client.deployment_selector
+.. currentmodule:: resolver_athena_client.client.deployment_selector
 
 See :doc:`deployment_selector` for deployment discovery and selection functionality.
 
 Correlation and Tracing
 -----------------------
 
-.. currentmodule:: athena_client.client.correlation
+.. currentmodule:: resolver_athena_client.client.correlation
 
 .. autoclass:: CorrelationProvider
    :members:
@@ -87,7 +87,7 @@ Correlation and Tracing
 Utility Functions
 -----------------
 
-.. currentmodule:: athena_client.client.utils
+.. currentmodule:: resolver_athena_client.client.utils
 
 .. autofunction:: process_classification_outputs
 
@@ -109,7 +109,7 @@ Utility Functions
 Constants
 ---------
 
-.. currentmodule:: athena_client.client.consts
+.. currentmodule:: resolver_athena_client.client.consts
 
 Common constants used throughout the client library.
 
@@ -127,9 +127,9 @@ Basic Classification
 .. code-block:: python
 
     import asyncio
-    from athena_client.client.athena_client import AthenaClient
-    from athena_client.client.athena_options import AthenaOptions
-    from athena_client.client.channel import create_channel
+    from resolver_athena_client.client.athena_client import AthenaClient
+    from resolver_athena_client.client.athena_options import AthenaOptions
+    from resolver_athena_client.client.channel import create_channel
 
     async def main():
         # Create channel with static token
@@ -167,9 +167,9 @@ OAuth Authentication
 
     import asyncio
     import os
-    from athena_client.client.athena_client import AthenaClient
-    from athena_client.client.athena_options import AthenaOptions
-    from athena_client.client.channel import (
+    from resolver_athena_client.client.athena_client import AthenaClient
+    from resolver_athena_client.client.athena_options import AthenaOptions
+    from resolver_athena_client.client.channel import (
         CredentialHelper,
         create_channel_with_credentials
     )
@@ -205,12 +205,12 @@ Error Handling
 
 .. code-block:: python
 
-    from athena_client.client.exceptions import (
+    from resolver_athena_client.client.exceptions import (
         AthenaClientError,
         AuthenticationError,
         ConnectionError
     )
-    from athena_client.client.utils import (
+    from resolver_athena_client.client.utils import (
         process_classification_outputs,
         has_output_errors
     )

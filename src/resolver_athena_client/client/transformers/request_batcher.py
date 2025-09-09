@@ -5,7 +5,7 @@ import logging
 import time
 from collections.abc import AsyncIterator
 
-from athena_client.generated.athena.athena_pb2 import (
+from resolver_athena_client.generated.athena.athena_pb2 import (
     ClassificationInput,
     ClassifyRequest,
 )

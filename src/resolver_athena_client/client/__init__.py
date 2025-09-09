@@ -3,17 +3,17 @@
 This module provides a client for interacting with the Athena API.
 """
 
-from athena_client.client.channel import (
+from resolver_athena_client.client.channel import (
     CredentialHelper,
     create_channel_with_credentials,
 )
-from athena_client.client.exceptions import (
+from resolver_athena_client.client.exceptions import (
     ClassificationOutputError,
     CredentialError,
     OAuthError,
     TokenExpiredError,
 )
-from athena_client.client.utils import (
+from resolver_athena_client.client.utils import (
     get_output_error_summary,
     get_successful_outputs,
     has_output_errors,

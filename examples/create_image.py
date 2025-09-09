@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator
 
 from PIL import Image, ImageDraw
 
-from athena_client.client.models import ImageData
+from resolver_athena_client.client.models import ImageData
 
 # Global cache for reusable objects and constants
 _image_cache = {}

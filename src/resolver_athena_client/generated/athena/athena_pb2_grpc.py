@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from athena_client.generated.athena import athena_pb2 as athena_dot_athena__pb2
+from resolver_athena_client.generated.athena import athena_pb2 as athena_dot_athena__pb2
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 GRPC_GENERATED_VERSION = '1.74.0'

@@ -3,8 +3,10 @@ from collections.abc import AsyncIterator
 import brotli
 import pytest
 
-from athena_client.client.models import ImageData
-from athena_client.client.transformers.brotli_compressor import BrotliCompressor
+from resolver_athena_client.client.models import ImageData
+from resolver_athena_client.client.transformers.brotli_compressor import (
+    BrotliCompressor,
+)
 from tests.utils.mock_async_iterator import MockAsyncIterator
 
 

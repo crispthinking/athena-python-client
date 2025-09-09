@@ -10,10 +10,10 @@ import pytest
 from grpc import StatusCode
 from grpc.aio._call import AioRpcError
 
-from athena_client.client.athena_client import AthenaClient
-from athena_client.client.athena_options import AthenaOptions
-from athena_client.client.models import ImageData
-from athena_client.generated.athena.athena_pb2 import (
+from resolver_athena_client.client.athena_client import AthenaClient
+from resolver_athena_client.client.athena_options import AthenaOptions
+from resolver_athena_client.client.models import ImageData
+from resolver_athena_client.generated.athena.athena_pb2 import (
     ClassificationOutput,
     ClassifyResponse,
 )
@@ -78,7 +78,7 @@ async def test_timeout_behavior() -> None:
     )
 
     with mock.patch(
-        "athena_client.client.athena_client.ClassifierServiceClient"
+        "resolver_athena_client.client.athena_client.ClassifierServiceClient"
     ) as mock_client_cls:
         mock_client = mock_client_cls.return_value
         # Create an iterator that will wait longer than the timeout
@@ -120,7 +120,7 @@ async def test_infinite_timeout() -> None:
     )
 
     with mock.patch(
-        "athena_client.client.athena_client.ClassifierServiceClient"
+        "resolver_athena_client.client.athena_client.ClassifierServiceClient"
     ) as mock_client_cls:
         mock_client = mock_client_cls.return_value
         # Create an iterator with significant delays
@@ -167,7 +167,7 @@ async def test_custom_timeout() -> None:
     )
 
     with mock.patch(
-        "athena_client.client.athena_client.ClassifierServiceClient"
+        "resolver_athena_client.client.athena_client.ClassifierServiceClient"
     ) as mock_client_cls:
         mock_client = mock_client_cls.return_value
         # Create an iterator with delays between responses
@@ -202,7 +202,7 @@ async def test_timeout_with_errors() -> None:
     )
 
     with mock.patch(
-        "athena_client.client.athena_client.ClassifierServiceClient"
+        "resolver_athena_client.client.athena_client.ClassifierServiceClient"
     ) as mock_client_cls:
         mock_client = mock_client_cls.return_value
         # Use our custom MockGrpcError
@@ -240,7 +240,7 @@ async def test_timeout_with_cancellation() -> None:
     )
 
     with mock.patch(
-        "athena_client.client.athena_client.ClassifierServiceClient"
+        "resolver_athena_client.client.athena_client.ClassifierServiceClient"
     ) as mock_client_cls:
         mock_client = mock_client_cls.return_value
         mock_classify = SlowMockAsyncIterator(test_responses, delay=0.01)

@@ -228,7 +228,7 @@ Use structured error handling with custom exception types:
 
 .. code-block:: python
 
-   from athena_client.client.exceptions import AthenaClientError
+   from resolver_athena_client.client.exceptions import AthenaClientError
 
    try:
        result = await client.classify_image(image_data)
@@ -285,7 +285,7 @@ Use pytest with async support:
 
    import pytest
    from unittest.mock import AsyncMock, Mock
-   from athena_client.client.athena_client import AthenaClient
+   from resolver_athena_client.client.athena_client import AthenaClient
 
    @pytest.fixture
    async def mock_channel():

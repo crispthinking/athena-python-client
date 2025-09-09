@@ -11,14 +11,14 @@ import uuid
 from create_image import iter_images
 from dotenv import load_dotenv
 
-from athena_client.client.athena_client import AthenaClient
-from athena_client.client.athena_options import AthenaOptions
-from athena_client.client.channel import (
+from resolver_athena_client.client.athena_client import AthenaClient
+from resolver_athena_client.client.athena_options import AthenaOptions
+from resolver_athena_client.client.channel import (
     CredentialHelper,
     create_channel_with_credentials,
 )
-from athena_client.client.deployment_selector import DeploymentSelector
-from athena_client.client.utils import (
+from resolver_athena_client.client.deployment_selector import DeploymentSelector
+from resolver_athena_client.client.utils import (
     get_output_error_summary,
     has_output_errors,
     process_classification_outputs,

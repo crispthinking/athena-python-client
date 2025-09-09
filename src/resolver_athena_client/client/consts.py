@@ -1,4 +1,4 @@
-"""Constants for the athena_client's image properties."""
+"""Constants for the resolver_athena_client's image properties."""
 
 # Athena's classifier expects images to be 448x448 pixels.
 EXPECTED_WIDTH = 448

@@ -3,7 +3,9 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from athena_client.generated.athena.athena_pb2 import ClassificationError
+    from resolver_athena_client.generated.athena.athena_pb2 import (
+        ClassificationError,
+    )
 
 
 class AthenaError(Exception):

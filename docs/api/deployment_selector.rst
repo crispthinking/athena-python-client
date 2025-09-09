@@ -5,7 +5,7 @@ The deployment selector provides functionality for discovering and selecting
 Athena service deployments. It abstracts the complexities of deployment
 management and provides a simple interface for listing deployments.
 
-.. module:: athena_client.client.deployment_selector
+.. module:: resolver_athena_client.client.deployment_selector
 
 .. autoclass:: DeploymentSelector
    :members:

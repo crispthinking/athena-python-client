@@ -22,7 +22,7 @@ The OAuth credential helper is the recommended authentication method for product
 
 .. code-block:: python
 
-    from athena_client.client.channel import CredentialHelper, create_channel_with_credentials
+    from resolver_athena_client.client.channel import CredentialHelper, create_channel_with_credentials
 
     # Create credential helper
     credential_helper = CredentialHelper(
@@ -61,9 +61,9 @@ Set these environment variables for OAuth authentication:
     import os
     from dotenv import load_dotenv
 
-    from athena_client.client.channel import CredentialHelper, create_channel_with_credentials
-    from athena_client.client.athena_client import AthenaClient
-    from athena_client.client.athena_options import AthenaOptions
+    from resolver_athena_client.client.channel import CredentialHelper, create_channel_with_credentials
+    from resolver_athena_client.client.athena_client import AthenaClient
+    from resolver_athena_client.client.athena_options import AthenaOptions
 
     async def main():
         load_dotenv()
@@ -119,7 +119,7 @@ Static token authentication is suitable for simple use cases or when you already
 
 .. code-block:: python
 
-    from athena_client.client.channel import create_channel
+    from resolver_athena_client.client.channel import create_channel
 
     # Use existing authentication token
     channel = create_channel(
@@ -132,9 +132,9 @@ Static token authentication is suitable for simple use cases or when you already
 .. code-block:: python
 
     import asyncio
-    from athena_client.client.channel import create_channel
-    from athena_client.client.athena_client import AthenaClient
-    from athena_client.client.athena_options import AthenaOptions
+    from resolver_athena_client.client.channel import create_channel
+    from resolver_athena_client.client.athena_client import AthenaClient
+    from resolver_athena_client.client.athena_options import AthenaOptions
 
     async def main():
         # Create channel with static token
@@ -258,7 +258,7 @@ Handle OAuth-specific errors gracefully:
 
 .. code-block:: python
 
-    from athena_client.client.exceptions import AuthenticationError
+    from resolver_athena_client.client.exceptions import AuthenticationError
 
     try:
         token = await credential_helper.get_token()

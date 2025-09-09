@@ -3,10 +3,10 @@
 import logging
 from typing import TYPE_CHECKING
 
-from athena_client.client.exceptions import ClassificationOutputError
+from resolver_athena_client.client.exceptions import ClassificationOutputError
 
 if TYPE_CHECKING:
-    from athena_client.generated.athena.athena_pb2 import (
+    from resolver_athena_client.generated.athena.athena_pb2 import (
         ClassificationOutput,
         ClassifyResponse,
     )

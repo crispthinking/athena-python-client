@@ -30,13 +30,13 @@ This example shows:
     import os
     from dotenv import load_dotenv
 
-    from athena_client.client.athena_client import AthenaClient
-    from athena_client.client.athena_options import AthenaOptions
-    from athena_client.client.channel import (
+    from resolver_athena_client.client.athena_client import AthenaClient
+    from resolver_athena_client.client.athena_options import AthenaOptions
+    from resolver_athena_client.client.channel import (
         CredentialHelper,
         create_channel_with_credentials,
     )
-    from athena_client.client.deployment_selector import DeploymentSelector
+    from resolver_athena_client.client.deployment_selector import DeploymentSelector
 
     async def main():
         load_dotenv()
@@ -152,7 +152,7 @@ For simpler use cases, you can use static token authentication:
 
 .. code-block:: python
 
-    from athena_client.client.channel import create_channel
+    from resolver_athena_client.client.channel import create_channel
 
     # Use a pre-existing authentication token
     channel = create_channel(host="your-host", auth_token="your-token")
@@ -179,7 +179,7 @@ The examples demonstrate comprehensive error handling:
 
 .. code-block:: python
 
-    from athena_client.client.utils import (
+    from resolver_athena_client.client.utils import (
         get_output_error_summary,
         has_output_errors,
         process_classification_outputs,
@@ -323,7 +323,7 @@ Implement retry logic for robust applications:
 .. code-block:: python
 
     import asyncio
-    from athena_client.client.exceptions import AthenaClientError
+    from resolver_athena_client.client.exceptions import AthenaClientError
 
     max_retries = 3
     retry_delay = 1.0
