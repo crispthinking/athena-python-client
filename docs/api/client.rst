@@ -1,7 +1,7 @@
 Client Interface
 ================
 
-.. currentmodule:: resolver.athena_client.client
+.. currentmodule:: resolver_athena_client.client
 
 The client module provides the main interface for interacting with Athena
 services, including the primary client class and authentication helpers.
