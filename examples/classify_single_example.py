@@ -5,8 +5,7 @@ import asyncio
 import logging
 import os
 import sys
-import time
-from collections.abc import AsyncIterator
+import uuid
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -65,13 +64,14 @@ async def classify_single_image_example(
         try:
             # Classify the single image
             logger.info("Classifying single image...")
+            correlation_id = uuid.uuid4().hex[:8]
+            logger.info("Correlation ID: %s", correlation_id)
             result = await client.classify_single(
-                image_data, correlation_id="example-correlation-001"
+                image_data, correlation_id=correlation_id
             )
 
             # Process the result
             logger.info("Classification completed successfully!")
-            logger.info("Correlation ID: %s", result.correlation_id)
 
             if result.error:
                 logger.error(
@@ -181,83 +181,6 @@ async def classify_multiple_single_images_example(
     return successful_count
 
 
-async def compare_single_vs_streaming_example(
-    logger: logging.Logger,
-    options: AthenaOptions,
-    credential_helper: CredentialHelper,
-) -> None:
-    """Compare classify_single vs streaming classify for the same image.
-
-    This demonstrates the difference between the two approaches
-    and shows when each might be more appropriate.
-
-    Args:
-        logger: Logger instance for output
-        options: Configuration options for the Athena client
-        credential_helper: OAuth credential helper for authentication
-
-    """
-    # Create gRPC channel with credentials
-    channel = await create_channel_with_credentials(
-        options.host, credential_helper
-    )
-
-    # Create test image
-    image_bytes = create_test_image()
-    image_data = ImageData(image_bytes)
-
-    async with AthenaClient(channel, options) as client:
-        logger.info("Comparing single vs streaming classification...")
-
-        # Method 1: classify_single
-        logger.info("1. Using classify_single...")
-        start_time = time.time()
-
-        single_result = await client.classify_single(image_data, "single-test")
-        single_duration = time.time() - start_time
-
-        logger.info("Single classification took: %.3fs", single_duration)
-        if single_result.classifications:
-            logger.info(
-                "Single result: %s (%.3f)",
-                single_result.classifications[0].label,
-                single_result.classifications[0].weight,
-            )
-
-        # Method 2: streaming classify
-        logger.info("2. Using streaming classify...")
-        start_time = time.time()
-
-        # Create a new ImageData for streaming (to reset hashes)
-        stream_image_data = ImageData(image_bytes)
-
-        async def single_image_stream() -> AsyncIterator[ImageData]:
-            yield stream_image_data
-
-        streaming_results = []
-        async for response in client.classify_images(single_image_stream()):
-            streaming_results.extend(response.outputs)
-
-        streaming_duration = time.time() - start_time
-
-        logger.info("Streaming classification took: %.3fs", streaming_duration)
-        if streaming_results and streaming_results[0].classifications:
-            logger.info(
-                "Streaming result: %s (%.3f)",
-                streaming_results[0].classifications[0].label,
-                streaming_results[0].classifications[0].weight,
-            )
-
-        # Summary
-        logger.info("Summary:")
-        logger.info("  - Single method: %.3fs", single_duration)
-        logger.info("  - Streaming method: %.3fs", streaming_duration)
-        logger.info(
-            "  - Use single for: one-off classifications, testing, debugging"
-        )
-        logger.info("  - Use streaming for: batch processing, high throughput")
-
-
 async def main() -> int:
     """Run the classify_single examples."""
     logger = logging.getLogger(__name__)
@@ -328,12 +251,6 @@ async def main() -> int:
         if successful_count == 0:
             logger.error("No images were successfully classified")
             return 1
-
-        # Example 3: Compare methods
-        logger.info("\n=== Example 3: Single vs Streaming Comparison ===")
-        await compare_single_vs_streaming_example(
-            logger, options, credential_helper
-        )
 
         logger.info("\n=== All examples completed successfully! ===")
 
