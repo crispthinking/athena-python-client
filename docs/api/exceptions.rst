@@ -1,7 +1,7 @@
 Error Handling
 ==============
 
-.. currentmodule:: athena_client.client.exceptions
+.. currentmodule:: resolver_athena_client.client.exceptions
 
 The exceptions module provides a comprehensive hierarchy of exception types for handling various error conditions that can occur when using the Athena Client library.
 
@@ -88,7 +88,7 @@ Basic Error Handling
 
 .. code-block:: python
 
-    from athena_client.client.exceptions import (
+    from resolver_athena_client.client.exceptions import (
         AthenaError,
         InvalidAuthError,
         InvalidRequestError
@@ -118,7 +118,7 @@ OAuth Error Handling
 
 .. code-block:: python
 
-    from athena_client.client.exceptions import (
+    from resolver_athena_client.client.exceptions import (
         OAuthError,
         TokenExpiredError,
         CredentialError
@@ -145,8 +145,8 @@ Classification Error Handling
 
 .. code-block:: python
 
-    from athena_client.client.exceptions import ClassificationOutputError
-    from athena_client.client.utils import process_classification_outputs
+    from resolver_athena_client.client.exceptions import ClassificationOutputError
+    from resolver_athena_client.client.utils import process_classification_outputs
 
     try:
         async for result in results:
@@ -174,7 +174,7 @@ Connection Error Handling
 
 .. code-block:: python
 
-    from athena_client.client.exceptions import InvalidHostError
+    from resolver_athena_client.client.exceptions import InvalidHostError
     import asyncio
 
     try:
@@ -201,7 +201,7 @@ Retry Logic
 .. code-block:: python
 
     import asyncio
-    from athena_client.client.exceptions import (
+    from resolver_athena_client.client.exceptions import (
         AthenaError,
         TokenExpiredError,
         InvalidRequestError
@@ -239,7 +239,7 @@ Graceful Degradation
 
 .. code-block:: python
 
-    from athena_client.client.exceptions import AthenaError
+    from resolver_athena_client.client.exceptions import AthenaError
 
     async def classify_with_fallback(client, image_iterator, fallback_handler=None):
         """Classify images with fallback handling."""

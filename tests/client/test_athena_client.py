@@ -5,17 +5,17 @@ from unittest import mock
 import pytest
 from grpc import aio
 
-from athena_client.client.athena_client import AthenaClient
-from athena_client.client.athena_options import AthenaOptions
-from athena_client.client.exceptions import AthenaError
-from athena_client.client.models import ImageData
-from athena_client.generated.athena.athena_pb2 import (
+from resolver_athena_client.client.athena_client import AthenaClient
+from resolver_athena_client.client.athena_options import AthenaOptions
+from resolver_athena_client.client.exceptions import AthenaError
+from resolver_athena_client.client.models import ImageData
+from resolver_athena_client.generated.athena.athena_pb2 import (
     ClassificationError,
     ClassificationOutput,
     ClassifyResponse,
     ErrorCode,
 )
-from athena_client.grpc_wrappers.classifier_service import (
+from resolver_athena_client.grpc_wrappers.classifier_service import (
     ClassifierServiceClient,
 )
 from tests.utils.mock_async_iterator import MockAsyncIterator
@@ -61,7 +61,7 @@ async def test_classify_images_success(
 
     # Setup mock classifier client
     with mock.patch(
-        "athena_client.client.athena_client.ClassifierServiceClient"
+        "resolver_athena_client.client.athena_client.ClassifierServiceClient"
     ) as mock_client_cls:
         mock_client = mock_client_cls.return_value
 
@@ -99,7 +99,7 @@ async def test_client_context_manager_success(
     )  # Success response will have default empty global_error
 
     with mock.patch(
-        "athena_client.client.athena_client.ClassifierServiceClient"
+        "resolver_athena_client.client.athena_client.ClassifierServiceClient"
     ) as mock_client_cls:
         mock_client = mock_client_cls.return_value
 
@@ -138,7 +138,7 @@ async def test_client_context_manager_error(
     )
 
     with mock.patch(
-        "athena_client.client.athena_client.ClassifierServiceClient"
+        "resolver_athena_client.client.athena_client.ClassifierServiceClient"
     ) as mock_client_cls:
         mock_client = mock_client_cls.return_value
 
@@ -171,7 +171,7 @@ async def test_client_transformers_disabled(
     )
 
     with mock.patch(
-        "athena_client.client.athena_client.ClassifierServiceClient"
+        "resolver_athena_client.client.athena_client.ClassifierServiceClient"
     ) as mock_client_cls:
         mock_client = mock_client_cls.return_value
         mock_classify = MockAsyncIterator([test_response])
@@ -210,7 +210,7 @@ async def test_client_transformers_enabled(
     )
 
     with mock.patch(
-        "athena_client.client.athena_client.ClassifierServiceClient"
+        "resolver_athena_client.client.athena_client.ClassifierServiceClient"
     ) as mock_client_cls:
         mock_client = mock_client_cls.return_value
         mock_classify = MockAsyncIterator([test_response])

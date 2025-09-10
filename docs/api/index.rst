@@ -60,6 +60,7 @@ Core Modules
 
    client
    options
+   transformers
    exceptions
    grpc_wrappers
    deployment_selector
@@ -68,8 +69,8 @@ Core Modules
 Module Details
 --------------
 
-athena_client.client
-~~~~~~~~~~~~~~~~~~~~
+resolver_athena_client.client
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The main client module containing:
 
@@ -78,8 +79,8 @@ The main client module containing:
 * ``CredentialHelper``: OAuth authentication helper
 * ``create_channel``: Channel creation utilities
 
-athena_client.client.transformers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+resolver_athena_client.client.transformers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Image processing pipeline components:
 
@@ -88,8 +89,8 @@ Image processing pipeline components:
 * ``ImageValidator``: Validate image formats and data
 * ``Pipeline``: Combine multiple transformers
 
-athena_client.client.exceptions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+resolver_athena_client.client.exceptions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Exception hierarchy for error handling:
 
@@ -99,8 +100,8 @@ Exception hierarchy for error handling:
 * ``ValidationError``: Input validation failures
 * ``ProcessingError``: Image processing errors
 
-athena_client.grpc_wrappers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+resolver_athena_client.grpc_wrappers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Low-level gRPC integration:
 
@@ -117,9 +118,9 @@ Basic Client Usage
 
 .. code-block:: python
 
-    from athena_client.client.athena_client import AthenaClient
-    from athena_client.client.athena_options import AthenaOptions
-    from athena_client.client.channel import create_channel_with_credentials
+    from resolver_athena_client.client.athena_client import AthenaClient
+    from resolver_athena_client.client.athena_options import AthenaOptions
+    from resolver_athena_client.client.channel import create_channel_with_credentials
 
     # Setup
     options = AthenaOptions(
@@ -141,7 +142,7 @@ Error Handling
 
 .. code-block:: python
 
-    from athena_client.client.exceptions import (
+    from resolver_athena_client.client.exceptions import (
         AthenaClientError,
         AuthenticationError,
         ConnectionError
@@ -166,7 +167,7 @@ Pipeline Processing
 
 .. code-block:: python
 
-    from athena_client.client.transformers import ImageResizer, BrotliCompressor
+    from resolver_athena_client.client.transformers import ImageResizer, BrotliCompressor
 
     # Create processing pipeline
     resizer = ImageResizer(target_size=(512, 512))
@@ -223,7 +224,7 @@ Extend the processing pipeline with custom transformers:
 
 .. code-block:: python
 
-    from athena_client.client.transformers.base import BaseTransformer
+    from resolver_athena_client.client.transformers.base import BaseTransformer
 
     class CustomTransformer(BaseTransformer):
         async def transform(self, data: bytes) -> bytes:
@@ -237,7 +238,7 @@ Dynamically select deployments:
 
 .. code-block:: python
 
-    from athena_client.client.deployment_selector import DeploymentSelector
+    from resolver_athena_client.client.deployment_selector import DeploymentSelector
 
     async with DeploymentSelector(channel) as selector:
         deployments = await selector.list_deployments()
@@ -250,7 +251,7 @@ Track requests across the system:
 
 .. code-block:: python
 
-    from athena_client.client.correlation import generate_correlation_id
+    from resolver_athena_client.client.correlation import generate_correlation_id
 
     correlation_id = generate_correlation_id()
     # Use correlation_id for request tracing

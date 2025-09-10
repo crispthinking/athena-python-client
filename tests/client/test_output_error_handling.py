@@ -2,15 +2,15 @@
 
 import pytest
 
-from athena_client.client.exceptions import ClassificationOutputError
-from athena_client.client.utils import (
+from resolver_athena_client.client.exceptions import ClassificationOutputError
+from resolver_athena_client.client.utils import (
     get_output_error_summary,
     get_successful_outputs,
     has_output_errors,
     log_output_errors,
     process_classification_outputs,
 )
-from athena_client.generated.athena.athena_pb2 import (
+from resolver_athena_client.generated.athena.athena_pb2 import (
     Classification,
     ClassificationError,
     ClassificationOutput,

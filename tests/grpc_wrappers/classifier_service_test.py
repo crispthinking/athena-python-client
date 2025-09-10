@@ -3,11 +3,11 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from google.protobuf.empty_pb2 import Empty
 
-from athena_client.generated.athena.athena_pb2 import (
+from resolver_athena_client.generated.athena.athena_pb2 import (
     ClassifyResponse,
     ListDeploymentsResponse,
 )
-from athena_client.grpc_wrappers.classifier_service import (
+from resolver_athena_client.grpc_wrappers.classifier_service import (
     ClassifierServiceClient,
 )
 from tests.utils.mock_stream_call import MockStreamCall

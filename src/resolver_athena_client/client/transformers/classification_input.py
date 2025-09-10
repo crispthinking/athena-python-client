@@ -2,12 +2,12 @@
 
 from collections.abc import AsyncIterator
 
-from athena_client.client.correlation import CorrelationProvider
-from athena_client.client.models import ImageData
-from athena_client.client.transformers.async_transformer import (
+from resolver_athena_client.client.correlation import CorrelationProvider
+from resolver_athena_client.client.models import ImageData
+from resolver_athena_client.client.transformers.async_transformer import (
     AsyncTransformer,
 )
-from athena_client.generated.athena.athena_pb2 import (
+from resolver_athena_client.generated.athena.athena_pb2 import (
     ClassificationInput,
     ImageFormat,
     RequestEncoding,

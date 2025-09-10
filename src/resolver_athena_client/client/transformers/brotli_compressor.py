@@ -2,8 +2,8 @@
 
 import brotli
 
-from athena_client.client.models import ImageData
-from athena_client.client.transformers.async_transformer import (
+from resolver_athena_client.client.models import ImageData
+from resolver_athena_client.client.transformers.async_transformer import (
     AsyncTransformer,
 )
 

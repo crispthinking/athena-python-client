@@ -1,7 +1,7 @@
 Configuration Options
 =====================
 
-.. currentmodule:: athena_client.client.athena_options
+.. currentmodule:: resolver_athena_client.client.athena_options
 
 The options module provides configuration classes for customizing client behavior, connection settings, and processing options.
 
@@ -85,7 +85,7 @@ Development Configuration
 
 .. code-block:: python
 
-    from athena_client.client.athena_options import AthenaOptions
+    from resolver_athena_client.client.athena_options import AthenaOptions
 
     # Development setup
     dev_options = AthenaOptions(
@@ -153,7 +153,7 @@ Environment-Based Configuration
 .. code-block:: python
 
     import os
-    from athena_client.client.athena_options import AthenaOptions
+    from resolver_athena_client.client.athena_options import AthenaOptions
 
     # Load from environment variables
     options = AthenaOptions(
@@ -281,7 +281,7 @@ Configuration from Files
 
     import json
     from pathlib import Path
-    from athena_client.client.athena_options import AthenaOptions
+    from resolver_athena_client.client.athena_options import AthenaOptions
 
     def load_options_from_file(config_path: Path) -> AthenaOptions:
         """Load configuration from a JSON file."""

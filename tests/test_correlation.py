@@ -2,7 +2,7 @@
 
 import pytest
 
-from athena_client.client.correlation import HashCorrelationProvider
+from resolver_athena_client.client.correlation import HashCorrelationProvider
 
 
 def test_hash_correlation_provider_with_bytes() -> None:

@@ -7,21 +7,27 @@ from collections.abc import AsyncGenerator, AsyncIterator
 
 import grpc
 
-from athena_client.client.athena_options import AthenaOptions
-from athena_client.client.exceptions import AthenaError
-from athena_client.client.models import ImageData
-from athena_client.client.transformers.brotli_compressor import BrotliCompressor
-from athena_client.client.transformers.classification_input import (
+from resolver_athena_client.client.athena_options import AthenaOptions
+from resolver_athena_client.client.exceptions import AthenaError
+from resolver_athena_client.client.models import ImageData
+from resolver_athena_client.client.transformers.brotli_compressor import (
+    BrotliCompressor,
+)
+from resolver_athena_client.client.transformers.classification_input import (
     ClassificationInputTransformer,
 )
-from athena_client.client.transformers.image_resizer import ImageResizer
-from athena_client.client.transformers.request_batcher import RequestBatcher
-from athena_client.generated.athena.athena_pb2 import (
+from resolver_athena_client.client.transformers.image_resizer import (
+    ImageResizer,
+)
+from resolver_athena_client.client.transformers.request_batcher import (
+    RequestBatcher,
+)
+from resolver_athena_client.generated.athena.athena_pb2 import (
     ClassifyRequest,
     ClassifyResponse,
     RequestEncoding,
 )
-from athena_client.grpc_wrappers.classifier_service import (
+from resolver_athena_client.grpc_wrappers.classifier_service import (
     ClassifierServiceClient,
 )
 

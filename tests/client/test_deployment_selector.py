@@ -5,12 +5,12 @@ from unittest import mock
 import pytest
 from grpc import aio
 
-from athena_client.client.deployment_selector import DeploymentSelector
-from athena_client.generated.athena.athena_pb2 import (
+from resolver_athena_client.client.deployment_selector import DeploymentSelector
+from resolver_athena_client.generated.athena.athena_pb2 import (
     Deployment,
     ListDeploymentsResponse,
 )
-from athena_client.grpc_wrappers.classifier_service import (
+from resolver_athena_client.grpc_wrappers.classifier_service import (
     ClassifierServiceClient,
 )
 
@@ -39,7 +39,7 @@ async def test_list_deployments_success(mock_channel: mock.Mock) -> None:
 
     # Setup mock
     with mock.patch(
-        "athena_client.client.deployment_selector.ClassifierServiceClient"
+        "resolver_athena_client.client.deployment_selector.ClassifierServiceClient"
     ) as mock_client_cls:
         mock_client = mock_client_cls.return_value
         mock_client.list_deployments = mock.AsyncMock(
@@ -72,7 +72,7 @@ async def test_list_deployments_empty(mock_channel: mock.Mock) -> None:
 
     # Setup mock
     with mock.patch(
-        "athena_client.client.deployment_selector.ClassifierServiceClient"
+        "resolver_athena_client.client.deployment_selector.ClassifierServiceClient"
     ) as mock_client_cls:
         mock_client = mock_client_cls.return_value
         mock_client.list_deployments = mock.AsyncMock(
@@ -97,7 +97,7 @@ async def test_list_deployments_client_error(mock_channel: mock.Mock) -> None:
     """Test deployment listing when client raises an error."""
     # Setup mock to raise error
     with mock.patch(
-        "athena_client.client.deployment_selector.ClassifierServiceClient"
+        "resolver_athena_client.client.deployment_selector.ClassifierServiceClient"
     ) as mock_client_cls:
         mock_client = mock_client_cls.return_value
         mock_client.list_deployments = mock.AsyncMock(

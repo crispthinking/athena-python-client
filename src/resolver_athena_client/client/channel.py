@@ -8,7 +8,7 @@ import grpc
 import httpx
 from grpc.aio import Channel
 
-from athena_client.client.exceptions import (
+from resolver_athena_client.client.exceptions import (
     CredentialError,
     InvalidHostError,
     OAuthError,

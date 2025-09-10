@@ -1,4 +1,4 @@
-"""Single point of truth for the version of the athena_client package."""
+"""Single point of truth for the version of the package."""
 
 import importlib.metadata
 

@@ -7,12 +7,12 @@ import httpx
 import pytest
 from grpc.aio import Channel
 
-from athena_client.client.channel import (
+from resolver_athena_client.client.channel import (
     CredentialHelper,
     TokenMetadataPlugin,
     create_channel_with_credentials,
 )
-from athena_client.client.exceptions import (
+from resolver_athena_client.client.exceptions import (
     CredentialError,
     InvalidHostError,
     OAuthError,
