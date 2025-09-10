@@ -1,24 +1,8 @@
 name: Build and Deploy Documentation
 
 on:
-  push:
-    branches: [main, master]
-    paths:
-      - "docs/**"
-      - "src/**"
-      - "examples/**"
-      - "README.md"
-      - "pyproject.toml"
-      - ".github/workflows/docs.yml"
-  pull_request:
-    branches: [main, master]
-    paths:
-      - "docs/**"
-      - "src/**"
-      - "examples/**"
-      - "README.md"
-      - "pyproject.toml"
-      - ".github/workflows/docs.yml"
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       reason:
@@ -38,6 +22,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'published' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -58,16 +43,13 @@ jobs:
       - name: Build documentation
         run: |
           cd docs
-          uv run make clean
-          uv run make html
+          uv run make clean html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
           path: docs/_build/html
 
@@ -86,7 +68,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    if: github.event_name == 'release' && github.event.action == 'published' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
