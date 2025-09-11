@@ -58,7 +58,7 @@ build-backend = "uv_build"
 
 [tool.ruff]
 line-length = 80
-exclude = ["src/resolver_athena_client/generated/*"]
+exclude = ["src/resolver_athena_client/generated/*", "docs"]
 
 [tool.ruff.lint]
 select = ["ALL"]
