@@ -1,5 +1,5 @@
 [project]
-name = "resolver-athena-client"
+name = "resolver_athena_client"
 version = "0.0.0"
 description = "Python client library for Athena API - CSAM detection and content classification"
 readme = "README.md"
@@ -58,7 +58,7 @@ build-backend = "uv_build"
 
 [tool.ruff]
 line-length = 80
-exclude = ["src/resolver_athena_client/generated/*"]
+exclude = ["src/resolver_athena_client/generated/*", "docs"]
 
 [tool.ruff.lint]
 select = ["ALL"]

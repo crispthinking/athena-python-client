@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from google.protobuf.empty_pb2 import Empty
 
-from resolver_athena_client.generated.athena.athena_pb2 import (
+from resolver_athena_client.generated.athena.models_pb2 import (
     ClassifyResponse,
     ListDeploymentsResponse,
 )

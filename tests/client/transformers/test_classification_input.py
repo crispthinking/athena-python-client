@@ -7,7 +7,7 @@ from resolver_athena_client.client.models import ImageData
 from resolver_athena_client.client.transformers.classification_input import (
     ClassificationInputTransformer,
 )
-from resolver_athena_client.generated.athena.athena_pb2 import (
+from resolver_athena_client.generated.athena.models_pb2 import (
     ImageFormat,
     RequestEncoding,
 )

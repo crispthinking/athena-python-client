@@ -9,7 +9,7 @@ import pytest
 from resolver_athena_client.client.transformers.request_batcher import (
     RequestBatcher,
 )
-from resolver_athena_client.generated.athena.athena_pb2 import (
+from resolver_athena_client.generated.athena.models_pb2 import (
     ClassificationInput,
     ClassifyRequest,
     RequestEncoding,

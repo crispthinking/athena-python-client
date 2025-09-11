@@ -2,4 +2,4 @@
 
 import importlib.metadata
 
-__version__ = importlib.metadata.version("athena_client")
+__version__ = importlib.metadata.version("resolver-athena-client")

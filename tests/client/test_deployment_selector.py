@@ -6,7 +6,7 @@ import pytest
 from grpc import aio
 
 from resolver_athena_client.client.deployment_selector import DeploymentSelector
-from resolver_athena_client.generated.athena.athena_pb2 import (
+from resolver_athena_client.generated.athena.models_pb2 import (
     Deployment,
     ListDeploymentsResponse,
 )

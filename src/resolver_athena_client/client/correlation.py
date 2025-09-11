@@ -69,7 +69,7 @@ class HashCorrelationProvider(CorrelationProvider):
             else:
                 data_bytes = str(input_data).encode("utf-8")
 
-            return hashlib.sha256(data_bytes).hexdigest()
+            return hashlib.sha256(data_bytes).hexdigest()[:63]
         except Exception as e:
             error_msg = f"Failed to generate correlation ID from input: {e}"
             raise ValueError(error_msg) from e

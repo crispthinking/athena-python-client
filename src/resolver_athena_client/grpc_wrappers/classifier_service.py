@@ -6,13 +6,15 @@ from typing import TYPE_CHECKING
 from google.protobuf.empty_pb2 import Empty
 from grpc import aio
 
-from resolver_athena_client.generated.athena.athena_pb2 import (
+from resolver_athena_client.generated.athena.athena_pb2_grpc import (
+    ClassifierServiceStub,
+)
+from resolver_athena_client.generated.athena.models_pb2 import (
+    ClassificationInput,
+    ClassificationOutput,
     ClassifyRequest,
     ClassifyResponse,
     ListDeploymentsResponse,
-)
-from resolver_athena_client.generated.athena.athena_pb2_grpc import (
-    ClassifierServiceStub,
 )
 
 if TYPE_CHECKING:
@@ -65,3 +67,26 @@ class ClassifierServiceClient:
 
         """
         return await self.stub.ListDeployments(Empty())
+
+    async def classify_single(
+        self,
+        request: ClassificationInput,
+        timeout: float | None = None,
+    ) -> ClassificationOutput:
+        """Classify a single image synchronously without deployment context.
+
+        Args:
+            request (ClassificationInput): The classification input containing
+                the image data and metadata to be classified.
+            timeout (float | None): RPC timeout in seconds. None for no timeout.
+
+        Returns:
+            ClassificationOutput: The classification result containing either
+            classifications or error information.
+
+        """
+        return await self.stub.ClassifySingle(
+            request,
+            timeout=timeout,
+            wait_for_ready=True,
+        )

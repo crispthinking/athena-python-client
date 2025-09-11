@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import types
+import uuid
 from collections.abc import AsyncGenerator, AsyncIterator
 
 import grpc
@@ -16,15 +17,24 @@ from resolver_athena_client.client.transformers.brotli_compressor import (
 from resolver_athena_client.client.transformers.classification_input import (
     ClassificationInputTransformer,
 )
+from resolver_athena_client.client.transformers.core import (
+    compress_image,
+    resize_image,
+)
 from resolver_athena_client.client.transformers.image_resizer import (
     ImageResizer,
 )
 from resolver_athena_client.client.transformers.request_batcher import (
     RequestBatcher,
 )
-from resolver_athena_client.generated.athena.athena_pb2 import (
+from resolver_athena_client.generated.athena.models_pb2 import (
+    ClassificationInput,
+    ClassificationOutput,
     ClassifyRequest,
     ClassifyResponse,
+    HashType,
+    ImageFormat,
+    ImageHash,
     RequestEncoding,
 )
 from resolver_athena_client.grpc_wrappers.classifier_service import (
@@ -154,6 +164,101 @@ class AthenaClient:
             reconnect_count,
             max_reconnects,
         )
+
+    async def classify_single(
+        self, image_data: ImageData, correlation_id: str | None = None
+    ) -> ClassificationOutput:
+        """Classify a single image synchronously without deployment context.
+
+        This method provides immediate, synchronous classification results for
+        single images without requiring deployment coordination, session
+        management, or streaming setup. It's ideal for:
+
+        - Low-throughput, low-latency classification scenarios
+        - Simple one-off image classifications
+        - Applications where immediate responses are preferred over streaming
+        - Testing and debugging individual image classifications
+
+        Args:
+            image_data: ImageData object containing image bytes and metadata.
+                The image will be processed through the same transformation
+                pipeline as the streaming classify method (resize, compression)
+                based on client options.
+            correlation_id: Optional unique identifier for correlating this
+                request. If not provided, a UUID will be generated
+                automatically.
+
+        Returns:
+            ClassificationOutput containing either classification results or
+            error information for the single image.
+
+        Raises:
+            AthenaError: If the service returns an error.
+            grpc.aio.AioRpcError: For gRPC communication errors.
+
+        Example:
+            # Create ImageData from raw bytes
+            image_data = ImageData(image_bytes)
+
+            async with AthenaClient(channel, options) as client:
+                result = await client.classify_single(image_data)
+                if result.error:
+                    print(f"Classification error: {result.error.message}")
+                else:
+                    for classification in result.classifications:
+                        print(f"Label: {classification.label}, "
+                              f"Weight: {classification.weight}")
+
+        """
+        if correlation_id is None:
+            correlation_id = str(uuid.uuid4())
+
+        processed_image = image_data
+
+        # Apply image resizing if enabled
+        if self.options.resize_images:
+            processed_image = await resize_image(processed_image)
+
+        # Apply compression if enabled
+        if self.options.compress_images:
+            processed_image = compress_image(processed_image)
+
+        request_encoding = (
+            RequestEncoding.REQUEST_ENCODING_BROTLI
+            if self.options.compress_images
+            else RequestEncoding.REQUEST_ENCODING_UNCOMPRESSED
+        )
+
+        classification_input = ClassificationInput(
+            affiliate=self.options.affiliate,
+            correlation_id=correlation_id,
+            encoding=request_encoding,
+            data=processed_image.data,
+            format=ImageFormat.IMAGE_FORMAT_RAW_UINT8,
+            hashes=[
+                ImageHash(
+                    value=hash_value,
+                    type=HashType.HASH_TYPE_MD5,
+                )
+                for hash_value in processed_image.md5_hashes
+            ],
+        )
+
+        try:
+            result = await self.classifier.classify_single(
+                classification_input, timeout=self.options.timeout
+            )
+        except grpc.aio.AioRpcError:
+            self.logger.exception(
+                "gRPC error in classify_single",
+            )
+            raise
+
+        # Check for errors in the response
+        if result.error and result.error.message:
+            self._raise_athena_error(result.error.message)
+
+        return result
 
     def _create_request_pipeline(
         self, images: AsyncIterator[ImageData]

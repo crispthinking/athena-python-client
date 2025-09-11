@@ -139,3 +139,23 @@ async def iter_images(
                 counter[0] += 1
             yield ImageData(img_bytes)
             count += 1
+
+
+def create_test_image(
+    width: int = 160, height: int = 120, seed: int | None = None
+) -> bytes:
+    """Create a test image with specified dimensions and optional seed.
+
+    Args:
+        width: Width of the test image in pixels (default: 160)
+        height: Height of the test image in pixels (default: 120)
+        seed: Optional seed for reproducible image generation
+
+    Returns:
+        PNG image bytes
+
+    """
+    if seed is not None:
+        _rng.seed(seed)
+
+    return create_random_image(width, height)
