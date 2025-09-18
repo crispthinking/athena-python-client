@@ -92,11 +92,15 @@ To build the package, run:
 uv build
 ```
 
-To run the tests, run:
+To run the standard tests, run:
 
 ```bash
-pytest
+pytest -m 'not functional'
 ```
+
+Developers wishing to run the functional tests should see the
+[Functional Tests](#functional-tests) section below.
+
 
 To lint and format the code, run:
 
@@ -116,4 +120,33 @@ To re-compile the protobuf files, run from the repository's root directory:
 
 ```bash
 bash scripts/compile_proto.sh
+```
+
+### Functional Tests
+Functional tests require an Athena environment to run against. You can set up
+the environment variables in a `.env` file in the root of the repository, or in
+your shell environment:
+
+You must set the following variables:
+```
+ATHENA_HOST=your-athena-host (e.g. myathenahost.com)
+OAUTH_CLIENT_ID=your-oauth-client-id
+OAUTH_CLIENT_SECRET=your-oauth-client-secret
+```
+
+You can optionally set the following variables:
+```
+OAUTH_AUTH_URL=your-oauth-auth-url (default: https://crispthinking.auth0.com/oauth/token)
+OAUTH_AUDIENCE=your-oauth-audience (default: crisp-athena-live)
+TEST_IMAGE_COUNT=number-of-images-to-test-with (default: 5000) - this is the
+number of images the _streaming_ test will use.
+TEST_MIN_INTERVAL=minimum-interval-in-ms (default: None, send as fast as
+possible) - this is the minimum interval between
+images for the _streaming_ test.
+```
+
+Then run the functional tests with:
+
+```bash
+pytest -m functional
 ```
