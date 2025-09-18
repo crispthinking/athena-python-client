@@ -60,8 +60,6 @@ See `examples/oauth_example.py` for a complete working example.
 
 - `examples/example.py` - Basic classification example with static token
 - `examples/oauth_example.py` - OAuth authentication with credential helper
-- `examples/functional_test.py` - Extended OAuth example to validate all
-  requests receive a response
 - `examples/create_image.py` - Image generation utilities
 
 ## TODO

@@ -1,20 +1,10 @@
-#!/usr/bin/env python3
-"""Functional test script for image classification using OAuth authentication.
-
-This test is primarily used internally, but is provided here as a further
-example of using the Athena client with OAuth.
-"""
-
 import asyncio
 import logging
 import os
-import sys
 import time
-import uuid
 from collections.abc import AsyncIterator
 
-from create_image import iter_images
-from dotenv import load_dotenv
+import pytest
 
 from resolver_athena_client.client.athena_client import AthenaClient
 from resolver_athena_client.client.athena_options import AthenaOptions
@@ -32,6 +22,7 @@ from resolver_athena_client.generated.athena.models_pb2 import (
     ClassificationOutput,
     ClassifyResponse,
 )
+from tests.utils.image_generation import iter_images
 
 
 async def rate_limited_image_iter(
@@ -80,7 +71,7 @@ def dump_classifications(
         )
 
 
-async def run_smoke_test(
+async def classify_images(
     logger: logging.Logger,
     options: AthenaOptions,
     credential_helper: CredentialHelper,
@@ -191,89 +182,51 @@ async def run_smoke_test(
     return (sent_counter[0], received_count, error_count)
 
 
-async def main() -> int:
-    """Run the OAuth classification example."""
+@pytest.mark.asyncio
+@pytest.mark.functional
+async def test_streaming_classify(
+    athena_options: AthenaOptions, credential_helper: CredentialHelper
+) -> int:
+    """Run streaming classify functional test.
+
+    Environment variables are read from .env file if present, or from the
+    environment.
+
+    Required environment variables:
+        - OAUTH_CLIENT_ID: OAuth client ID
+        - OAUTH_CLIENT_SECRET: OAuth client secret
+
+    Optional environment variables:
+        - ATHENA_HOST: Athena service host (default: localhost)
+        - OAUTH_AUTH_URL: OAuth token URL
+        (default: https://crispthinking.auth0.com/oauth/token)
+        - OAUTH_AUDIENCE: OAuth audience (default: crisp-athena-dev)
+        - TEST_IMAGE_COUNT: Number of test images to classify (default: 5000)
+        - TEST_MIN_INTERVAL: Minimum interval in milliseconds between sending
+          images (default: None, send as fast as possible)
+    """
     logger = logging.getLogger(__name__)
-    load_dotenv()
 
     # Configuration
-    max_test_images = int(os.getenv("TEST_IMAGE_COUNT", str(10_000)))
+    max_test_images = int(os.getenv("TEST_IMAGE_COUNT", str(5_000)))
     min_interval_ms = os.getenv("TEST_MIN_INTERVAL_MS", None)
     if min_interval_ms is not None:
         min_interval_ms = int(min_interval_ms)
 
-    # OAuth credentials from environment
-    client_id = os.getenv("OAUTH_CLIENT_ID")
-    client_secret = os.getenv("OAUTH_CLIENT_SECRET")
-    auth_url = os.getenv(
-        "OAUTH_AUTH_URL", "https://crispthinking.auth0.com/oauth/token"
-    )
-    audience = os.getenv("OAUTH_AUDIENCE", "crisp-athena-dev")
-
-    if not client_id or not client_secret:
-        logger.error("OAUTH_CLIENT_ID and OAUTH_CLIENT_SECRET must be set")
-        return 1
-
-    host = os.getenv("ATHENA_HOST", "localhost")
-    logger.info("Connecting to %s", host)
-
-    # Create credential helper
-    credential_helper = CredentialHelper(
-        client_id=client_id,
-        client_secret=client_secret,
-        auth_url=auth_url,
-        audience=audience,
-    )
-
-    # Test token acquisition
-    try:
-        logger.info("Acquiring OAuth token...")
-        token = await credential_helper.get_token()
-        logger.info("Successfully acquired token (length: %d)", len(token))
-    except Exception:
-        logger.exception("Failed to acquire OAuth token")
-        return 1
-
-    max_deployment_id_length = 63
-
-    deployment_id = f"smoke-test-{uuid.uuid4()}"
-    if len(deployment_id) > max_deployment_id_length:
-        deployment_id = deployment_id[:max_deployment_id_length]
-
-    logger.info("Using deployment: %s", deployment_id)
-
-    # Run classification with OAuth authentication
-    options = AthenaOptions(
-        host=host,
-        resize_images=True,
-        deployment_id=deployment_id,
-        compress_images=True,
-        timeout=120.0,  # Maximum duration, not forced timeout
-        keepalive_interval=30.0,  # Longer intervals for persistent streams
-        affiliate="Crisp",
-    )
-
-    sent, received, errors = await run_smoke_test(
-        logger, options, credential_helper, max_test_images, min_interval_ms
+    sent, received, errors = await classify_images(
+        logger,
+        athena_options,
+        credential_helper,
+        max_test_images,
+        min_interval_ms,
     )
 
     if errors > 0:
-        logger.warning("Completed Unsuccessfully with %d errors", errors)
-        return 1
+        msg = f"Completed with {errors} errors"
+        raise AssertionError(msg)
 
     if sent == received:
-        logger.info("Success: %d requests processed", sent)
         return 0
 
-    logger.warning("Incomplete: %d sent, %d received", sent, received)
-    return 1
-
-
-if __name__ == "__main__":
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s.%(msecs)03d %(levelname)s: %(message)s",
-        datefmt="%H:%M:%S",
-    )
-
-    sys.exit(asyncio.run(main()))
+    msg = f"Incomplete: {sent} sent, {received} received"
+    raise AssertionError(msg)

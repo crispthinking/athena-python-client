@@ -73,5 +73,11 @@ exclude = ["src/resolver_athena_client/generated/*", ".venv"]
 venvPath = "."
 venv = ".venv"
 
+[tool.pytest.ini_options]
+markers = [
+    "functional: mark a test as a functional test",
+]
+addopts = "--strict-markers"
+
 [tool.coverage.run]
 omit = ["src/resolver_athena_client/generated/*"]
