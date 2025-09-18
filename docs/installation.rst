@@ -164,7 +164,7 @@ For development and testing, you'll typically need these environment variables:
 
    # Optional OAuth configuration
    export OAUTH_AUTH_URL="https://crispthinking.auth0.com/oauth/token"
-   export OAUTH_AUDIENCE="crisp-athena-dev"
+   export OAUTH_AUDIENCE="crisp-athena-live"
 
 You can create a `.env` file in the project root with these variables, and the examples will automatically load them using `python-dotenv`.
 

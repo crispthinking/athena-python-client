@@ -29,7 +29,7 @@ The OAuth credential helper is the recommended authentication method for product
         client_id="your-oauth-client-id",
         client_secret="your-oauth-client-secret",
         auth_url="https://crispthinking.auth0.com/oauth/token",  # Optional
-        audience="crisp-athena-dev"  # Optional
+        audience="crisp-athena-live"  # Optional
     )
 
     # Create authenticated channel
@@ -51,7 +51,7 @@ Set these environment variables for OAuth authentication:
 
     # Optional (defaults shown)
     export OAUTH_AUTH_URL="https://crispthinking.auth0.com/oauth/token"
-    export OAUTH_AUDIENCE="crisp-athena-dev"
+    export OAUTH_AUDIENCE="crisp-athena-live"
 
 **Complete Example:**
 
@@ -73,7 +73,7 @@ Set these environment variables for OAuth authentication:
             client_id=os.getenv("OAUTH_CLIENT_ID"),
             client_secret=os.getenv("OAUTH_CLIENT_SECRET"),
             auth_url=os.getenv("OAUTH_AUTH_URL", "https://crispthinking.auth0.com/oauth/token"),
-            audience=os.getenv("OAUTH_AUDIENCE", "crisp-athena-dev"),
+            audience=os.getenv("OAUTH_AUDIENCE", "crisp-athena-live"),
         )
 
         # Test token acquisition
@@ -166,7 +166,7 @@ Default Endpoints
 The credential helper uses these default OAuth endpoints:
 
 * **Auth URL**: ``https://crispthinking.auth0.com/oauth/token``
-* **Audience**: ``crisp-athena-dev``
+* **Audience**: ``crisp-athena-live``
 
 These can be overridden when creating the ``CredentialHelper``.
 

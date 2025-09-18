@@ -47,7 +47,7 @@ This example shows:
         auth_url = os.getenv(
             "OAUTH_AUTH_URL", "https://crispthinking.auth0.com/oauth/token"
         )
-        audience = os.getenv("OAUTH_AUDIENCE", "crisp-athena-dev")
+        audience = os.getenv("OAUTH_AUDIENCE", "crisp-athena-live")
         host = os.getenv("ATHENA_HOST", "localhost")
 
         # Create credential helper
@@ -125,7 +125,7 @@ All examples use environment variables for configuration. Create a ``.env`` file
 
     # Optional OAuth configuration (defaults shown)
     OAUTH_AUTH_URL=https://crispthinking.auth0.com/oauth/token
-    OAUTH_AUDIENCE=crisp-athena-dev
+    OAUTH_AUDIENCE=crisp-athena-live
 
 Running the Examples
 --------------------

@@ -72,7 +72,7 @@ class TestCredentialHelper:
         assert helper._client_id == "test_client_id"
         assert helper._client_secret == "test_client_secret"
         assert helper._auth_url == "https://crispthinking.auth0.com/oauth/token"
-        assert helper._audience == "crisp-athena-dev"
+        assert helper._audience == "crisp-athena-live"
         assert helper._token is None
         assert helper._token_expires_at is None
 
