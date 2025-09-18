@@ -26,7 +26,7 @@ async def credential_helper() -> CredentialHelper:
     auth_url = os.getenv(
         "OAUTH_AUTH_URL", "https://crispthinking.auth0.com/oauth/token"
     )
-    audience = os.getenv("OAUTH_AUDIENCE", "crisp-athena-dev")
+    audience = os.getenv("OAUTH_AUDIENCE", "crisp-athena-live")
 
     # Create credential helper
     credential_helper = CredentialHelper(

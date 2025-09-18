@@ -200,7 +200,7 @@ async def test_streaming_classify(
         - ATHENA_HOST: Athena service host (default: localhost)
         - OAUTH_AUTH_URL: OAuth token URL
         (default: https://crispthinking.auth0.com/oauth/token)
-        - OAUTH_AUDIENCE: OAuth audience (default: crisp-athena-dev)
+        - OAUTH_AUDIENCE: OAuth audience (default: crisp-athena-live)
         - TEST_IMAGE_COUNT: Number of test images to classify (default: 5000)
         - TEST_MIN_INTERVAL: Minimum interval in milliseconds between sending
           images (default: None, send as fast as possible)
