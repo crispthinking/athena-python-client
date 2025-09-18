@@ -35,10 +35,10 @@ from resolver_athena_client.generated.athena.athena_pb2 import (
 
 
 async def rate_limited_image_iter(
-        min_interval_ms: int,
-        max_images: int | None = None,
-        counter: list[int] | None = None,
-        ) -> AsyncIterator[ImageData]:
+    min_interval_ms: int,
+    max_images: int | None = None,
+    counter: list[int] | None = None,
+) -> AsyncIterator[ImageData]:
     """Generate images with a minimum interval between yields."""
     last_yield_time = time.time()
     async for image in iter_images(max_images, counter):
@@ -50,10 +50,8 @@ async def rate_limited_image_iter(
 
 
 def process_errors(
-        logger: logging.Logger,
-        result: ClassifyResponse,
-        current_error_count: int
-        ) -> int:
+    logger: logging.Logger, result: ClassifyResponse, current_error_count: int
+) -> int:
     """Process errors in the result and update the current error count."""
     if has_output_errors(result):
         error_summary = get_output_error_summary(result)
@@ -68,14 +66,12 @@ def process_errors(
 
 
 def dump_classifications(
-        logger: logging.Logger,
-        successful_outputs: list[ClassificationOutput]
-        ) -> None:
+    logger: logging.Logger, successful_outputs: list[ClassificationOutput]
+) -> None:
     """Dump classifications from successful outputs to the logger."""
     for output in successful_outputs:
         classifications = {
-            c.label: round(c.weight, 3)
-            for c in output.classifications
+            c.label: round(c.weight, 3) for c in output.classifications
         }
         logger.debug(
             "Result [%s]: %s",
@@ -114,16 +110,17 @@ async def run_smoke_test(
     received_count = 0
     error_count = 0
 
-    img_gen_func = (iter_images if rate_limit_min_interval_ms is None else
-                    lambda max_images, sent_ctr:
-                    rate_limited_image_iter(rate_limit_min_interval_ms,
-                                            max_images, sent_ctr))
+    img_gen_func = (
+        iter_images
+        if rate_limit_min_interval_ms is None
+        else lambda max_images, sent_ctr: rate_limited_image_iter(
+            rate_limit_min_interval_ms, max_images, sent_ctr
+        )
+    )
 
     async with AthenaClient(channel, options) as client:
         generated = img_gen_func(max_test_images, sent_counter)
-        results = client.classify_images(
-            generated
-        )
+        results = client.classify_images(generated)
 
         start_time = time.time()
 
@@ -149,12 +146,15 @@ async def run_smoke_test(
                     result, raise_on_error=False, log_errors=True
                 )
 
-                if (logger.isEnabledFor(logging.DEBUG)):
+                if logger.isEnabledFor(logging.DEBUG):
                     dump_classifications(logger, successful_outputs)
 
                 if received_count >= max_test_images:
-                    logger.info("Received all %s test images, with %d errors.",
-                                received_count, error_count)
+                    logger.info(
+                        "Received all %s test images, with %d errors.",
+                        received_count,
+                        error_count,
+                    )
                     break
 
         except Exception:
