@@ -12,9 +12,7 @@ def test_hash_correlation_provider_with_bytes() -> None:
     correlation_id = provider.get_correlation_id(test_input)
 
     # SHA-256 of b"test data"
-    expected = (
-        "916f0027a575074ce72a331777c3478d6513f786a591bd892da1a577bf2335f9"
-    )
+    expected = "916f0027a575074ce72a331777c3478d6513f786a591bd892da1a577bf2335f"
     assert correlation_id == expected
 
 
@@ -25,9 +23,7 @@ def test_hash_correlation_provider_with_string() -> None:
     correlation_id = provider.get_correlation_id(test_input)
 
     # SHA-256 of "test data" encoded as UTF-8
-    expected = (
-        "916f0027a575074ce72a331777c3478d6513f786a591bd892da1a577bf2335f9"
-    )
+    expected = "916f0027a575074ce72a331777c3478d6513f786a591bd892da1a577bf2335f"
     assert correlation_id == expected
 
 
@@ -39,9 +35,7 @@ def test_hash_correlation_provider_with_bytearray() -> None:
 
     # Convert bytearray to string before hashing
     # This matches provider's behavior
-    expected = (
-        "77d31b8539e943c4a1b3e54b971b979e6b666f9d354d0af433e22c0e5d0e90b6"
-    )
+    expected = "77d31b8539e943c4a1b3e54b971b979e6b666f9d354d0af433e22c0e5d0e90b"
     assert correlation_id == expected
 
 
