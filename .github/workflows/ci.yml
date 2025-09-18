@@ -72,6 +72,7 @@ jobs:
 
       - name: Run tests
         run: |
+          set -eou pipefail
           uv run pytest -m 'not functional' --junitxml=pytest.xml --tb=auto --cov-report=term-missing:skip-covered --cov=src/resolver_athena_client tests/ | tee pytest-coverage.txt
 
       - name: Upload test results
