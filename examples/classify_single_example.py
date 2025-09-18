@@ -8,7 +8,6 @@ import sys
 import uuid
 from pathlib import Path
 
-from create_image import create_test_image
 from dotenv import load_dotenv
 
 from resolver_athena_client.client.athena_client import AthenaClient
@@ -18,6 +17,7 @@ from resolver_athena_client.client.channel import (
     create_channel_with_credentials,
 )
 from resolver_athena_client.client.models import ImageData
+from tests.utils.image_generation import create_test_image
 
 
 async def classify_single_image_example(
