@@ -51,8 +51,17 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Set up Python
-        run: uv python install
+      - name: Set version from tag
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            TAG_VERSION=${GITHUB_REF#refs/tags/}
+            # Remove 'v' prefix if present
+            VERSION=${TAG_VERSION#v}
+            echo "Setting version to: $VERSION"
+            uv version "$VERSION"
+          else
+            echo "Not building from a tag, using default version"
+          fi
 
       - name: Install dependencies
         run: uv sync --locked --group docs
