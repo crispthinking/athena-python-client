@@ -35,12 +35,14 @@ async def run_oauth_example(
     """Run example classification with OAuth credential helper.
 
     Args:
+    ----
         logger: Logger instance for output
         options: Configuration options for the Athena client
         credential_helper: OAuth credential helper for authentication
         max_test_images: Maximum number of test images to generate
 
     Returns:
+    -------
         Number of requests sent and responses received
 
     """
