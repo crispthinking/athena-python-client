@@ -53,7 +53,7 @@ class CredentialHelper:
         client_id: str,
         client_secret: str,
         auth_url: str = "https://crispthinking.auth0.com/oauth/token",
-        audience: str = "crisp-athena-dev",
+        audience: str = "crisp-athena-live",
     ) -> None:
         """Initialize the credential helper.
 

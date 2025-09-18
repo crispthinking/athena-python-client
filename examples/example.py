@@ -143,7 +143,7 @@ async def main() -> int:
     auth_url = os.getenv(
         "OAUTH_AUTH_URL", "https://crispthinking.auth0.com/oauth/token"
     )
-    audience = os.getenv("OAUTH_AUDIENCE", "crisp-athena-dev")
+    audience = os.getenv("OAUTH_AUDIENCE", "crisp-athena-live")
 
     if not client_id or not client_secret:
         logger.error("OAUTH_CLIENT_ID and OAUTH_CLIENT_SECRET must be set")

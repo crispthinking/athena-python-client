@@ -28,7 +28,7 @@ async def main():
         client_id="your-oauth-client-id",
         client_secret="your-oauth-client-secret",
         auth_url="https://crispthinking.auth0.com/oauth/token",  # Optional, this is default
-        audience="crisp-athena-dev"  # Optional, this is default
+        audience="crisp-athena-live"  # Optional, this is default
     )
 
     # Create channel with automatic OAuth handling
