@@ -8,7 +8,6 @@ import sys
 import time
 import uuid
 
-from create_image import iter_images
 from dotenv import load_dotenv
 
 from resolver_athena_client.client.athena_client import AthenaClient
@@ -23,6 +22,7 @@ from resolver_athena_client.client.utils import (
     has_output_errors,
     process_classification_outputs,
 )
+from tests.utils.image_generation import iter_images
 
 
 async def run_oauth_example(
