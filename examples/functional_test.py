@@ -258,7 +258,7 @@ async def main() -> int:
     )
 
     if errors > 0:
-        logger.warning("Completed Unsuccesfully with %d errors", errors)
+        logger.warning("Completed Unsuccessfully with %d errors", errors)
         return 1
 
     if sent == received:
