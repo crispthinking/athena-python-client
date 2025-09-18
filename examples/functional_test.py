@@ -28,7 +28,7 @@ from resolver_athena_client.client.utils import (
     has_output_errors,
     process_classification_outputs,
 )
-from resolver_athena_client.generated.athena.athena_pb2 import (
+from resolver_athena_client.generated.athena.models_pb2 import (
     ClassificationOutput,
     ClassifyResponse,
 )
