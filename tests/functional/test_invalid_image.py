@@ -1,0 +1,95 @@
+import pytest
+from PIL import UnidentifiedImageError
+
+from resolver_athena_client.client.athena_client import AthenaClient
+from resolver_athena_client.client.athena_options import AthenaOptions
+from resolver_athena_client.client.channel import (
+    CredentialHelper,
+    create_channel_with_credentials,
+)
+from resolver_athena_client.client.exceptions import AthenaError
+from resolver_athena_client.client.models import ImageData
+from tests.utils.image_generation import create_test_image
+
+
+@pytest.mark.asyncio
+@pytest.mark.functional
+async def test_classify_single_invalid_image(
+    athena_options: AthenaOptions, credential_helper: CredentialHelper
+) -> None:
+    """Functional test for ClassifySingle endpoint and API methods.
+
+    This test creates a unique test image for each iteration and classifies it.
+    The test runs multiple iterations to ensure consistent behavior.
+    """
+
+    # Create gRPC channel with credentials
+    channel = await create_channel_with_credentials(
+        athena_options.host, credential_helper
+    )
+
+    async with AthenaClient(channel, athena_options) as client:
+        try:
+            # Create a unique test image for each iteration
+            image_bytes = b"this is not a valid image file"
+            image_data = ImageData(image_bytes)
+
+            with pytest.raises(UnidentifiedImageError) as e:
+                await client.classify_single(image_data)
+
+            expected_msg = "cannot identify image file"
+            assert expected_msg in str(e.value)
+
+        except Exception as e:
+            msg = "Unexpected exception during invalid image test"
+            raise AssertionError(msg) from e
+
+
+@pytest.mark.asyncio
+@pytest.mark.functional
+@pytest.mark.parametrize(
+    ("image_width", "image_height"),
+    [
+        (500, 500),  # too big both dimensions
+        (50, 50),  # too small both dimensions
+        (500, 448),  # too big width
+        (448, 500),  # too big height
+        (50, 448),  # too small width
+        (448, 50),  # too small height
+    ],
+)
+async def test_classify_single_invalid_size_image(
+    athena_options: AthenaOptions,
+    credential_helper: CredentialHelper,
+    image_width: int,
+    image_height: int,
+) -> None:
+    """Functional test for ClassifySingle endpoint and API methods.
+
+    This test creates a unique test image for each iteration and classifies it.
+    The test runs multiple iterations to ensure consistent behavior.
+    """
+
+    # Create gRPC channel with credentials
+    channel = await create_channel_with_credentials(
+        athena_options.host, credential_helper
+    )
+
+    athena_options.resize_images = False
+
+    async with AthenaClient(channel, athena_options) as client:
+        try:
+            # Create a unique test image for each iteration
+            image_bytes = create_test_image(
+                width=image_width, height=image_height
+            )
+            image_data = ImageData(image_bytes)
+
+            with pytest.raises(AthenaError) as e:
+                await client.classify_single(image_data)
+
+            assert "Image Classification Error" in str(e.value)
+
+        except Exception as e:
+            msg = "Unexpected exception during invalid image test"
+            raise AssertionError(msg) from e
