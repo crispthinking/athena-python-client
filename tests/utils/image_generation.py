@@ -124,7 +124,6 @@ def create_batch_images(
 
 async def iter_images(
     max_images: int | None = None,
-    counter: list[int] | None = None,
 ) -> AsyncIterator[ImageData]:
     """Generate random test images with maximum throughput optimization.
 
@@ -154,8 +153,6 @@ async def iter_images(
 
         # Yield each image
         for img_bytes in images:
-            if counter is not None:
-                counter[0] += 1
             yield ImageData(img_bytes)
             count += 1
 
@@ -188,11 +185,10 @@ def create_test_image(
 async def rate_limited_image_iter(
     min_interval_ms: int,
     max_images: int | None = None,
-    counter: list[int] | None = None,
 ) -> AsyncIterator[ImageData]:
     """Generate images with a minimum interval between yields."""
     last_yield_time = time.time()
-    async for image in iter_images(max_images, counter):
+    async for image in iter_images(max_images):
         elapsed_ms = (time.time() - last_yield_time) * 1000
         if elapsed_ms < min_interval_ms:
             await asyncio.sleep((min_interval_ms - elapsed_ms) / 1000)
