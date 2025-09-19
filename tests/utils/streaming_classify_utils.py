@@ -1,5 +1,6 @@
 import logging
 import time
+import typing
 from collections.abc import AsyncIterator
 
 from resolver_athena_client.client.athena_client import AthenaClient
@@ -18,6 +19,17 @@ from resolver_athena_client.generated.athena.models_pb2 import (
     ClassificationOutput,
     ClassifyResponse,
 )
+
+T = typing.TypeVar("T")
+
+
+async def count_and_yield(
+    source: AsyncIterator[T], counter: list[int]
+) -> AsyncIterator[T]:
+    """Wrap an async iterator to count items as they are yielded."""
+    async for item in source:
+        counter[0] += 1
+        yield item
 
 
 def process_errors(
@@ -82,7 +94,8 @@ async def classify_images(
     error_count = 0
 
     async with AthenaClient(channel, options) as client:
-        results = client.classify_images(image_generator)
+        counted_image_generator = count_and_yield(image_generator, sent_counter)
+        results = client.classify_images(counted_image_generator)
 
         start_time = time.time()
 
