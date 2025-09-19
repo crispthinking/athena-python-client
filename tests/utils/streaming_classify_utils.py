@@ -164,3 +164,64 @@ async def classify_images(
                     )
 
     return (sent_counter[0], received_count, error_count)
+
+
+async def classify_images_break_on_first_result(
+    logger: logging.Logger,
+    options: AthenaOptions,
+    credential_helper: CredentialHelper,
+    image_generator: AsyncIterator[ImageData],
+) -> tuple[int, int, int]:
+    """Run example classification with OAuth credential helper.
+
+    Args:
+        logger: Logger instance for output
+        options: Configuration options for the Athena client
+        credential_helper: OAuth credential helper for authentication
+        max_test_images: Maximum number of test images to generate
+        rate_limit_min_interval_ms: Optional minimum interval in milliseconds
+            between sending images to control rate. If None, sends as fast as
+            possible.
+
+    Returns:
+        Number of requests sent and responses received
+
+    """
+    channel = await create_channel_with_credentials(
+        options.host, credential_helper
+    )
+
+    sent_counter = [0]  # Use list to allow mutation in closure
+    received_count = 0
+    error_count = 0
+
+    async with AthenaClient(channel, options) as client:
+        counted_image_generator = count_and_yield(image_generator, sent_counter)
+        results = client.classify_images(counted_image_generator)
+
+        start_time = time.time()
+
+        try:
+            async for result in results:
+                received_count += len(result.outputs)
+
+                if received_count % 10 == 0:
+                    elapsed = time.time() - start_time
+                    rate = received_count / elapsed if elapsed > 0 else 0
+                    logger.info(
+                        "Sent %d requests, received %d responses (%.1f/sec)",
+                        sent_counter[0],
+                        received_count,
+                        rate,
+                    )
+
+                error_count = process_errors(logger, result, error_count)
+
+                break
+
+        except Exception:
+            logger.exception("Error during classification")
+            if received_count == 0:
+                raise
+
+    return (sent_counter[0], received_count, error_count)
