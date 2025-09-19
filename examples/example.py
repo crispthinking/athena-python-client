@@ -23,6 +23,7 @@ from resolver_athena_client.client.utils import (
     process_classification_outputs,
 )
 from tests.utils.image_generation import iter_images
+from tests.utils.streaming_classify_utils import count_and_yield
 
 
 async def run_oauth_example(
@@ -52,7 +53,7 @@ async def run_oauth_example(
 
     async with AthenaClient(channel, options) as client:
         results = client.classify_images(
-            iter_images(max_test_images, sent_counter)
+            count_and_yield(iter_images(max_test_images), sent_counter)
         )
 
         start_time = time.time()
