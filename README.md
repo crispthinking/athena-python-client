@@ -123,9 +123,19 @@ bash scripts/compile_proto.sh
 ```
 
 ### Functional Tests
-Functional tests require an Athena environment to run against. You can set up
-the environment variables in a `.env` file in the root of the repository, or in
-your shell environment:
+Functional tests require an Athena environment to run against.
+
+#### Pre-Requisites
+You will need:
+- An Athena host URL.
+- An OAuth client ID and secret with access to the Athena environment.
+- An affiliate with Athena enabled.
+- `imagemagick` installed on your system and on your path at `magick`.
+
+
+#### Preparing your environment
+You can set up the environment variables in a `.env` file in the root of the
+repository, or in your shell environment:
 
 You must set the following variables:
 ```
