@@ -74,6 +74,8 @@ def athena_options() -> AthenaOptions:
 
     affiliate = os.environ["ATHENA_TEST_AFFILIATE"]
 
+    affiliate = get_required_env_var("ATHENA_TEST_AFFILIATE")
+
     # Run classification with OAuth authentication
     return AthenaOptions(
         host=host,
