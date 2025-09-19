@@ -25,7 +25,9 @@ def _get_cached_image(
     return _image_cache[key]
 
 
-def create_random_image(width: int = 160, height: int = 120) -> bytes:
+def create_random_image(
+    width: int = 160, height: int = 120, img_format: str = "PNG"
+) -> bytes:
     """Create a minimal random image optimized for maximum speed.
 
     Args:
@@ -55,9 +57,24 @@ def create_random_image(width: int = 160, height: int = 120) -> bytes:
     x2, y2 = (width * 3) // 4, (height * 3) // 4
     draw.rectangle([x1, y1, x2, y2], fill=accent_color)
 
+    if img_format.upper() == "RAW_UINT8":
+        # Return raw bytes
+        r_bytes = []
+        g_bytes = []
+        b_bytes = []
+        for y in range(height):
+            for x in range(width):
+                pixel = image.getpixel((x, y))
+                assert pixel is not None
+                assert isinstance(pixel, tuple)
+                r_bytes.append(pixel[0])
+                g_bytes.append(pixel[1])
+                b_bytes.append(pixel[2])
+        return bytes(r_bytes + g_bytes + b_bytes)
+
     # Convert to PNG bytes
     buffer = io.BytesIO()
-    image.save(buffer, format="PNG")
+    image.save(buffer, format=img_format)
     return buffer.getvalue()
 
 
@@ -142,7 +159,10 @@ async def iter_images(
 
 
 def create_test_image(
-    width: int = 160, height: int = 120, seed: int | None = None
+    width: int = 160,
+    height: int = 120,
+    seed: int | None = None,
+    img_format: str = "PNG",
 ) -> bytes:
     """Create a test image with specified dimensions and optional seed.
 
@@ -150,12 +170,14 @@ def create_test_image(
         width: Width of the test image in pixels (default: 160)
         height: Height of the test image in pixels (default: 120)
         seed: Optional seed for reproducible image generation
+        img_format: Image format (default: PNG). Other formats like JPEG are
+            also supported.
 
     Returns:
-        PNG image bytes
+        image bytes in specified format (default: PNG)
 
     """
     if seed is not None:
         _rng.seed(seed)
 
-    return create_random_image(width, height)
+    return create_random_image(width, height, img_format)
