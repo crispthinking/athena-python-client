@@ -1,7 +1,9 @@
 """Ultra-fast random image creation utilities for maximum throughput."""
 
+import asyncio
 import io
 import random
+import time
 from collections.abc import AsyncIterator
 
 from PIL import Image, ImageDraw
@@ -181,3 +183,27 @@ def create_test_image(
         _rng.seed(seed)
 
     return create_random_image(width, height, img_format)
+
+
+async def rate_limited_image_iter(
+    min_interval_ms: int,
+    max_images: int | None = None,
+    counter: list[int] | None = None,
+) -> AsyncIterator[ImageData]:
+    """Generate images with a minimum interval between yields."""
+    last_yield_time = time.time()
+    async for image in iter_images(max_images, counter):
+        elapsed_ms = (time.time() - last_yield_time) * 1000
+        if elapsed_ms < min_interval_ms:
+            await asyncio.sleep((min_interval_ms - elapsed_ms) / 1000)
+        yield image
+        last_yield_time = time.time()
+
+
+def create_random_image_generator(
+    max_images: int, rate_limit_min_interval_ms: int | None = None
+) -> AsyncIterator[ImageData]:
+    if rate_limit_min_interval_ms is not None:
+        return rate_limited_image_iter(rate_limit_min_interval_ms, max_images)
+
+    return iter_images(max_images)
