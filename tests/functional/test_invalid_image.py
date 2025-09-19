@@ -142,10 +142,10 @@ async def test_classify_streaming_one_bad_image(
         generate_images(),
     )
 
-    assert sent == images_to_generate, (
-        f"Sent {sent}, expected {images_to_generate}"
-    )
-    assert recv == images_to_generate, (
-        f"Received {recv}, expected {images_to_generate}"
-    )
+    assert (
+        sent == images_to_generate
+    ), f"Sent {sent}, expected {images_to_generate}"
+    assert (
+        recv == images_to_generate
+    ), f"Received {recv}, expected {images_to_generate}"
     assert errors == 1, f"Expected 1 error, got {errors}"
