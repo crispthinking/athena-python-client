@@ -14,3 +14,6 @@ docs/_build/
 
 # Generated protobuf code
 src/resolver_athena_client/generated/
+
+# Generated functional test images
+tests/test_support/images/*
