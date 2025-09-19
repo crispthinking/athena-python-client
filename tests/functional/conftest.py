@@ -78,6 +78,8 @@ def athena_options() -> AthenaOptions:
     if len(deployment_id) > max_deployment_id_length:
         deployment_id = deployment_id[:max_deployment_id_length]
 
+    affiliate = get_required_env_var("ATHENA_TEST_AFFILIATE")
+
     # Run classification with OAuth authentication
     return AthenaOptions(
         host=host,
@@ -86,7 +88,7 @@ def athena_options() -> AthenaOptions:
         compress_images=True,
         timeout=120.0,  # Maximum duration, not forced timeout
         keepalive_interval=30.0,  # Longer intervals for persistent streams
-        affiliate="Crisp",
+        affiliate=affiliate,
     )
 
 

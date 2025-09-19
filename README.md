@@ -140,6 +140,7 @@ repository, or in your shell environment:
 You must set the following variables:
 ```
 ATHENA_HOST=your-athena-host (e.g. myathenahost.com)
+ATHENA_TEST_AFFILIATE=your-affiliate-id
 OAUTH_CLIENT_ID=your-oauth-client-id
 OAUTH_CLIENT_SECRET=your-oauth-client-secret
 ```
@@ -153,6 +154,10 @@ number of images the _streaming_ test will use.
 TEST_MIN_INTERVAL=minimum-interval-in-ms (default: None, send as fast as
 possible) - this is the minimum interval between
 images for the _streaming_ test.
+ATHENA_NON_EXISTENT_AFFILIATE=non-existent-affiliate-id (default:
+thisaffiliatedoesnotexist123) - this is used to test error handling.
+ATHENA_NON_PERMITTED_AFFILIATE=non-permitted-affiliate-id (default:
+thisaffiliatedoesnothaveathenaenabled) - this is used to test error handling.
 ```
 
 Then run the functional tests with:
