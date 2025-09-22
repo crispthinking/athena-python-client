@@ -143,6 +143,9 @@ ATHENA_HOST=your-athena-host (e.g. myathenahost.com)
 ATHENA_TEST_AFFILIATE=your-affiliate-id
 OAUTH_CLIENT_ID=your-oauth-client-id
 OAUTH_CLIENT_SECRET=your-oauth-client-secret
+ATHENA_TEST_PLATFORM_TOKEN=a standard platform token - this should be rejected
+as only athena specific tokens are accepted.
+ATHENA_TEST_EXPIRED_TOKEN=a valid but expired token - this should be rejected.
 ```
 
 You can optionally set the following variables:
