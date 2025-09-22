@@ -15,32 +15,7 @@ def create_channel(host: str, token: str) -> Channel:
         grpc.ssl_channel_credentials(),
         grpc.access_token_call_credentials(token),
     )
-    options = [
-        # Keep connections alive longer
-        ("grpc.keepalive_time_ms", 60000),  # Send keepalive every 60s
-        ("grpc.keepalive_timeout_ms", 30000),  # Wait 30s for keepalive ack
-        (
-            "grpc.keepalive_permit_without_calls",
-            1,
-        ),  # Allow keepalive when idle
-        # Optimize for persistent streams
-        ("grpc.http2.max_pings_without_data", 0),  # Allow unlimited pings
-        (
-            "grpc.http2.min_time_between_pings_ms",
-            60000,
-        ),  # Min 60s between pings
-        (
-            "grpc.http2.min_ping_interval_without_data_ms",
-            30000,
-        ),  # Min 30s when idle
-        # Increase buffer sizes for better performance
-        ("grpc.http2.write_buffer_size", 1024 * 1024),  # 1MB write buffer
-        (
-            "grpc.max_receive_message_length",
-            64 * 1024 * 1024,
-        ),  # 64MB max message
-    ]
-    return grpc.aio.secure_channel(host, credentials, options=options)
+    return grpc.aio.secure_channel(host, credentials)
 
 
 @pytest.mark.asyncio
