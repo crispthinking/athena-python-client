@@ -11,7 +11,7 @@ from resolver_athena_client.client.models import ImageData
 
 @pytest.mark.asyncio
 @pytest.mark.functional
-async def test_classsify_single_multi_format(
+async def test_classify_single_multi_format(
     athena_options: AthenaOptions,
     credential_helper: CredentialHelper,
     formatted_images: list[tuple[bytes, str]],
