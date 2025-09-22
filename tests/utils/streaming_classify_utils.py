@@ -175,10 +175,7 @@ async def classify_images_break_on_first_result(
         logger: Logger instance for output
         options: Configuration options for the Athena client
         credential_helper: OAuth credential helper for authentication
-        max_test_images: Maximum number of test images to generate
-        rate_limit_min_interval_ms: Optional minimum interval in milliseconds
-            between sending images to control rate. If None, sends as fast as
-            possible.
+        image_generator: Async iterator of ImageData objects
 
     Returns:
         Number of requests sent and responses received
