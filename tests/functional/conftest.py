@@ -86,7 +86,7 @@ def athena_options() -> AthenaOptions:
     )
 
 
-@pytest.fixture(params=SUPPORTED_TEST_FORMATS)
+@pytest.fixture(scope="session", params=SUPPORTED_TEST_FORMATS)
 def valid_formatted_image(
     request: pytest.FixtureRequest,
     tmp_path_factory: pytest.TempPathFactory,
