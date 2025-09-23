@@ -2,7 +2,6 @@ import os
 import shutil
 import subprocess
 import uuid
-from pathlib import Path
 
 import pytest
 import pytest_asyncio
@@ -17,7 +16,7 @@ from resolver_athena_client.client.consts import (
 )
 from tests.utils.image_generation import create_test_image
 
-IMAGEMAGICK_FORMATS = [
+SUPPORTED_TEST_FORMATS = [
     "gif",
     "bmp",
     "dib",
@@ -32,6 +31,7 @@ IMAGEMAGICK_FORMATS = [
     "ras",
     "tiff",
     "pic",
+    "raw_uint8",
 ]
 
 
@@ -86,60 +86,50 @@ def athena_options() -> AthenaOptions:
     )
 
 
-@pytest.fixture
-def formatted_images() -> list[tuple[bytes, str]]:
+@pytest.fixture(params=SUPPORTED_TEST_FORMATS)
+def valid_formatted_image(
+    request: pytest.FixtureRequest,
+    tmp_path_factory: pytest.TempPathFactory,
+) -> bytes:
+    image_format = request.param
     if (magick_path := shutil.which("magick")) is None:
-        msg = (
+        pytest.fail(
             "ImageMagick 'magick' command not found - cannot run "
             "multi-format test"
         )
-        raise AssertionError(msg)
 
-    images = []
-    this_dir = Path(__file__).resolve()
-    image_dir = this_dir.parent / "../test_support/images/"
-
-    if not image_dir.exists():
-        image_dir.mkdir(parents=True)
-    if not image_dir.is_dir():
-        msg = f"Image directory {image_dir} is not a directory"
-        raise AssertionError(msg)
+    image_dir = tmp_path_factory.mktemp("images")
 
     base_image_format = "png"
     base_image = create_test_image(
         EXPECTED_WIDTH, EXPECTED_HEIGHT, img_format=base_image_format
     )
     base_image_path = image_dir / "base_image.png"
-    with base_image_path.open("wb") as f:
-        f.write(base_image)
+    if not base_image_path.exists():
+        with base_image_path.open("wb") as f:
+            f.write(base_image)
 
-    for img_format in IMAGEMAGICK_FORMATS:
-        if img_format == base_image_format:
-            continue  # base image is already generated.
+    if image_format == base_image_format:
+        return base_image
 
-        converted_image_path = image_dir / f"test_image.{img_format}"
-        if converted_image_path.exists():
-            continue  # already generated - probably from previous run.
+    if image_format == "raw_uint8":
+        return create_test_image(
+            EXPECTED_WIDTH, EXPECTED_HEIGHT, img_format="raw_uint8"
+        )
 
-        cmd = f'magick "{base_image_path}" "{converted_image_path}"'
+    image_path = image_dir / f"test_image.{image_format}"
+    if not image_path.exists():
+        cmd = f'magick "{base_image_path}" "{image_path}"'
         subprocess.run(  # noqa: S603 - false positive :(
-            [magick_path, str(base_image_path), str(converted_image_path)],
+            [magick_path, str(base_image_path), str(image_path)],
             check=True,
             shell=False,
         )
 
-        if not converted_image_path.exists():
-            msg = f"Failed to create {img_format} image with command: {cmd}"
-            raise AssertionError(msg)
+        if not image_path.exists():
+            pytest.fail(
+                f"Failed to create {image_format} image with command: {cmd}"
+            )
 
-    for path in image_dir.iterdir():
-        if path.is_file():
-            with path.open("rb") as f:
-                img_bytes = f.read()
-                images.append((img_bytes, path.suffix.lstrip(".")))
-
-    raw_uint8 = create_test_image(
-        EXPECTED_WIDTH, EXPECTED_HEIGHT, img_format="raw_uint8"
-    )
-    images.append((raw_uint8, "raw_uint8"))
-    return images
+    with image_path.open("rb") as f:
+        return f.read()
