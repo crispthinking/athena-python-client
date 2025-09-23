@@ -27,7 +27,6 @@ async def test_classify_single(
     )
 
     async with AthenaClient(channel, athena_options) as client:
-        # Create a unique test image for each iteration
         image_bytes = create_test_image()
         image_data = ImageData(image_bytes)
 
