@@ -41,7 +41,7 @@ async def test_invalid_secret(athena_options: AthenaOptions) -> None:
 async def test_invalid_clientid(athena_options: AthenaOptions) -> None:
     """Test that an invalid OAuth client secret is rejected."""
     load_dotenv()
-    invalid_client_secret = os.environ["OAUTH_CLIENT_SECRET"]
+    client_secret = os.environ["OAUTH_CLIENT_SECRET"]
     client_id = "this_is_not_a_valid_client_id"
     auth_url = os.getenv(
         "OAUTH_AUTH_URL", "https://crispthinking.auth0.com/oauth/token"
@@ -50,7 +50,7 @@ async def test_invalid_clientid(athena_options: AthenaOptions) -> None:
 
     credential_helper = CredentialHelper(
         client_id=client_id,
-        client_secret=invalid_client_secret,
+        client_secret=client_secret,
         auth_url=auth_url,
         audience=audience,
     )
@@ -64,9 +64,9 @@ async def test_invalid_clientid(athena_options: AthenaOptions) -> None:
 @pytest.mark.asyncio
 @pytest.mark.functional
 async def test_invalid_audience(athena_options: AthenaOptions) -> None:
-    """Test that an invalid OAuth client secret is rejected."""
+    """Test that an invalid OAuth audience is rejected."""
     load_dotenv()
-    invalid_client_secret = os.environ["OAUTH_CLIENT_SECRET"]
+    client_secret = os.environ["OAUTH_CLIENT_SECRET"]
     client_id = "this_is_not_a_valid_client_id"
     auth_url = os.getenv(
         "OAUTH_AUTH_URL", "https://crispthinking.auth0.com/oauth/token"
@@ -75,7 +75,7 @@ async def test_invalid_audience(athena_options: AthenaOptions) -> None:
 
     credential_helper = CredentialHelper(
         client_id=client_id,
-        client_secret=invalid_client_secret,
+        client_secret=client_secret,
         auth_url=auth_url,
         audience=audience,
     )
