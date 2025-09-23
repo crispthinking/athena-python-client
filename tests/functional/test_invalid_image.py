@@ -10,6 +10,7 @@ from resolver_athena_client.client.channel import (
     CredentialHelper,
     create_channel_with_credentials,
 )
+from resolver_athena_client.client.consts import EXPECTED_HEIGHT, EXPECTED_WIDTH
 from resolver_athena_client.client.exceptions import AthenaError
 from resolver_athena_client.client.models import ImageData
 from tests.utils.image_generation import create_test_image
@@ -56,10 +57,10 @@ async def test_classify_single_invalid_image(
     [
         (500, 500),  # too big both dimensions
         (50, 50),  # too small both dimensions
-        (500, 448),  # too big width
-        (448, 500),  # too big height
-        (50, 448),  # too small width
-        (448, 50),  # too small height
+        (500, EXPECTED_HEIGHT),  # too big width
+        (EXPECTED_WIDTH, 500),  # too big height
+        (50, EXPECTED_HEIGHT),  # too small width
+        (EXPECTED_WIDTH, 50),  # too small height
     ],
 )
 async def test_classify_single_invalid_size_image(
@@ -118,7 +119,10 @@ async def test_classify_streaming_one_bad_image(
         else:
             images.append(
                 create_test_image(
-                    width=448, height=448, seed=i, img_format="RAW_UINT8"
+                    width=EXPECTED_WIDTH,
+                    height=EXPECTED_HEIGHT,
+                    seed=i,
+                    img_format="RAW_UINT8",
                 )
             )
 
