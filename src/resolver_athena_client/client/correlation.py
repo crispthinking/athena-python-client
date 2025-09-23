@@ -5,6 +5,8 @@ from __future__ import annotations
 import abc
 import hashlib
 
+from resolver_athena_client.client.consts import MAX_DEPLOYMENT_ID_LENGTH
+
 __all__ = ["CorrelationProvider", "HashCorrelationProvider"]
 
 
@@ -69,7 +71,9 @@ class HashCorrelationProvider(CorrelationProvider):
             else:
                 data_bytes = str(input_data).encode("utf-8")
 
-            return hashlib.sha256(data_bytes).hexdigest()[:63]
+            return hashlib.sha256(data_bytes).hexdigest()[
+                :MAX_DEPLOYMENT_ID_LENGTH
+            ]
         except Exception as e:
             error_msg = f"Failed to generate correlation ID from input: {e}"
             raise ValueError(error_msg) from e
