@@ -55,12 +55,12 @@ async def test_classify_single_invalid_image(
 @pytest.mark.parametrize(
     ("image_width", "image_height"),
     [
-        (500, 500),  # too big both dimensions
-        (50, 50),  # too small both dimensions
-        (500, EXPECTED_HEIGHT),  # too big width
-        (EXPECTED_WIDTH, 500),  # too big height
-        (50, EXPECTED_HEIGHT),  # too small width
-        (EXPECTED_WIDTH, 50),  # too small height
+        pytest.param(500, 500, id="too-big-both-dimensions"),
+        pytest.param(50, 50, id="too-small-both-dimensions"),
+        pytest.param(500, EXPECTED_HEIGHT, id="too-big-width"),
+        pytest.param(EXPECTED_WIDTH, 500, id="too-big-height"),
+        pytest.param(50, EXPECTED_HEIGHT, id="too-small-width"),
+        pytest.param(EXPECTED_WIDTH, 50, id="too-small-height"),
     ],
 )
 async def test_classify_single_invalid_size_image(
