@@ -123,7 +123,7 @@ async def test_classify_single_with_correlation_id(
     )
 
     # Call classify_single with custom correlation ID
-    await athena_client.classify_single(
+    _ = await athena_client.classify_single(
         sample_image_data, correlation_id=custom_correlation_id
     )
 
@@ -147,14 +147,16 @@ async def test_classify_single_auto_correlation_id(
     )
 
     # Call classify_single without correlation ID
-    await athena_client.classify_single(sample_image_data)
+    _ = await athena_client.classify_single(sample_image_data)
 
     # Verify a correlation ID was generated
     call_args = athena_client.classifier.classify_single.call_args[0][0]
     assert call_args.correlation_id is not None
     assert len(call_args.correlation_id) > 0
     # Should be a valid UUID format
-    uuid.UUID(call_args.correlation_id)  # This will raise if not a valid UUID
+    _ = uuid.UUID(
+        call_args.correlation_id
+    )  # This will raise if not a valid UUID
 
 
 @pytest.mark.asyncio
@@ -175,7 +177,7 @@ async def test_classify_single_with_compression(
     )
 
     # Call classify_single
-    await athena_client.classify_single(sample_image_data)
+    _ = await athena_client.classify_single(sample_image_data)
 
     # Verify compression settings were applied
     call_args = athena_client.classifier.classify_single.call_args[0][0]
@@ -210,7 +212,7 @@ async def test_classify_single_error_handling(
     )
 
     # Call classify_single with valid image
-    await athena_client.classify_single(valid_image_data)
+    _ = await athena_client.classify_single(valid_image_data)
 
     # Verify resizing was processed (encoding should be uncompressed)
     call_args = athena_client.classifier.classify_single.call_args[0][0]
@@ -239,7 +241,7 @@ async def test_classify_single_with_error_response(
 
     # Call classify_single and expect AthenaError
     with pytest.raises(AthenaError, match="Image is too large"):
-        await athena_client.classify_single(sample_image_data)
+        _ = await athena_client.classify_single(sample_image_data)
 
 
 @pytest.mark.asyncio
@@ -276,7 +278,7 @@ async def test_classify_single_timeout_parameter(
     )
 
     # Call classify_single
-    await athena_client.classify_single(sample_image_data)
+    _ = await athena_client.classify_single(sample_image_data)
 
     # Verify timeout was passed
     call_kwargs = athena_client.classifier.classify_single.call_args[1]
@@ -306,7 +308,7 @@ async def test_classify_single_multiple_hashes(
     )
 
     # Call classify_single
-    await athena_client.classify_single(image_data)
+    _ = await athena_client.classify_single(image_data)
 
     # Verify all hashes were included
     call_args = athena_client.classifier.classify_single.call_args[0][0]

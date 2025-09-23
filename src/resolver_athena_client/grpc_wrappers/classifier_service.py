@@ -1,7 +1,7 @@
 """Low-level GRPC client for the ClassifierService."""
 
 from collections.abc import AsyncIterable
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, final
 
 from google.protobuf.empty_pb2 import Empty
 from grpc import aio
@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from grpc.aio import StreamStreamCall
 
 
+@final
 class ClassifierServiceClient:
     """Low-level gRPC wrapper for the ClassifierService."""
 

@@ -1,5 +1,7 @@
 """Tests for correlation ID generation."""
 
+from typing import final, override
+
 import pytest
 
 from resolver_athena_client.client.correlation import HashCorrelationProvider
@@ -47,7 +49,11 @@ def test_hash_correlation_provider_with_invalid_input() -> None:
     provider = HashCorrelationProvider()
 
     # Create an object that raises an exception when converted to string
-    class BadStr:
+    @final
+    class BadStr(str):
+        __slots__ = ()
+
+        @override
         def __str__(self) -> str:
             error_msg = "Cannot convert to string"
             raise ValueError(error_msg)
@@ -55,7 +61,7 @@ def test_hash_correlation_provider_with_invalid_input() -> None:
     with pytest.raises(
         ValueError, match="Failed to generate correlation ID from input"
     ):
-        provider.get_correlation_id(BadStr())  # type: ignore[arg-type]
+        _ = provider.get_correlation_id(BadStr())
 
 
 def test_hash_correlation_provider_consistency() -> None:

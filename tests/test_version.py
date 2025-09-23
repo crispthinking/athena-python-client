@@ -13,7 +13,7 @@ def test_version_from_metadata() -> None:
         mock_version.return_value = "1.2.3"
         # Force reload of version module to get mocked value
 
-        importlib.reload(resolver_athena_client.version)
+        _ = importlib.reload(resolver_athena_client.version)
         assert resolver_athena_client.version.__version__ == "1.2.3"
 
 

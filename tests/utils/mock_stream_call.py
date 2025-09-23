@@ -1,7 +1,7 @@
 """Mock gRPC stream call for testing."""
 
 from collections.abc import AsyncIterator, Callable
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, override
 
 import grpc
 from grpc.aio import Call, Metadata, StreamStreamCall
@@ -24,8 +24,10 @@ class MockStreamCall(Generic[RequestT, ResponseT]):
 
     def __init__(self, responses: list[ResponseT]) -> None:
         """Initialize with response list."""
-        self.responses = responses.copy()
-        self.call_count = 0
+        self.responses: list[ResponseT] = responses.copy()
+        self.call_count: int = 0
+        self._last_timeout: float | None = None
+        self._last_wait_for_ready: bool = True
 
     def __call__(
         self,
@@ -57,12 +59,13 @@ class StreamCallMock(StreamStreamCall[RequestT, ResponseT]):
     ) -> None:
         """Initialize with request iterator and responses."""
         super().__init__()
-        self._request_iter = request_iter
-        self._responses = responses.copy()
-        self._done = False
-        self._cancelled = False
+        self._request_iter: AsyncIterator[RequestT] = request_iter
+        self._responses: list[ResponseT] = responses.copy()
+        self._done: bool = False
+        self._cancelled: bool = False
         self._done_callbacks: list[Callable[[Call], None]] = []
 
+    @override
     def __aiter__(self) -> AsyncIterator[ResponseT]:
         """Get async iterator over responses."""
         return self
@@ -80,6 +83,7 @@ class StreamCallMock(StreamStreamCall[RequestT, ResponseT]):
             raise StopAsyncIteration
         return self._responses.pop(0)
 
+    @override
     async def read(self) -> ResponseT:
         """Read next response message.
 
@@ -88,6 +92,7 @@ class StreamCallMock(StreamStreamCall[RequestT, ResponseT]):
         """
         return await self.__anext__()
 
+    @override
     async def write(self, request: RequestT) -> None:
         """Write a request message (no-op).
 
@@ -95,10 +100,12 @@ class StreamCallMock(StreamStreamCall[RequestT, ResponseT]):
             request: Request message to write.
         """
 
+    @override
     async def done_writing(self) -> None:
         """Signal end of request stream."""
         self._done = True
 
+    @override
     def add_done_callback(self, callback: Callable[[Call], None]) -> None:
         """Register completion callback.
 
@@ -109,6 +116,7 @@ class StreamCallMock(StreamStreamCall[RequestT, ResponseT]):
         if self._done:
             callback(self)
 
+    @override
     def time_remaining(self) -> float | None:
         """Get remaining timeout time.
 
@@ -117,6 +125,7 @@ class StreamCallMock(StreamStreamCall[RequestT, ResponseT]):
         """
         return None
 
+    @override
     def cancel(self) -> bool:
         """Cancel the call.
 
@@ -131,6 +140,7 @@ class StreamCallMock(StreamStreamCall[RequestT, ResponseT]):
             return True
         return False
 
+    @override
     def cancelled(self) -> bool:
         """Check if call was cancelled.
 
@@ -139,6 +149,7 @@ class StreamCallMock(StreamStreamCall[RequestT, ResponseT]):
         """
         return self._cancelled
 
+    @override
     async def code(self) -> grpc.StatusCode:
         """Get status code.
 
@@ -147,6 +158,7 @@ class StreamCallMock(StreamStreamCall[RequestT, ResponseT]):
         """
         return grpc.StatusCode.OK
 
+    @override
     async def details(self) -> str:
         """Get error details.
 
@@ -155,6 +167,7 @@ class StreamCallMock(StreamStreamCall[RequestT, ResponseT]):
         """
         return ""
 
+    @override
     async def initial_metadata(self) -> Metadata:
         """Get initial metadata.
 
@@ -163,6 +176,7 @@ class StreamCallMock(StreamStreamCall[RequestT, ResponseT]):
         """
         return Metadata()
 
+    @override
     async def trailing_metadata(self) -> Metadata:
         """Get trailing metadata.
 
@@ -171,6 +185,7 @@ class StreamCallMock(StreamStreamCall[RequestT, ResponseT]):
         """
         return Metadata()
 
+    @override
     def done(self) -> bool:
         """Check if call is complete.
 
@@ -179,5 +194,6 @@ class StreamCallMock(StreamStreamCall[RequestT, ResponseT]):
         """
         return self._done
 
+    @override
     async def wait_for_connection(self) -> None:
         """Wait for connection (no-op)."""

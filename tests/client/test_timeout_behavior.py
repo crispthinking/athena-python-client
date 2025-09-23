@@ -22,7 +22,7 @@ from resolver_athena_client.generated.athena.models_pb2 import (
 class MockGrpcError(AioRpcError):
     """Mock gRPC error for testing."""
 
-    def __init__(self, code: StatusCode, details: str | None = None) -> None:
+    def __init__(self, code: StatusCode, details: str | None = None) -> None:  # pyright: ignore[reportMissingSuperCall] - Mock
         self._code = code
         self._details: str | None = details
         self._debug_error_string: str | None = f"MockGrpcError: {code.name}"
