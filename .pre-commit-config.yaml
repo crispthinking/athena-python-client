@@ -9,10 +9,10 @@ repos:
     rev: 0.7.15
     hooks:
       - id: uv-lock
-  - repo: https://github.com/fsouza/mirrors-pyright
-    rev: v1.1.403
+  - repo: https://github.com/DetachHead/basedpyright-pre-commit-mirror
+    rev: v1.13.0
     hooks:
-      - id: pyright
+      - id: basedpyright
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
