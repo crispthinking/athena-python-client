@@ -1,3 +1,5 @@
+import os
+
 import grpc
 import pytest
 from dotenv import load_dotenv
@@ -6,7 +8,6 @@ from grpc.aio import Channel
 from resolver_athena_client.client.athena_client import AthenaClient
 from resolver_athena_client.client.athena_options import AthenaOptions
 from resolver_athena_client.client.models.input_model import ImageData
-from tests.functional.conftest import get_required_env_var
 from tests.utils.image_generation import create_test_image
 
 
@@ -45,7 +46,7 @@ async def test_platform_token_is_rejected(
 
     Only static tokens generated for Athena access should be accepted."""
     load_dotenv()
-    platform_token = get_required_env_var("ATHENA_TEST_PLATFORM_TOKEN")
+    platform_token = os.environ["ATHENA_TEST_PLATFORM_TOKEN"]
     channel = create_channel(athena_options.host, platform_token)
 
     async with AthenaClient(channel, athena_options) as client:
@@ -64,7 +65,7 @@ async def test_expired_token_is_rejected(athena_options: AthenaOptions) -> None:
 
     Only static tokens generated for Athena access should be accepted."""
     load_dotenv()
-    platform_token = get_required_env_var("ATHENA_TEST_EXPIRED_TOKEN")
+    platform_token = os.environ["ATHENA_TEST_EXPIRED_TOKEN"]
     channel = create_channel(athena_options.host, platform_token)
 
     async with AthenaClient(channel, athena_options) as client:

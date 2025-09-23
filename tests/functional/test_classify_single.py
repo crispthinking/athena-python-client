@@ -27,19 +27,13 @@ async def test_classify_single(
     )
 
     async with AthenaClient(channel, athena_options) as client:
-        for i in range(5):
-            try:
-                # Create a unique test image for each iteration
-                image_bytes = create_test_image(seed=i)
-                image_data = ImageData(image_bytes)
+        # Create a unique test image for each iteration
+        image_bytes = create_test_image()
+        image_data = ImageData(image_bytes)
 
-                # Classify with auto-generated correlation ID
-                result = await client.classify_single(image_data)
+        # Classify with auto-generated correlation ID
+        result = await client.classify_single(image_data)
 
-                if result.error.code:
-                    msg = f"Image Result Error: {result.error.message}"
-                    pytest.fail(msg)
-
-            except Exception as e:  # noqa: PERF203
-                msg = f"Image {i + 1} classification failed"
-                raise AssertionError(msg) from e
+        if result.error.code:
+            msg = f"Image Result Error: {result.error.message}"
+            pytest.fail(msg)

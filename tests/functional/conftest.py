@@ -10,6 +10,11 @@ from dotenv import load_dotenv
 
 from resolver_athena_client.client.athena_options import AthenaOptions
 from resolver_athena_client.client.channel import CredentialHelper
+from resolver_athena_client.client.consts import (
+    EXPECTED_HEIGHT,
+    EXPECTED_WIDTH,
+    MAX_DEPLOYMENT_ID_LENGTH,
+)
 from tests.utils.image_generation import create_test_image
 
 IMAGEMAGICK_FORMATS = [
@@ -30,20 +35,11 @@ IMAGEMAGICK_FORMATS = [
 ]
 
 
-def get_required_env_var(name: str) -> str:
-    """Get an environment variable or raise an error if not set."""
-    value = os.getenv(name)
-    if not value:
-        msg = f"Environment variable {name} must be set - cannot run test"
-        raise AssertionError(msg)
-    return value
-
-
 @pytest_asyncio.fixture
 async def credential_helper() -> CredentialHelper:
     load_dotenv()
-    client_id = get_required_env_var("OAUTH_CLIENT_ID")
-    client_secret = get_required_env_var("OAUTH_CLIENT_SECRET")
+    client_id = os.environ["OAUTH_CLIENT_ID"]
+    client_secret = os.environ["OAUTH_CLIENT_SECRET"]
     auth_url = os.getenv(
         "OAUTH_AUTH_URL", "https://crispthinking.auth0.com/oauth/token"
     )
@@ -72,13 +68,11 @@ def athena_options() -> AthenaOptions:
     load_dotenv()
     host = os.getenv("ATHENA_HOST", "localhost")
 
-    max_deployment_id_length = 63
-
     deployment_id = f"functional-test-{uuid.uuid4()}"
-    if len(deployment_id) > max_deployment_id_length:
-        deployment_id = deployment_id[:max_deployment_id_length]
+    if len(deployment_id) > MAX_DEPLOYMENT_ID_LENGTH:
+        deployment_id = deployment_id[:MAX_DEPLOYMENT_ID_LENGTH]
 
-    affiliate = get_required_env_var("ATHENA_TEST_AFFILIATE")
+    affiliate = os.environ["ATHENA_TEST_AFFILIATE"]
 
     # Run classification with OAuth authentication
     return AthenaOptions(
@@ -112,7 +106,9 @@ def formatted_images() -> list[tuple[bytes, str]]:
         raise AssertionError(msg)
 
     base_image_format = "png"
-    base_image = create_test_image(448, 448, img_format=base_image_format)
+    base_image = create_test_image(
+        EXPECTED_WIDTH, EXPECTED_HEIGHT, img_format=base_image_format
+    )
     base_image_path = image_dir / "base_image.png"
     with base_image_path.open("wb") as f:
         f.write(base_image)
@@ -142,6 +138,8 @@ def formatted_images() -> list[tuple[bytes, str]]:
                 img_bytes = f.read()
                 images.append((img_bytes, path.suffix.lstrip(".")))
 
-    raw_uint8 = create_test_image(448, 448, img_format="raw_uint8")
+    raw_uint8 = create_test_image(
+        EXPECTED_WIDTH, EXPECTED_HEIGHT, img_format="raw_uint8"
+    )
     images.append((raw_uint8, "raw_uint8"))
     return images

@@ -25,12 +25,8 @@ async def test_list_deployments(
     async with AthenaClient(classify_channel, athena_options) as client:
         # Classify a few images to ensure at least one deployment exists
         images = iter_images(max_images=32)
-        try:
-            async for _ in client.classify_images(images):
-                break  # Only need one response to ensure deployment exists
-        except Exception as e:
-            msg = "Initial classification to ensure deployment existence failed"
-            raise AssertionError(msg) from e
+        async for _ in client.classify_images(images):
+            break  # Only need one response to ensure deployment exists
 
     deployment_channel = await create_channel_with_credentials(
         athena_options.host, credential_helper

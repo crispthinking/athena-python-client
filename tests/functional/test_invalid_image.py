@@ -110,17 +110,25 @@ async def test_classify_streaming_one_bad_image(
     images_to_generate = 32
     for i in range(images_to_generate):
         if i == images_to_generate // 2:
-            images.append(create_test_image(width=500, height=500, seed=i))
+            images.append(
+                create_test_image(
+                    width=50, height=50, seed=i, img_format="RAW_UINT8"
+                )
+            )
         else:
-            images.append(create_test_image(width=448, height=448, seed=i))
+            images.append(
+                create_test_image(
+                    width=448, height=448, seed=i, img_format="RAW_UINT8"
+                )
+            )
 
     async def generate_images() -> AsyncIterator[ImageData]:
         for img in images:
             yield ImageData(img)
 
-    logger = logging.getLogger(__name__)
+    athena_options.resize_images = False
 
-    athena_options.resize_images = False  # set to false to trigger error
+    logger = logging.getLogger(__name__)
 
     sent, recv, errors = await classify_images(
         logger,
