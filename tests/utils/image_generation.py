@@ -60,19 +60,7 @@ def create_random_image(
     draw.rectangle([x1, y1, x2, y2], fill=accent_color)
 
     if img_format.upper() == "RAW_UINT8":
-        # Return raw bytes
-        r_bytes = []
-        g_bytes = []
-        b_bytes = []
-        for y in range(height):
-            for x in range(width):
-                pixel = image.getpixel((x, y))
-                assert pixel is not None
-                assert isinstance(pixel, tuple)
-                r_bytes.append(pixel[0])
-                g_bytes.append(pixel[1])
-                b_bytes.append(pixel[2])
-        return bytes(r_bytes + g_bytes + b_bytes)
+        return image.tobytes()
 
     # Convert to PNG bytes
     buffer = io.BytesIO()
