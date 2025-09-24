@@ -22,6 +22,7 @@ class ImageData:
     maintaining object identity while tracking transformation history.
 
     Attributes:
+    ----------
         data: The raw bytes of the image (modified in-place by transformers).
         sha256_hashes: List of SHA256 hashes tracking image transformations.
             Index 0 is the original image, subsequent indices track
@@ -31,6 +32,7 @@ class ImageData:
             transformations.
 
     Example:
+    -------
         # Create ImageData from raw bytes
         image_bytes = b"\\x89PNG\\r\\n\\x1a\\n..."  # PNG file bytes
         image_data = ImageData(image_bytes)
@@ -59,12 +61,15 @@ class ImageData:
         """Initialize ImageData with bytes and calculate hashes.
 
         Args:
+        ----
             image_bytes: The raw bytes of the image.
 
         """
-        self.data = image_bytes
-        self.sha256_hashes = [hashlib.sha256(image_bytes).hexdigest()]
-        self.md5_hashes = [hashlib.md5(image_bytes).hexdigest()]
+        self.data: bytes = image_bytes
+        self.sha256_hashes: list[str] = [
+            hashlib.sha256(image_bytes).hexdigest()
+        ]
+        self.md5_hashes: list[str] = [hashlib.md5(image_bytes).hexdigest()]
 
     def add_transformation_hashes(self) -> None:
         """Add new hashes for the current data to track transformations.

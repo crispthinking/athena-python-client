@@ -15,7 +15,7 @@ from resolver_athena_client.client.exceptions import OAuthError
 @pytest.mark.functional
 async def test_invalid_secret(athena_options: AthenaOptions) -> None:
     """Test that an invalid OAuth client secret is rejected."""
-    load_dotenv()
+    _ = load_dotenv()
     invalid_client_secret = "this_is_not_a_valid_secret"
     client_id = os.environ["OAUTH_CLIENT_ID"]
     auth_url = os.getenv(
@@ -31,7 +31,7 @@ async def test_invalid_secret(athena_options: AthenaOptions) -> None:
     )
 
     with pytest.raises(OAuthError):
-        await create_channel_with_credentials(
+        _ = await create_channel_with_credentials(
             athena_options.host, credential_helper=credential_helper
         )
 
@@ -40,7 +40,7 @@ async def test_invalid_secret(athena_options: AthenaOptions) -> None:
 @pytest.mark.functional
 async def test_invalid_clientid(athena_options: AthenaOptions) -> None:
     """Test that an invalid OAuth client secret is rejected."""
-    load_dotenv()
+    _ = load_dotenv()
     client_secret = os.environ["OAUTH_CLIENT_SECRET"]
     client_id = "this_is_not_a_valid_client_id"
     auth_url = os.getenv(
@@ -56,7 +56,7 @@ async def test_invalid_clientid(athena_options: AthenaOptions) -> None:
     )
 
     with pytest.raises(OAuthError):
-        await create_channel_with_credentials(
+        _ = await create_channel_with_credentials(
             athena_options.host, credential_helper=credential_helper
         )
 
@@ -65,7 +65,7 @@ async def test_invalid_clientid(athena_options: AthenaOptions) -> None:
 @pytest.mark.functional
 async def test_invalid_audience(athena_options: AthenaOptions) -> None:
     """Test that an invalid OAuth audience is rejected."""
-    load_dotenv()
+    _ = load_dotenv()
     client_secret = os.environ["OAUTH_CLIENT_SECRET"]
     client_id = "this_is_not_a_valid_client_id"
     auth_url = os.getenv(
@@ -81,6 +81,6 @@ async def test_invalid_audience(athena_options: AthenaOptions) -> None:
     )
 
     with pytest.raises(OAuthError):
-        await create_channel_with_credentials(
+        _ = await create_channel_with_credentials(
             athena_options.host, credential_helper=credential_helper
         )

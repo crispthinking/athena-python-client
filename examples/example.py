@@ -135,7 +135,7 @@ async def run_oauth_example(
 async def main() -> int:
     """Run the OAuth classification example."""
     logger = logging.getLogger(__name__)
-    load_dotenv()
+    _ = load_dotenv()
 
     # Configuration
     max_test_images = 10_000

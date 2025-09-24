@@ -1,6 +1,6 @@
 """Base classes for all Athena exceptions."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, final
 
 if TYPE_CHECKING:
     from resolver_athena_client.generated.athena.models_pb2 import (
@@ -15,45 +15,46 @@ class AthenaError(Exception):
 class InvalidRequestError(AthenaError):
     """Raised when the request is invalid."""
 
-    default_message = "Invalid request"
+    default_message: str = "Invalid request"
 
 
 class InvalidResponseError(AthenaError):
     """Raised when the response is invalid."""
 
-    default_message = "Invalid response"
+    default_message: str = "Invalid response"
 
 
 class InvalidAuthError(AthenaError):
     """Raised when the authentication is invalid."""
 
-    default_message = "auth_token cannot be empty"
+    default_message: str = "auth_token cannot be empty"
 
 
 class InvalidHostError(AthenaError):
     """Raised when the host is invalid."""
 
-    default_message = "host cannot be empty"
+    default_message: str = "host cannot be empty"
 
 
 class OAuthError(AthenaError):
     """Raised when OAuth authentication fails."""
 
-    default_message = "OAuth authentication failed"
+    default_message: str = "OAuth authentication failed"
 
 
 class TokenExpiredError(AthenaError):
     """Raised when the authentication token has expired."""
 
-    default_message = "Authentication token has expired"
+    default_message: str = "Authentication token has expired"
 
 
 class CredentialError(AthenaError):
     """Raised when there are issues with credential management."""
 
-    default_message = "Credential management error"
+    default_message: str = "Credential management error"
 
 
+@final
 class ClassificationOutputError(AthenaError):
     """Raised when an individual classification output contains an error."""
 
@@ -66,6 +67,7 @@ class ClassificationOutputError(AthenaError):
         """Initialize the classification output error.
 
         Args:
+        ----
             correlation_id: The correlation ID of the failed output
             error: The ClassificationError from the protobuf response
             message: Optional custom error message

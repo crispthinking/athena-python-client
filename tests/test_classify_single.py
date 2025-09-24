@@ -260,7 +260,7 @@ async def test_classify_single_timeout_handling(
 
     # Call classify_single and expect gRPC error to be re-raised
     with pytest.raises(grpc.aio.AioRpcError):
-        await athena_client.classify_single(sample_image_data)
+        _ = await athena_client.classify_single(sample_image_data)
 
 
 @pytest.mark.asyncio

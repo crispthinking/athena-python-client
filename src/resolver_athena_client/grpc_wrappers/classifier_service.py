@@ -1,4 +1,7 @@
 """Low-level GRPC client for the ClassifierService."""
+# pyright: reportUnknownMemberType = false
+# pyright: reportUnknownVariableType = false
+# No GRPC typehinting tracked here: https://github.com/grpc/grpc/issues/29041
 
 from collections.abc import AsyncIterable
 from typing import TYPE_CHECKING, final
@@ -29,6 +32,7 @@ class ClassifierServiceClient:
         """Initialize the client with a gRPC channel.
 
         Args:
+        ----
             channel (aio.Channel): A gRPC channel to communicate with the
             server.
 
@@ -43,12 +47,14 @@ class ClassifierServiceClient:
         """Perform image classification in a deployment-based streaming context.
 
         Args:
+        ----
             request_iter (AsyncIterable[ClassifyRequest]): An async
                 iterable of classify requests to be streamed to the server.
             timeout (float | None): RPC timeout in seconds. None for no timeout.
                 The overall duration for receiving all responses.
 
         Returns:
+        -------
             StreamStreamCall[ClassifyRequest, ClassifyResponse]: A gRPC stream
             call object that can be used as an async iterator of responses.
 
@@ -62,7 +68,8 @@ class ClassifierServiceClient:
     async def list_deployments(self) -> ListDeploymentsResponse:
         """Retrieve a list of all active deployment IDs.
 
-        Returns:
+        Returns
+        -------
             ListDeploymentsResponse: The model representing the list
             deployments response.
 
@@ -77,11 +84,13 @@ class ClassifierServiceClient:
         """Classify a single image synchronously without deployment context.
 
         Args:
+        ----
             request (ClassificationInput): The classification input containing
                 the image data and metadata to be classified.
             timeout (float | None): RPC timeout in seconds. None for no timeout.
 
         Returns:
+        -------
             ClassificationOutput: The classification result containing either
             classifications or error information.
 

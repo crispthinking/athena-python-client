@@ -30,12 +30,14 @@ async def classify_single_image_example(
     """Demonstrate single image classification.
 
     Args:
+    ----
         logger: Logger instance for output
         options: Configuration options for the Athena client
         credential_helper: OAuth credential helper for authentication
         image_path: Path to image file to classify (optional)
 
     Returns:
+    -------
         True if classification was successful, False otherwise
 
     """
@@ -117,12 +119,14 @@ async def classify_multiple_single_images_example(
     when you want individual control over each classification request.
 
     Args:
+    ----
         logger: Logger instance for output
         options: Configuration options for the Athena client
         credential_helper: OAuth credential helper for authentication
         num_images: Number of test images to classify
 
     Returns:
+    -------
         Number of successfully classified images
 
     """
@@ -185,7 +189,7 @@ async def classify_multiple_single_images_example(
 async def main() -> int:
     """Run the classify_single examples."""
     logger = logging.getLogger(__name__)
-    load_dotenv()
+    _ = load_dotenv()
 
     # OAuth credentials from environment
     client_id = os.getenv("OAUTH_CLIENT_ID")

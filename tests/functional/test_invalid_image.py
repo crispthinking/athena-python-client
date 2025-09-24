@@ -40,7 +40,7 @@ async def test_classify_single_invalid_image(
             image_data = ImageData(image_bytes)
 
             with pytest.raises(UnidentifiedImageError) as e:
-                await client.classify_single(image_data)
+                _ = await client.classify_single(image_data)
 
             expected_msg = "cannot identify image file"
             assert expected_msg in str(e.value)
@@ -91,7 +91,7 @@ async def test_classify_single_invalid_size_image(
             image_data = ImageData(image_bytes)
 
             with pytest.raises(AthenaError) as e:
-                await client.classify_single(image_data)
+                _ = await client.classify_single(image_data)
 
             assert "Image Classification Error" in str(e.value)
 
@@ -107,7 +107,7 @@ async def test_classify_streaming_one_bad_image(
 ) -> None:
     """Functional test for ClassifyStreaming with one invalid image in the
     stream."""
-    images = []
+    images: list[bytes] = []
     images_to_generate = 32
     for i in range(images_to_generate):
         if i == images_to_generate // 2:

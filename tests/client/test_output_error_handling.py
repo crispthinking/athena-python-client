@@ -268,7 +268,7 @@ class TestProcessClassificationOutputs:
         response = create_response_with_mixed_outputs()
 
         with pytest.raises(ClassificationOutputError) as exc_info:
-            process_classification_outputs(response, raise_on_error=True)
+            _ = process_classification_outputs(response, raise_on_error=True)
 
         assert exc_info.value.correlation_id == "error-1"
         assert exc_info.value.error_code == ErrorCode.ERROR_CODE_IMAGE_TOO_LARGE
@@ -301,7 +301,7 @@ class TestProcessClassificationOutputs:
         response.outputs.append(create_error_output("error-1"))
 
         with pytest.raises(ClassificationOutputError):
-            process_classification_outputs(response, raise_on_error=True)
+            _ = process_classification_outputs(response, raise_on_error=True)
 
     def test_process_empty_response(self) -> None:
         """Test processing empty response."""

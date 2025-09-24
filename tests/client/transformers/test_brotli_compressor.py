@@ -59,7 +59,7 @@ async def test_brotli_compressor_iteration(
 
     # Test StopAsyncIteration
     with pytest.raises(StopAsyncIteration):
-        await anext(compressor)
+        _ = await anext(compressor)
 
 
 @pytest.mark.asyncio

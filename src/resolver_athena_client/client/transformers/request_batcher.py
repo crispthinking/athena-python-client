@@ -25,6 +25,7 @@ class RequestBatcher:
         """Initialize the batcher.
 
         Args:
+        ----
             source: Iterator of ClassificationInputs to batch
             deployment_id: Deployment ID to use in requests
             max_batch_size: Maximum number of inputs per batch
@@ -32,16 +33,16 @@ class RequestBatcher:
             keepalive_interval: Seconds between keepalive requests
 
         """
-        self.source = source
-        self.deployment_id = deployment_id
-        self.max_batch_size = max_batch_size
-        self.timeout = timeout
-        self.keepalive_interval = keepalive_interval or 30.0
+        self.source: AsyncIterator[ClassificationInput] = source
+        self.deployment_id: str = deployment_id
+        self.max_batch_size: int = max_batch_size
+        self.timeout: float = timeout
+        self.keepalive_interval: float = keepalive_interval or 30.0
         self._batch: list[ClassificationInput] = []
-        self._last_send_time = time.time()
-        self._stream_started = False
-        self._source_exhausted = False
-        self.logger = logging.getLogger(__name__)
+        self._last_send_time: float = time.time()
+        self._stream_started: bool = False
+        self._source_exhausted: bool = False
+        self.logger: logging.Logger = logging.getLogger(__name__)
 
     @property
     def source_exhausted(self) -> bool:

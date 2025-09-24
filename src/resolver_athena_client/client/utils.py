@@ -23,21 +23,24 @@ def process_classification_outputs(
     """Process classification outputs from a response, handling errors properly.
 
     Args:
+    ----
         response: The ClassifyResponse containing outputs to process
         raise_on_error: If True, raises ClassificationOutputError when an output
             contains an error. If False, logs the error and skips the output.
         log_errors: If True, logs error information for failed outputs
 
     Returns:
+    -------
         List of successful ClassificationOutput objects (excludes outputs with
         errors when raise_on_error=False)
 
     Raises:
+    ------
         ClassificationOutputError: When raise_on_error=True and an output
             contains an error
 
     """
-    successful_outputs = []
+    successful_outputs: list[ClassificationOutput] = []
 
     for output in response.outputs:
         if output.error and output.error.message:
@@ -73,13 +76,15 @@ def get_output_error_summary(response: "ClassifyResponse") -> dict[str, int]:
     """Get a summary of error types in the response outputs.
 
     Args:
+    ----
         response: The ClassifyResponse to analyze
 
     Returns:
+    -------
         Dictionary mapping error code names to their counts
 
     """
-    error_counts = {}
+    error_counts: dict[str, int] = {}
 
     for output in response.outputs:
         if output.error and output.error.message:
@@ -95,9 +100,11 @@ def has_output_errors(response: "ClassifyResponse") -> bool:
     """Check if any outputs in the response contain errors.
 
     Args:
+    ----
         response: The ClassifyResponse to check
 
     Returns:
+    -------
         True if any output contains an error, False otherwise
 
     """
@@ -112,9 +119,11 @@ def get_successful_outputs(
     """Get only the successful outputs from a response, filtering out errors.
 
     Args:
+    ----
         response: The ClassifyResponse to filter
 
     Returns:
+    -------
         List of ClassificationOutput objects that don't contain errors
 
     """
@@ -129,6 +138,7 @@ def log_output_errors(response: "ClassifyResponse") -> None:
     """Log all output errors in a response for debugging purposes.
 
     Args:
+    ----
         response: The ClassifyResponse to analyze for errors
 
     """

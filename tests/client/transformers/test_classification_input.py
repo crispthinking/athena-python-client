@@ -85,7 +85,7 @@ async def test_classification_input_iteration(
 
     # Test StopAsyncIteration
     with pytest.raises(StopAsyncIteration):
-        await anext(transformer)
+        _ = await anext(transformer)
 
 
 @pytest.mark.asyncio
