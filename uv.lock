@@ -156,6 +156,18 @@ wheels = [
 ]
 
 [[package]]
+name = "brotli-stubs"
+version = "1.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "brotli" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/34/70/28f9f1d099a530b4c7fc9a01ab7f0fd14c5f074307e2eeee2d81589a05f8/brotli_stubs-1.1.0.tar.gz", hash = "sha256:8c097b605d018a972cb4516e0f2de2c5f1c64cf3015d723dcff8e087d9f71dc3", size = 1882, upload-time = "2025-09-24T13:03:45.136Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/71/62/eb069f202b80e93c3ebe4723e3b9a0a9d65ed0d1926e5e65442368afc761/brotli_stubs-1.1.0-py3-none-any.whl", hash = "sha256:04a0f3682de4e8eaf20bd6ce8d057cc5fce9718172fc17465bbfc2686b9f8119", size = 2412, upload-time = "2025-09-24T13:03:43.351Z" },
+]
+
+[[package]]
 name = "certifi"
 version = "2025.8.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1178,6 +1190,7 @@ source = { editable = "." }
 dependencies = [
     { name = "anyio" },
     { name = "brotli" },
+    { name = "brotli-stubs" },
     { name = "grpcio-tools" },
     { name = "httpx" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
@@ -1188,6 +1201,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "basedpyright" },
+    { name = "brotli-stubs" },
     { name = "load-dotenv" },
     { name = "mypy-protobuf" },
     { name = "pre-commit" },
@@ -1211,6 +1225,7 @@ docs = [
 requires-dist = [
     { name = "anyio", specifier = ">=4.10.0" },
     { name = "brotli", specifier = ">=1.1.0" },
+    { name = "brotli-stubs" },
     { name = "grpcio-tools", specifier = ">=1.74.0" },
     { name = "httpx", specifier = ">=0.25.0" },
     { name = "numpy", specifier = ">=2.2.6" },
@@ -1220,6 +1235,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "basedpyright", specifier = ">=1.31.4" },
+    { name = "brotli-stubs", specifier = ">=1.1.0" },
     { name = "load-dotenv", specifier = ">=0.1.0" },
     { name = "mypy-protobuf", specifier = ">=3.6.0" },
     { name = "pre-commit", specifier = ">=4.2.0" },
