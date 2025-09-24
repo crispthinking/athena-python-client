@@ -1,7 +1,9 @@
 """Ultra-fast random image creation utilities for maximum throughput."""
 
+import asyncio
 import io
 import random
+import time
 from collections.abc import AsyncIterator
 
 from PIL import Image, ImageDraw
@@ -25,7 +27,9 @@ def _get_cached_image(
     return _image_cache[key]
 
 
-def create_random_image(width: int = 160, height: int = 120) -> bytes:
+def create_random_image(
+    width: int = 160, height: int = 120, img_format: str = "PNG"
+) -> bytes:
     """Create a minimal random image optimized for maximum speed.
 
     Args:
@@ -55,9 +59,12 @@ def create_random_image(width: int = 160, height: int = 120) -> bytes:
     x2, y2 = (width * 3) // 4, (height * 3) // 4
     draw.rectangle([x1, y1, x2, y2], fill=accent_color)
 
+    if img_format.upper() == "RAW_UINT8":
+        return image.tobytes()
+
     # Convert to PNG bytes
     buffer = io.BytesIO()
-    image.save(buffer, format="PNG")
+    image.save(buffer, format=img_format)
     return buffer.getvalue()
 
 
@@ -105,7 +112,6 @@ def create_batch_images(
 
 async def iter_images(
     max_images: int | None = None,
-    counter: list[int] | None = None,
 ) -> AsyncIterator[ImageData]:
     """Generate random test images with maximum throughput optimization.
 
@@ -135,14 +141,15 @@ async def iter_images(
 
         # Yield each image
         for img_bytes in images:
-            if counter is not None:
-                counter[0] += 1
             yield ImageData(img_bytes)
             count += 1
 
 
 def create_test_image(
-    width: int = 160, height: int = 120, seed: int | None = None
+    width: int = 160,
+    height: int = 120,
+    seed: int | None = None,
+    img_format: str = "PNG",
 ) -> bytes:
     """Create a test image with specified dimensions and optional seed.
 
@@ -150,12 +157,37 @@ def create_test_image(
         width: Width of the test image in pixels (default: 160)
         height: Height of the test image in pixels (default: 120)
         seed: Optional seed for reproducible image generation
+        img_format: Image format (default: PNG). Other formats like JPEG are
+            also supported.
 
     Returns:
-        PNG image bytes
+        image bytes in specified format (default: PNG)
 
     """
     if seed is not None:
         _rng.seed(seed)
 
-    return create_random_image(width, height)
+    return create_random_image(width, height, img_format)
+
+
+async def rate_limited_image_iter(
+    min_interval_ms: int,
+    max_images: int | None = None,
+) -> AsyncIterator[ImageData]:
+    """Generate images with a minimum interval between yields."""
+    last_yield_time = time.time()
+    async for image in iter_images(max_images):
+        elapsed_ms = (time.time() - last_yield_time) * 1000
+        if elapsed_ms < min_interval_ms:
+            await asyncio.sleep((min_interval_ms - elapsed_ms) / 1000)
+        yield image
+        last_yield_time = time.time()
+
+
+def create_random_image_generator(
+    max_images: int, rate_limit_min_interval_ms: int | None = None
+) -> AsyncIterator[ImageData]:
+    if rate_limit_min_interval_ms is not None:
+        return rate_limited_image_iter(rate_limit_min_interval_ms, max_images)
+
+    return iter_images(max_images)
