@@ -84,9 +84,9 @@ async def test_streaming_classify_with_reopened_stream(
     )
 
     assert sent > 0, "First stream did not send any images"
-    assert (
-        recv < sent
-    ), "First stream received all results - cannot test reopening"
+    assert recv < sent, (
+        "First stream received all results - cannot test reopening"
+    )
 
     if errors > 0:
         msg = f"First stream returned encountered {errors} errors. Cannot "
