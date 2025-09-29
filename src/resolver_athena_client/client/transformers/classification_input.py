@@ -1,6 +1,7 @@
 """Transform image bytes into ClassificationInputs."""
 
 from collections.abc import AsyncIterator
+from typing import override
 
 from resolver_athena_client.client.correlation import CorrelationProvider
 from resolver_athena_client.client.models import ImageData
@@ -30,6 +31,7 @@ class ClassificationInputTransformer(
         """Initialize with source iterator and request configuration.
 
         Args:
+        ----
             source: ImageData source iterator
             deployment_id: Model deployment ID for classification
             affiliate: Affiliate identifier
@@ -38,10 +40,10 @@ class ClassificationInputTransformer(
 
         """
         super().__init__(source)
-        self.deployment_id = deployment_id
-        self.affiliate = affiliate
-        self.request_encoding = request_encoding
-        self.correlation_provider = correlation_provider()
+        self.deployment_id: str = deployment_id
+        self.affiliate: str = affiliate
+        self.request_encoding: RequestEncoding.ValueType = request_encoding
+        self.correlation_provider: CorrelationProvider = correlation_provider()
 
     def _create_classification_input(
         self, image_data: ImageData
@@ -57,6 +59,7 @@ class ClassificationInputTransformer(
             format=ImageFormat.IMAGE_FORMAT_RAW_UINT8,
         )
 
+    @override
     async def transform(self, data: ImageData) -> ClassificationInput:
         """Transform ImageData into a ClassifyRequest."""
         return self._create_classification_input(data)

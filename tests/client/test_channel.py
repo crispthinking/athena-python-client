@@ -1,4 +1,6 @@
 """Tests for gRPC channel creation utilities."""
+# pyright: reportPrivateUsage = false
+# Ideally we don't use private attributes in the tests but hard to test without
 
 import time
 from unittest import mock
@@ -44,7 +46,7 @@ async def test_create_channel_with_credentials_validation() -> None:
     mock_helper = mock.Mock(spec=CredentialHelper)
 
     with pytest.raises(InvalidHostError, match="host cannot be empty"):
-        await create_channel_with_credentials(test_host, mock_helper)
+        _ = await create_channel_with_credentials(test_host, mock_helper)
 
 
 @pytest.mark.asyncio
@@ -56,7 +58,7 @@ async def test_create_channel_with_credentials_oauth_failure() -> None:
     mock_helper.get_token.side_effect = OAuthError("Token acquisition failed")
 
     with pytest.raises(OAuthError, match="Token acquisition failed"):
-        await create_channel_with_credentials(test_host, mock_helper)
+        _ = await create_channel_with_credentials(test_host, mock_helper)
 
 
 class TestCredentialHelper:
@@ -91,7 +93,7 @@ class TestCredentialHelper:
     def test_init_with_empty_client_id(self) -> None:
         """Test CredentialHelper initialization with empty client_id."""
         with pytest.raises(CredentialError, match="client_id cannot be empty"):
-            CredentialHelper(
+            _ = CredentialHelper(
                 client_id="",
                 client_secret="test_client_secret",
             )
@@ -101,7 +103,7 @@ class TestCredentialHelper:
         with pytest.raises(
             CredentialError, match="client_secret cannot be empty"
         ):
-            CredentialHelper(
+            _ = CredentialHelper(
                 client_id="test_client_id",
                 client_secret="",
             )
@@ -220,7 +222,7 @@ class TestCredentialHelper:
             with pytest.raises(
                 OAuthError, match="OAuth request failed with status 401"
             ):
-                await helper.get_token()
+                _ = await helper.get_token()
 
     @pytest.mark.asyncio
     async def test_refresh_token_request_error(self) -> None:
@@ -239,7 +241,7 @@ class TestCredentialHelper:
             with pytest.raises(
                 OAuthError, match="Failed to connect to OAuth server"
             ):
-                await helper.get_token()
+                _ = await helper.get_token()
 
     @pytest.mark.asyncio
     async def test_refresh_token_invalid_response(self) -> None:
@@ -262,7 +264,7 @@ class TestCredentialHelper:
             with pytest.raises(
                 OAuthError, match="Invalid OAuth response format"
             ):
-                await helper.get_token()
+                _ = await helper.get_token()
 
     @pytest.mark.asyncio
     async def test_invalidate_token(self) -> None:
@@ -324,7 +326,7 @@ async def test_create_channel_with_credentials_invalid_host() -> None:
     mock_helper = mock.Mock(spec=CredentialHelper)
 
     with pytest.raises(InvalidHostError, match="host cannot be empty"):
-        await create_channel_with_credentials(test_host, mock_helper)
+        _ = await create_channel_with_credentials(test_host, mock_helper)
 
 
 @pytest.mark.asyncio
@@ -336,4 +338,4 @@ async def test_create_channel_with_credentials_oauth_error() -> None:
     mock_helper.get_token.side_effect = OAuthError("OAuth failed")
 
     with pytest.raises(OAuthError, match="OAuth failed"):
-        await create_channel_with_credentials(test_host, mock_helper)
+        _ = await create_channel_with_credentials(test_host, mock_helper)

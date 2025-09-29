@@ -3,7 +3,7 @@
 import asyncio
 import time
 from collections.abc import AsyncIterator
-from typing import NoReturn, Self, TypeVar
+from typing import NoReturn, Self, TypeVar, override
 from unittest import mock
 
 import pytest
@@ -22,22 +22,20 @@ from resolver_athena_client.generated.athena.models_pb2 import (
 class MockGrpcError(AioRpcError):
     """Mock gRPC error for testing."""
 
-    def __init__(self, code: StatusCode, details: str | None = None) -> None:
-        self._code = code
+    def __init__(self, code: StatusCode, details: str | None = None) -> None:  # pyright: ignore[reportMissingSuperCall] - Mock
+        self._code: StatusCode = code
         self._details: str | None = details
         self._debug_error_string: str | None = f"MockGrpcError: {code.name}"
 
+    @override
     def code(self) -> StatusCode:
         """Get the error code."""
         return self._code
 
+    @override
     def details(self) -> str:
         """Get error details."""
         return self._details or ""
-
-    def debug_error_string(self) -> str:
-        """Get debug error string."""
-        return self._debug_error_string or ""
 
 
 T = TypeVar("T")
@@ -47,13 +45,15 @@ class SlowMockAsyncIterator(AsyncIterator[T]):
     """Mock async iterator that yields with configurable delays."""
 
     def __init__(self, items: list[T], delay: float = 0.01) -> None:
-        self.items = items
-        self.delay = delay
-        self.index = 0
+        self.items: list[T] = items
+        self.delay: float = delay
+        self.index: int = 0
 
+    @override
     def __aiter__(self) -> Self:
         return self
 
+    @override
     async def __anext__(self) -> T:
         if self.index >= len(self.items):
             raise StopAsyncIteration
@@ -127,7 +127,7 @@ async def test_infinite_timeout() -> None:
         mock_classify = SlowMockAsyncIterator(test_responses, delay=0.02)
         mock_client.classify = mock.AsyncMock(return_value=mock_classify)
 
-        options.timeout = None  # type: ignore[assignment]
+        options.timeout = None
         client = AthenaClient(mock_channel, options)
         image_stream = SlowMockAsyncIterator([ImageData(b"test_image")])
 
@@ -249,7 +249,7 @@ async def test_timeout_with_cancellation() -> None:
         client = AthenaClient(mock_channel, options)
         image_stream = SlowMockAsyncIterator([ImageData(b"test_image")])
 
-        responses = []
+        responses: list[ClassifyResponse] = []
 
         async def _cancel_stream() -> NoReturn:
             """Helper function to cancel the stream."""

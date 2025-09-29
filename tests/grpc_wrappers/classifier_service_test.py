@@ -35,7 +35,9 @@ async def test_classify(client: ClassifierServiceClient) -> None:
     mock_response = ClassifyResponse()
 
     # Create stream call mock that will return our response
-    mock_stream = MockStreamCall([mock_response])
+    mock_stream: MockStreamCall[AsyncMock, ClassifyResponse] = MockStreamCall(
+        [mock_response]
+    )
 
     # Replace stub's Classify method with our mock
     client.stub.Classify = mock_stream

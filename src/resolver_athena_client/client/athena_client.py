@@ -58,14 +58,17 @@ class AthenaClient:
         """Initialize the Athena Client.
 
         Args:
+        ----
             channel: The gRPC channel to use for communication.
             options: Configuration options for the Athena client.
 
         """
-        self.logger = logging.getLogger(__name__)
-        self.options = options
-        self.channel = channel
-        self.classifier = ClassifierServiceClient(self.channel)
+        self.logger: logging.Logger = logging.getLogger(__name__)
+        self.options: AthenaOptions = options
+        self.channel: grpc.aio.Channel = channel
+        self.classifier: ClassifierServiceClient = ClassifierServiceClient(
+            self.channel
+        )
 
     async def classify_images(
         self, images: AsyncIterator[ImageData]
@@ -73,6 +76,7 @@ class AthenaClient:
         """Classify images using the Athena service.
 
         Args:
+        ----
             images: An async iterator of ImageData objects containing image
                 bytes and hash lists tracking transformations. Users must create
                 ImageData objects from raw image bytes before passing to this
@@ -82,9 +86,11 @@ class AthenaClient:
                 operations.
 
         Yields:
+        ------
             Classification responses from the service.
 
         Example:
+        -------
             # Create ImageData from raw bytes
             image_data = ImageData(image_bytes)
             print(f"Initial hashes: {len(image_data.sha256_hashes)}")  # 1
@@ -180,6 +186,7 @@ class AthenaClient:
         - Testing and debugging individual image classifications
 
         Args:
+        ----
             image_data: ImageData object containing image bytes and metadata.
                 The image will be processed through the same transformation
                 pipeline as the streaming classify method (resize, compression)
@@ -189,14 +196,17 @@ class AthenaClient:
                 automatically.
 
         Returns:
+        -------
             ClassificationOutput containing either classification results or
             error information for the single image.
 
         Raises:
+        ------
             AthenaError: If the service returns an error.
             grpc.aio.AioRpcError: For gRPC communication errors.
 
         Example:
+        -------
             # Create ImageData from raw bytes
             image_data = ImageData(image_bytes)
 

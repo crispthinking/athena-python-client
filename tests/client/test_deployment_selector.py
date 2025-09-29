@@ -109,7 +109,7 @@ async def test_list_deployments_client_error(mock_channel: mock.Mock) -> None:
 
         # Verify error is propagated
         with pytest.raises(RuntimeError, match="Test error"):
-            await selector.list_deployments()
+            _ = await selector.list_deployments()
 
         # Verify client interaction
         mock_client_cls.assert_called_once_with(mock_channel)

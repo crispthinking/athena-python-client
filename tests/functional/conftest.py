@@ -37,7 +37,7 @@ SUPPORTED_TEST_FORMATS = [
 
 @pytest_asyncio.fixture
 async def credential_helper() -> CredentialHelper:
-    load_dotenv()
+    _ = load_dotenv()
     client_id = os.environ["OAUTH_CLIENT_ID"]
     client_secret = os.environ["OAUTH_CLIENT_SECRET"]
     auth_url = os.getenv(
@@ -55,7 +55,7 @@ async def credential_helper() -> CredentialHelper:
 
     # Test token acquisition
     try:
-        await credential_helper.get_token()
+        _ = await credential_helper.get_token()
     except Exception as e:
         msg = "Failed to acquire OAuth token"
         raise AssertionError(msg) from e
@@ -65,7 +65,7 @@ async def credential_helper() -> CredentialHelper:
 
 @pytest.fixture
 def athena_options() -> AthenaOptions:
-    load_dotenv()
+    _ = load_dotenv()
     host = os.getenv("ATHENA_HOST", "localhost")
 
     deployment_id = f"functional-test-{uuid.uuid4()}"
@@ -107,7 +107,7 @@ def valid_formatted_image(
     base_image_path = image_dir / "base_image.png"
     if not base_image_path.exists():
         with base_image_path.open("wb") as f:
-            f.write(base_image)
+            _ = f.write(base_image)
 
     if image_format == base_image_format:
         return base_image
@@ -120,7 +120,7 @@ def valid_formatted_image(
     image_path = image_dir / f"test_image.{image_format}"
     if not image_path.exists():
         cmd = f'magick "{base_image_path}" "{image_path}"'
-        subprocess.run(  # noqa: S603 - false positive :(
+        _ = subprocess.run(  # noqa: S603 - false positive :(
             [magick_path, str(base_image_path), str(image_path)],
             check=True,
             shell=False,

@@ -37,10 +37,10 @@ class AsyncIteratorWithDelay:
             delay: Delay in seconds between items, defaults to 0
 
         """
-        self.data = data
-        self.delay = delay
-        self.index = 0
-        self.stopped = False
+        self.data: list[ClassificationInput] = data
+        self.delay: float = delay
+        self.index: int = 0
+        self.stopped: bool = False
 
     def __aiter__(self) -> "AsyncIteratorWithDelay":
         """Return self as async iterator."""
@@ -224,7 +224,7 @@ async def test_request_batcher_exact_batch() -> None:
     # After consuming all items, source should be exhausted
     # Need to trigger one more iteration to confirm exhaustion
     try:
-        await anext(batcher)  # This should be a keepalive
+        _ = await anext(batcher)  # This should be a keepalive
         assert batcher.source_exhausted
     except StopAsyncIteration:
         assert batcher.source_exhausted
@@ -267,7 +267,7 @@ async def test_request_batcher_edge_cases() -> None:
     # After consuming all items, source should be exhausted
     # Need to trigger one more iteration to confirm exhaustion
     try:
-        await anext(batcher)  # This should be a keepalive
+        _ = await anext(batcher)  # This should be a keepalive
         assert batcher.source_exhausted
     except StopAsyncIteration:
         assert batcher.source_exhausted

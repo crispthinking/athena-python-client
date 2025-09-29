@@ -68,7 +68,7 @@ jobs:
 
       - name: Run type checking
         run: |
-          uv run pyright
+          uv run basedpyright
 
       - name: Run tests
         run: |

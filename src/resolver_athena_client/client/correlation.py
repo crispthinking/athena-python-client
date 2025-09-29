@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import abc
 import hashlib
+from typing import override
 
 from resolver_athena_client.client.consts import MAX_DEPLOYMENT_ID_LENGTH
 
@@ -23,14 +24,17 @@ class CorrelationProvider(abc.ABC):
         """Generate a correlation ID for the given input data.
 
         Args:
+        ----
             input_data: Data to use as the basis for correlation ID generation.
                 The type and structure of this data depends on the specific
                 implementation.
 
         Returns:
+        -------
             A string containing the generated correlation ID.
 
         Raises:
+        ------
             ValueError: If the input data is not in a format supported by
                 the implementation.
 
@@ -45,6 +49,7 @@ class HashCorrelationProvider(CorrelationProvider):
     input data's bytes, which serves as the correlation ID.
     """
 
+    @override
     def get_correlation_id(self, input_data: bytes | str | bytearray) -> str:
         """Generate a correlation ID by hashing the input data.
 
@@ -54,12 +59,15 @@ class HashCorrelationProvider(CorrelationProvider):
         - Otherwise, convert to string and encode as UTF-8
 
         Args:
+        ----
             input_data: Data to hash for correlation ID generation.
 
         Returns:
+        -------
             A hex string of the SHA-256 hash of the input data.
 
         Raises:
+        ------
             ValueError: If the input data cannot be converted to bytes.
 
         """

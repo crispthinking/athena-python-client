@@ -3,6 +3,7 @@
 import asyncio
 import json
 import time
+from typing import override
 
 import grpc
 import httpx
@@ -22,11 +23,13 @@ class TokenMetadataPlugin(grpc.AuthMetadataPlugin):
         """Initialize the plugin with the auth token.
 
         Args:
+        ----
             token: The authorization token to add to requests
 
         """
-        self._token = token
+        self._token: str = token
 
+    @override
     def __call__(
         self,
         _: grpc.AuthMetadataContext,
@@ -37,6 +40,7 @@ class TokenMetadataPlugin(grpc.AuthMetadataPlugin):
         This method will be invoked asynchronously in a separate thread.
 
         Args:
+        ----
             callback: An AuthMetadataPluginCallback to be invoked either
             synchronously or asynchronously.
 
@@ -58,6 +62,7 @@ class CredentialHelper:
         """Initialize the credential helper.
 
         Args:
+        ----
             client_id: OAuth client ID
             client_secret: OAuth client secret
             auth_url: OAuth token endpoint URL
@@ -71,13 +76,13 @@ class CredentialHelper:
             msg = "client_secret cannot be empty"
             raise CredentialError(msg)
 
-        self._client_id = client_id
-        self._client_secret = client_secret
-        self._auth_url = auth_url
-        self._audience = audience
+        self._client_id: str = client_id
+        self._client_secret: str = client_secret
+        self._auth_url: str = auth_url
+        self._audience: str = audience
         self._token: str | None = None
         self._token_expires_at: float | None = None
-        self._lock = asyncio.Lock()
+        self._lock: asyncio.Lock = asyncio.Lock()
 
     async def get_token(self) -> str:
         """Get a valid authentication token.
@@ -85,10 +90,12 @@ class CredentialHelper:
         This method will return a cached token if it's still valid,
         or fetch a new token if needed.
 
-        Returns:
+        Returns
+        -------
             A valid authentication token
 
-        Raises:
+        Raises
+        ------
             OAuthError: If token acquisition fails
             TokenExpiredError: If token has expired and refresh fails
 
@@ -109,7 +116,8 @@ class CredentialHelper:
     def _is_token_valid(self) -> bool:
         """Check if the current token is valid and not expired.
 
-        Returns:
+        Returns
+        -------
             True if token is valid, False otherwise
 
         """
@@ -122,7 +130,8 @@ class CredentialHelper:
     async def _refresh_token(self) -> None:
         """Refresh the authentication token by making an OAuth request.
 
-        Raises:
+        Raises
+        ------
             OAuthError: If the OAuth request fails
 
         """
@@ -143,7 +152,7 @@ class CredentialHelper:
                     headers=headers,
                     timeout=30.0,
                 )
-                response.raise_for_status()
+                _ = response.raise_for_status()
 
                 token_data = response.json()
                 self._token = token_data["access_token"]
@@ -195,13 +204,16 @@ async def create_channel_with_credentials(
     """Create a gRPC channel with OAuth credential helper.
 
     Args:
+    ----
         host: The host address to connect to
         credential_helper: The credential helper for OAuth authentication
 
     Returns:
+    -------
         A secure gRPC channel with OAuth authentication
 
     Raises:
+    ------
         InvalidHostError: If host is empty
         OAuthError: If OAuth authentication fails
 

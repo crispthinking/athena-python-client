@@ -4,7 +4,7 @@
 - Install deps: `uv sync --dev`
 - Build package: `uv build`
 - Run tests: `pytest`
-- Type check code: `pyright`
+- Type check code: `basedpyright`
 - Format code: `ruff format`
 - Lint code: `ruff check`
 - Install git hooks: `pre-commit install`
@@ -30,7 +30,7 @@
 
 ## PR instructions
 - Title format: [component] Description
-- Run `bash scripts/compile_proto.sh`, `ruff check`, `pyright`, and `pytest` before committing
+- Run `bash scripts/compile_proto.sh`, `ruff check`, `basedpyright`, and `pytest` before committing
 - Keep PRs focused on a single change
 - Add tests for new functionality
 - Update documentation for API changes

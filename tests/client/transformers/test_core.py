@@ -168,7 +168,7 @@ def test_compress_image_preserves_hashes() -> None:
     original_hashes = image_data.md5_hashes.copy()
 
     # Compress the image
-    compress_image(image_data)
+    _ = compress_image(image_data)
 
     # Hashes should be unchanged
     assert image_data.md5_hashes == original_hashes
@@ -185,7 +185,7 @@ async def test_combined_transformations() -> None:
     original_hash_count = len(image_data.md5_hashes)
 
     # Apply resize transformation
-    await resize_image(image_data)
+    _ = await resize_image(image_data)
 
     # Should have new hash from resizing
     assert len(image_data.md5_hashes) == original_hash_count + 1
@@ -193,7 +193,7 @@ async def test_combined_transformations() -> None:
     assert resized_data != original_data
 
     # Apply compression transformation
-    compress_image(image_data)
+    _ = compress_image(image_data)
 
     # Should still have the same number of hashes (compression preserves)
     assert len(image_data.md5_hashes) == original_hash_count + 1

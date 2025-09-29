@@ -26,7 +26,7 @@ class DeploymentSelector:
 
     """
 
-    channel: grpc.aio.Channel
+    channel: grpc.aio.Channel | None = None
     classifier: ClassifierServiceClient
 
     def __init__(self, channel: grpc.aio.Channel) -> None:
@@ -37,7 +37,7 @@ class DeploymentSelector:
                 the Athena service.
 
         """
-        self.logger = logging.getLogger(__name__)
+        self.logger: logging.Logger = logging.getLogger(__name__)
         self.classifier = ClassifierServiceClient(channel)
 
     async def list_deployments(self) -> ListDeploymentsResponse:
@@ -90,5 +90,5 @@ class DeploymentSelector:
             exc_tb: The traceback of the exception that was raised
 
         """
-        if hasattr(self, "channel"):
+        if hasattr(self, "channel") and self.channel is not None:
             await self.channel.close()

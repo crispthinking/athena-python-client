@@ -1,6 +1,7 @@
 """Optimized image resizer that ensures all images match expected dimensions."""
 
 from collections.abc import AsyncIterator
+from typing import override
 
 from resolver_athena_client.client.models import ImageData
 from resolver_athena_client.client.transformers.async_transformer import (
@@ -16,11 +17,13 @@ class ImageResizer(AsyncTransformer[ImageData, ImageData]):
         """Initialize with source iterator.
 
         Args:
+        ----
             source: Iterator yielding ImageData objects
 
         """
         super().__init__(source)
 
+    @override
     async def transform(self, data: ImageData) -> ImageData:
         """Transform ImageData by resizing to expected dimensions.
 

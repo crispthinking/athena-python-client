@@ -21,7 +21,7 @@ async def test_non_existent_affiliate(
 ) -> None:
     """Functional test for ClassifySingle with non existent affiliate."""
 
-    load_dotenv()
+    _ = load_dotenv()
 
     bad_affiliate = os.getenv(
         "ATHENA_NON_EXISTENT_AFFILIATE", "thisaffiliatedoesnotexist123"
@@ -41,7 +41,7 @@ async def test_non_existent_affiliate(
 
         # Classify with auto-generated correlation ID
         with pytest.raises(AthenaError) as e:
-            await client.classify_single(image_data)
+            _ = await client.classify_single(image_data)
 
         expected_msg = (
             f"Affiliate ID '{bad_affiliate}' is not permitted "
@@ -58,7 +58,7 @@ async def test_existing_not_permitted_affiliate(
     """Functional test for ClassifySingle with existing but not permitted
     affiliate."""
 
-    load_dotenv()
+    _ = load_dotenv()
 
     bad_affiliate = os.getenv(
         "ATHENA_NON_PERMITTED_AFFILIATE",
@@ -79,7 +79,7 @@ async def test_existing_not_permitted_affiliate(
 
         # Classify with auto-generated correlation ID
         with pytest.raises(AthenaError) as e:
-            await client.classify_single(image_data)
+            _ = await client.classify_single(image_data)
 
         expected_msg = (
             f"Affiliate ID '{bad_affiliate}' is not permitted "

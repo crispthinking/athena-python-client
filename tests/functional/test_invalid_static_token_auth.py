@@ -32,7 +32,7 @@ async def test_malformed_token_is_rejected(
         image = ImageData(create_test_image())
 
         with pytest.raises(grpc.aio.AioRpcError) as exc_info:
-            await client.classify_single(image)
+            _ = await client.classify_single(image)
 
         assert exc_info.value.code() == grpc.StatusCode.UNAUTHENTICATED
 
@@ -45,7 +45,7 @@ async def test_platform_token_is_rejected(
     """Test that a standard Resolver platform token is rejected.
 
     Only static tokens generated for Athena access should be accepted."""
-    load_dotenv()
+    _ = load_dotenv()
     platform_token = os.environ["ATHENA_TEST_PLATFORM_TOKEN"]
     channel = create_channel(athena_options.host, platform_token)
 
@@ -53,7 +53,7 @@ async def test_platform_token_is_rejected(
         image = ImageData(create_test_image())
 
         with pytest.raises(grpc.aio.AioRpcError) as exc_info:
-            await client.classify_single(image)
+            _ = await client.classify_single(image)
 
         assert exc_info.value.code() == grpc.StatusCode.UNAUTHENTICATED
 
@@ -62,7 +62,7 @@ async def test_platform_token_is_rejected(
 @pytest.mark.functional
 async def test_expired_token_is_rejected(athena_options: AthenaOptions) -> None:
     """Test that an expired token is rejected."""
-    load_dotenv()
+    _ = load_dotenv()
     platform_token = os.environ["ATHENA_TEST_EXPIRED_TOKEN"]
     channel = create_channel(athena_options.host, platform_token)
 
@@ -70,6 +70,6 @@ async def test_expired_token_is_rejected(athena_options: AthenaOptions) -> None:
         image = ImageData(create_test_image())
 
         with pytest.raises(grpc.aio.AioRpcError) as exc_info:
-            await client.classify_single(image)
+            _ = await client.classify_single(image)
 
         assert exc_info.value.code() == grpc.StatusCode.UNAUTHENTICATED

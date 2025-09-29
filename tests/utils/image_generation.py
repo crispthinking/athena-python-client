@@ -11,7 +11,9 @@ from PIL import Image, ImageDraw
 from resolver_athena_client.client.models import ImageData
 
 # Global cache for reusable objects and constants
-_image_cache = {}
+_image_cache: dict[
+    tuple[int, int], tuple[Image.Image, ImageDraw.ImageDraw]
+] = {}
 _rng = random.Random()  # noqa: S311 - Not used for cryptographic purposes
 
 
@@ -82,7 +84,7 @@ def create_batch_images(
         List of PNG image bytes
 
     """
-    images = []
+    images: list[bytes] = []
     image, draw = _get_cached_image(width, height)
 
     # Pre-calculate accent rectangle coordinates
