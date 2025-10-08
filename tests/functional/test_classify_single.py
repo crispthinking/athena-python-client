@@ -36,3 +36,14 @@ async def test_classify_single(
         if result.error.code:
             msg = f"Image Result Error: {result.error.message}"
             pytest.fail(msg)
+
+        hash_checks = [
+            classification
+            for classification in result.classifications
+            if "hash" in classification.label.lower()
+        ]
+
+        assert len(hash_checks) > 0, "No hash checks found in classifications"
+
+        for hash_check in hash_checks:
+            assert hash_check.weight == 0.0
