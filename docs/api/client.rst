@@ -153,8 +153,8 @@ Basic Classification
             async for result in results:
                 for output in result.outputs:
                     # Manually map classifications, as the generated grpc
-                    # implementation # for __str__ will ignore weights of 0.0,
-                    # which are common, especially # for binary classifications
+                    # implementation for __str__ will ignore weights of 0.0,
+                    # which are common, especially for binary classifications
                     # such as hash checks
                     classifications = {
                         c.label: c.weight
