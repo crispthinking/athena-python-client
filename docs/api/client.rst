@@ -152,6 +152,10 @@ Basic Classification
 
             async for result in results:
                 for output in result.outputs:
+                    # Manually map classifications, as the generated grpc
+                    # implementation # for __str__ will ignore weights of 0.0,
+                    # which are common, especially # for binary classifications
+                    # such as hash checks
                     classifications = {
                         c.label: c.weight
                         for c in output.classifications
@@ -274,3 +278,5 @@ Notes
 * Enable compression for bandwidth-constrained environments
 * Configure appropriate timeouts for your use case
 * See :doc:`options` for detailed configuration options
+* Carefully handle any logging of classification results, as decribed in the
+  basic classification example above, to avoid losing important information
