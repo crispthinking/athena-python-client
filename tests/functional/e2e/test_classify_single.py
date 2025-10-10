@@ -41,7 +41,6 @@ async def test_classify_single(
         image_bytes = f.read()
 
     async with AthenaClient(channel, athena_options) as client:
-
         image_data = ImageData(image_bytes)
 
         # Classify with auto-generated correlation ID
