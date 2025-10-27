@@ -152,7 +152,8 @@ async def main() -> int:
         logger.error("OAUTH_CLIENT_ID and OAUTH_CLIENT_SECRET must be set")
         return 1
 
-    host = os.getenv("ATHENA_HOST", "localhost")
+    host = os.getenv("ATHENA_HOST", "trust-messages.crispthinking.com")
+    affiliate = os.getenv("ATHENA_AFFILIATE", "athena-test")
     logger.info("Connecting to %s", host)
 
     # Create credential helper
@@ -192,7 +193,7 @@ async def main() -> int:
         compress_images=True,
         timeout=120.0,  # Maximum duration, not forced timeout
         keepalive_interval=30.0,  # Longer intervals for persistent streams
-        affiliate="crisp",
+        affiliate=affiliate,
     )
 
     sent, received = await run_oauth_example(
