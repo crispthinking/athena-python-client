@@ -157,7 +157,7 @@ Environment-Based Configuration
 
     # Load from environment variables
     options = AthenaOptions(
-        host=os.getenv("ATHENA_HOST", "localhost:50051"),
+        host=os.getenv("ATHENA_HOST", "trust-messages-global.crispthinking.com"),
         deployment_id=os.getenv("ATHENA_DEPLOYMENT_ID", "default"),
         resize_images=os.getenv("ATHENA_RESIZE_IMAGES", "true").lower() == "true",
         compress_images=os.getenv("ATHENA_COMPRESS_IMAGES", "true").lower() == "true",

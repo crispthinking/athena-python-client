@@ -139,7 +139,7 @@ repository, or in your shell environment:
 
 You must set the following variables:
 ```
-ATHENA_HOST=your-athena-host (e.g. myathenahost.com)
+ATHENA_HOST=your-athena-host (e.g. localhost:5001)
 ATHENA_TEST_AFFILIATE=your-affiliate-id
 OAUTH_CLIENT_ID=your-oauth-client-id
 OAUTH_CLIENT_SECRET=your-oauth-client-secret
