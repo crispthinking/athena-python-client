@@ -62,8 +62,8 @@ async def resize_image(image_data: ImageData) -> ImageData:
             brg_bytes[:] = rgb_bytes  # Initialize with RGB data
 
             for i in range(0, len(rgb_bytes), 3):
-                brg_bytes[i] = rgb_bytes[i + 2]     # B
-                brg_bytes[i + 2] = rgb_bytes[i]     # R
+                brg_bytes[i] = rgb_bytes[i + 2]  # B
+                brg_bytes[i + 2] = rgb_bytes[i]  # R
 
             return bytes(brg_bytes), True  # Data was transformed
 
