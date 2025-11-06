@@ -20,7 +20,7 @@ _expected_raw_size = EXPECTED_WIDTH * EXPECTED_HEIGHT * 3
 
 
 def _is_raw_brg_expected_size(data: bytes) -> bool:
-    """Detect if data is already a raw RGB array of expected size."""
+    """Detect if data is already a raw BRG array of expected size."""
     return len(data) == _expected_raw_size
 
 
@@ -57,13 +57,13 @@ async def resize_image(image_data: ImageData) -> ImageData:
 
             rgb_bytes = resized_image.tobytes()
 
-            # Convert RGB to BGR by swapping channels
+            # Convert RGB to BRG by swapping channels
             brg_bytes = bytearray(len(rgb_bytes))
-            brg_bytes[:] = rgb_bytes  # Initialize with RGB data
 
             for i in range(0, len(rgb_bytes), 3):
-                brg_bytes[i] = rgb_bytes[i + 2]  # B
-                brg_bytes[i + 2] = rgb_bytes[i]  # R
+                brg_bytes[i] = rgb_bytes[i + 2]
+                brg_bytes[i + 1] = rgb_bytes[i]
+                brg_bytes[i + 2] = rgb_bytes[i + 1]
 
             return bytes(brg_bytes), True  # Data was transformed
 
