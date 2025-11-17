@@ -37,13 +37,24 @@ async def test_classify_single(
             msg = f"Image Result Error: {result.error.message}"
             pytest.fail(msg)
 
-        hash_checks = [
+        found_hash_check = False
+
+        for classification in result.classifications:
+            if classification.label.startswith("KnownCSAM-"):
+                assert classification.weight == 0.0
+                found_hash_check = True
+                break
+
+        assert found_hash_check, "No KnownHash- classification found"
+
+        assert [
             classification
             for classification in result.classifications
-            if "hash" in classification.label.lower()
+            if classification.label == "UnknownCSAM-Entropy"
         ]
 
-        assert len(hash_checks) > 0, "No hash checks found in classifications"
-
-        for hash_check in hash_checks:
-            assert hash_check.weight == 0.0
+        assert [
+            classification
+            for classification in result.classifications
+            if classification.label == "UnknownCSAM-PCSAM"
+        ]
