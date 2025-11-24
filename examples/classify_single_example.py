@@ -203,7 +203,7 @@ async def main() -> int:
         logger.error("OAUTH_CLIENT_ID and OAUTH_CLIENT_SECRET must be set")
         return 1
 
-    host = os.getenv("ATHENA_HOST", "localhost")
+    host = os.getenv("ATHENA_HOST", "trust-messages-global.crispthinking.com")
     logger.info("Connecting to %s", host)
 
     # Create credential helper
