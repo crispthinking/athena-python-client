@@ -14,7 +14,7 @@ from tests.functional.e2e.testcases.parser import (
     load_test_cases,
 )
 
-TEST_CASES = load_test_cases("benign_model")
+TEST_CASES = load_test_cases("live_model")
 
 FP_ERROR_TOLERANCE = 1e-4
 
@@ -30,7 +30,7 @@ async def test_classify_single(
     """Functional test for ClassifySingle endpoint and API methods.
 
     This test creates a unique test image for each iteration and classifies it.
-    The test runs multiple iterations to ensure consistent behavior.
+
     """
 
     # Create gRPC channel with credentials
@@ -57,6 +57,7 @@ async def test_classify_single(
             "Expected output to contain labels: ",
             f"{test_case.expected_output.keys() - actual_output.keys()}",
         )
+        actual_output = {k: actual_output[k] for k in test_case.expected_output}
 
         max_diff = max(
             abs(test_case.expected_output[label] - actual_output[label])
