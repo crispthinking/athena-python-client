@@ -100,7 +100,7 @@ async def test_classify_single_success(
     assert call_args.affiliate == "test-affiliate"
     assert call_args.data == b"fake_image_bytes"
     assert call_args.encoding == RequestEncoding.REQUEST_ENCODING_UNCOMPRESSED
-    assert call_args.format == ImageFormat.IMAGE_FORMAT_RAW_UINT8
+    assert call_args.format == ImageFormat.IMAGE_FORMAT_RAW_UINT8_BGR
     assert len(call_args.hashes) == 1
     assert call_args.hashes[0].type == HashType.HASH_TYPE_MD5
     assert len(call_args.hashes[0].value) > 0  # MD5 hash should be generated

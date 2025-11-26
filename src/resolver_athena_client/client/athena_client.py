@@ -244,7 +244,7 @@ class AthenaClient:
             correlation_id=correlation_id,
             encoding=request_encoding,
             data=processed_image.data,
-            format=ImageFormat.IMAGE_FORMAT_RAW_UINT8,
+            format=ImageFormat.IMAGE_FORMAT_RAW_UINT8_BGR,
             hashes=[
                 ImageHash(
                     value=hash_value,

@@ -19,8 +19,8 @@ _target_size = (EXPECTED_WIDTH, EXPECTED_HEIGHT)
 _expected_raw_size = EXPECTED_WIDTH * EXPECTED_HEIGHT * 3
 
 
-def _is_raw_brg_expected_size(data: bytes) -> bool:
-    """Detect if data is already a raw BRG array of expected size."""
+def _is_raw_bgr_expected_size(data: bytes) -> bool:
+    """Detect if data is already a raw BGR array of expected size."""
     return len(data) == _expected_raw_size
 
 
@@ -37,7 +37,7 @@ async def resize_image(image_data: ImageData) -> ImageData:
 
     def process_image() -> tuple[bytes, bool]:
         # Fast path for raw RGB arrays of correct size
-        if _is_raw_brg_expected_size(image_data.data):
+        if _is_raw_bgr_expected_size(image_data.data):
             return image_data.data, False  # No transformation needed
 
         # Try to load the image data directly
@@ -57,15 +57,15 @@ async def resize_image(image_data: ImageData) -> ImageData:
 
             rgb_bytes = resized_image.tobytes()
 
-            # Convert RGB to BRG by swapping channels
-            brg_bytes = bytearray(len(rgb_bytes))
+            # Convert RGB to BGR by swapping channels
+            bgr_bytes = bytearray(len(rgb_bytes))
 
             for i in range(0, len(rgb_bytes), 3):
-                brg_bytes[i] = rgb_bytes[i + 2]
-                brg_bytes[i + 1] = rgb_bytes[i]
-                brg_bytes[i + 2] = rgb_bytes[i + 1]
+                bgr_bytes[i] = rgb_bytes[i + 2]
+                bgr_bytes[i + 1] = rgb_bytes[i + 1]
+                bgr_bytes[i + 2] = rgb_bytes[i]
 
-            return bytes(brg_bytes), True  # Data was transformed
+            return bytes(bgr_bytes), True  # Data was transformed
 
     # Use thread pool for CPU-intensive processing
     resized_bytes, was_transformed = await asyncio.to_thread(process_image)

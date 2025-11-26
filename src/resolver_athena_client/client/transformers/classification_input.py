@@ -56,7 +56,7 @@ class ClassificationInputTransformer(
             ),
             data=image_data.data,
             encoding=self.request_encoding,
-            format=ImageFormat.IMAGE_FORMAT_RAW_UINT8,
+            format=ImageFormat.IMAGE_FORMAT_RAW_UINT8_BGR,
         )
 
     @override
