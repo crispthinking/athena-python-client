@@ -7,6 +7,11 @@ consistent input handling across the application.
 
 import hashlib
 
+from resolver_athena_client.client.image_format_detector import (
+    detect_image_format,
+)
+from resolver_athena_client.generated.athena.models_pb2 import ImageFormat
+
 
 class ImageData:
     r"""Container for image bytes with calculated hashes.
@@ -24,6 +29,8 @@ class ImageData:
     Attributes:
     ----------
         data: The raw bytes of the image (modified in-place by transformers).
+        image_format: The format of the image data (e.g., JPEG, PNG, RAW_UINT8).
+            Updated by transformers when they change the format.
         sha256_hashes: List of SHA256 hashes tracking image transformations.
             Index 0 is the original image, subsequent indices track
             transformations.
@@ -66,6 +73,9 @@ class ImageData:
 
         """
         self.data: bytes = image_bytes
+        self.image_format: ImageFormat.ValueType = detect_image_format(
+            image_bytes
+        )
         self.sha256_hashes: list[str] = [
             hashlib.sha256(image_bytes).hexdigest()
         ]

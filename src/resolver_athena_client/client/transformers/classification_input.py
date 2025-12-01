@@ -48,7 +48,12 @@ class ClassificationInputTransformer(
     def _create_classification_input(
         self, image_data: ImageData
     ) -> ClassificationInput:
-        # Get image format and data
+        # Ensure we never send UNSPECIFIED format over the API
+        # If format is still UNSPECIFIED, default to RAW_UINT8
+        image_format = image_data.image_format
+        if image_format == ImageFormat.IMAGE_FORMAT_UNSPECIFIED:
+            image_format = ImageFormat.IMAGE_FORMAT_RAW_UINT8
+
         return ClassificationInput(
             affiliate=self.affiliate,
             correlation_id=self.correlation_provider.get_correlation_id(
@@ -56,7 +61,7 @@ class ClassificationInputTransformer(
             ),
             data=image_data.data,
             encoding=self.request_encoding,
-            format=ImageFormat.IMAGE_FORMAT_RAW_UINT8,
+            format=image_format,
         )
 
     @override

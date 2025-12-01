@@ -49,6 +49,7 @@ async def test_classification_input_transform(
     )  # Should be a non-empty string
     assert result.data == test_data.data
     assert result.encoding == RequestEncoding.REQUEST_ENCODING_BROTLI
+    # UNSPECIFIED should be converted to RAW_UINT8 before sending
     assert result.format == ImageFormat.IMAGE_FORMAT_RAW_UINT8
 
 
@@ -69,6 +70,7 @@ async def test_classification_input_iteration(
     assert result.data == b"test1"
     assert result.affiliate == transformer_config.affiliate
     assert result.encoding == RequestEncoding.REQUEST_ENCODING_BROTLI
+    # UNSPECIFIED should be converted to RAW_UINT8 before sending
     assert result.format == ImageFormat.IMAGE_FORMAT_RAW_UINT8
 
     # Test second item
@@ -106,6 +108,7 @@ async def test_classification_input_empty(
     assert result.data == b""
     assert result.affiliate == transformer_config.affiliate
     assert result.encoding == RequestEncoding.REQUEST_ENCODING_BROTLI
+    # UNSPECIFIED should be converted to RAW_UINT8 before sending
     assert result.format == ImageFormat.IMAGE_FORMAT_RAW_UINT8
 
 
@@ -133,4 +136,57 @@ async def test_classification_input_encodings(
     test_data = ImageData(b"test")
     result = await transformer.transform(test_data)
     assert result.encoding == encoding
+    # UNSPECIFIED should be converted to RAW_UINT8 before sending
     assert result.format == ImageFormat.IMAGE_FORMAT_RAW_UINT8
+
+
+@pytest.mark.asyncio
+async def test_classification_input_preserves_detected_format(
+    transformer_config: AthenaOptions,
+) -> None:
+    """Test that detected image formats are preserved and sent correctly."""
+    transformer = ClassificationInputTransformer(
+        source=MockAsyncIterator([]),
+        deployment_id=transformer_config.deployment_id,
+        affiliate=transformer_config.affiliate,
+        request_encoding=RequestEncoding.REQUEST_ENCODING_BROTLI,
+        correlation_provider=transformer_config.correlation_provider,
+    )
+
+    # Create ImageData with PNG header - should be detected as PNG
+    png_data = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+    test_data = ImageData(png_data)
+    result = await transformer.transform(test_data)
+
+    # PNG format should be preserved
+    assert result.format == ImageFormat.IMAGE_FORMAT_PNG
+    assert result.data == png_data
+
+
+@pytest.mark.asyncio
+async def test_classification_input_never_sends_unspecified(
+    transformer_config: AthenaOptions,
+) -> None:
+    """Test that UNSPECIFIED format is never sent over the API."""
+    transformer = ClassificationInputTransformer(
+        source=MockAsyncIterator([]),
+        deployment_id=transformer_config.deployment_id,
+        affiliate=transformer_config.affiliate,
+        request_encoding=RequestEncoding.REQUEST_ENCODING_BROTLI,
+        correlation_provider=transformer_config.correlation_provider,
+    )
+
+    # Test with various unrecognizable data that would be UNSPECIFIED
+    test_cases = [
+        b"random_bytes",
+        b"xyz",
+        b"\x00\x00\x00\x00",
+        b"not_an_image",
+    ]
+
+    for data in test_cases:
+        test_data = ImageData(data)
+        result = await transformer.transform(test_data)
+        # Should never be UNSPECIFIED - defaults to RAW_UINT8
+        assert result.format != ImageFormat.IMAGE_FORMAT_UNSPECIFIED
+        assert result.format == ImageFormat.IMAGE_FORMAT_RAW_UINT8
