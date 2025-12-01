@@ -19,7 +19,7 @@ def test_image_data_detects_png_format() -> None:
 
 def test_image_data_detects_jpeg_format() -> None:
     """Test that JPEG format is detected during initialization."""
-    jpeg_data = b"\xFF\xD8\xFF\xE0" + b"\x00" * 100
+    jpeg_data = b"\xff\xd8\xff\xe0" + b"\x00" * 100
     image_data = ImageData(jpeg_data)
 
     assert image_data.image_format == ImageFormat.IMAGE_FORMAT_JPEG
@@ -78,15 +78,15 @@ def test_image_data_transformation_preserves_format() -> None:
 
     # Format should still be PNG (transformers will update it if needed)
     assert image_data.image_format == ImageFormat.IMAGE_FORMAT_PNG
-    assert len(image_data.sha256_hashes) == 2
-    assert len(image_data.md5_hashes) == 2
+    assert len(image_data.sha256_hashes) == 2  # noqa: PLR2004
+    assert len(image_data.md5_hashes) == 2  # noqa: PLR2004
 
 
 @pytest.mark.parametrize(
     ("data", "expected_format"),
     [
         (b"\x89PNG\r\n\x1a\n", ImageFormat.IMAGE_FORMAT_PNG),
-        (b"\xFF\xD8\xFF", ImageFormat.IMAGE_FORMAT_JPEG),
+        (b"\xff\xd8\xff", ImageFormat.IMAGE_FORMAT_JPEG),
         (b"GIF87a", ImageFormat.IMAGE_FORMAT_GIF),
         (b"GIF89a", ImageFormat.IMAGE_FORMAT_GIF),
         (b"BM", ImageFormat.IMAGE_FORMAT_BMP),

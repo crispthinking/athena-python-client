@@ -16,7 +16,7 @@ def test_detect_png_format() -> None:
 
 def test_detect_jpeg_format() -> None:
     """Test detection of JPEG format."""
-    jpeg_header = b"\xFF\xD8\xFF\xE0" + b"\x00" * 100
+    jpeg_header = b"\xff\xd8\xff\xe0" + b"\x00" * 100
     assert detect_image_format(jpeg_header) == ImageFormat.IMAGE_FORMAT_JPEG
 
 
@@ -58,16 +58,12 @@ def test_detect_tiff_big_endian_format() -> None:
 
 def test_detect_unspecified_for_empty_data() -> None:
     """Test that empty data returns UNSPECIFIED."""
-    assert (
-        detect_image_format(b"") == ImageFormat.IMAGE_FORMAT_UNSPECIFIED
-    )
+    assert detect_image_format(b"") == ImageFormat.IMAGE_FORMAT_UNSPECIFIED
 
 
 def test_detect_unspecified_for_short_data() -> None:
     """Test that very short data returns UNSPECIFIED."""
-    assert (
-        detect_image_format(b"ab") == ImageFormat.IMAGE_FORMAT_UNSPECIFIED
-    )
+    assert detect_image_format(b"ab") == ImageFormat.IMAGE_FORMAT_UNSPECIFIED
 
 
 def test_detect_unspecified_for_unknown_format() -> None:
@@ -95,7 +91,7 @@ def test_detect_format_with_real_png_data() -> None:
 def test_detect_format_with_real_jpeg_data() -> None:
     """Test detection with JPEG SOI marker."""
     # JPEG Start of Image (SOI) marker
-    jpeg_data = b"\xFF\xD8\xFF\xDB" + b"\x00" * 100
+    jpeg_data = b"\xff\xd8\xff\xdb" + b"\x00" * 100
     assert detect_image_format(jpeg_data) == ImageFormat.IMAGE_FORMAT_JPEG
 
 
@@ -103,7 +99,7 @@ def test_detect_format_with_real_jpeg_data() -> None:
     ("header", "expected"),
     [
         (b"\x89PNG\r\n\x1a\n", ImageFormat.IMAGE_FORMAT_PNG),
-        (b"\xFF\xD8\xFF", ImageFormat.IMAGE_FORMAT_JPEG),
+        (b"\xff\xd8\xff", ImageFormat.IMAGE_FORMAT_JPEG),
         (b"GIF87a", ImageFormat.IMAGE_FORMAT_GIF),
         (b"GIF89a", ImageFormat.IMAGE_FORMAT_GIF),
         (b"BM", ImageFormat.IMAGE_FORMAT_BMP),

@@ -5,12 +5,17 @@ tasks in the Athena client. It provides structured data classes to ensure
 consistent input handling across the application.
 """
 
+from __future__ import annotations
+
 import hashlib
+from typing import TYPE_CHECKING
 
 from resolver_athena_client.client.image_format_detector import (
     detect_image_format,
 )
-from resolver_athena_client.generated.athena.models_pb2 import ImageFormat
+
+if TYPE_CHECKING:
+    from resolver_athena_client.generated.athena.models_pb2 import ImageFormat
 
 
 class ImageData:

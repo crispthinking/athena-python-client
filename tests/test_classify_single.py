@@ -413,7 +413,7 @@ async def test_classify_single_with_jpeg_format(
 ) -> None:
     """Test that JPEG format is detected and preserved."""
     # Create ImageData with JPEG header
-    jpeg_data = b"\xFF\xD8\xFF\xE0" + b"\x00" * 100
+    jpeg_data = b"\xff\xd8\xff\xe0" + b"\x00" * 100
     image_data = ImageData(jpeg_data)
 
     # Setup mock response
