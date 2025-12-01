@@ -14,7 +14,7 @@ from tests.functional.e2e.testcases.parser import (
     load_test_cases,
 )
 
-TEST_CASES = load_test_cases("live_model")
+TEST_CASES = load_test_cases("benign_model")
 
 FP_ERROR_TOLERANCE = 1e-4
 
@@ -59,12 +59,10 @@ async def test_classify_single(
         )
         actual_output = {k: actual_output[k] for k in test_case.expected_output}
 
-        max_diff = max(
-            abs(test_case.expected_output[label] - actual_output[label])
-            for label in test_case.expected_output
-        )
-        assert max_diff < FP_ERROR_TOLERANCE, (
-            "Output weights differ from expected by more than",
-            f" {FP_ERROR_TOLERANCE}: ",
-            f"expected={test_case.expected_output}, actual={actual_output}",
-        )
+        for label in test_case.expected_output:
+            expected = test_case.expected_output[label]
+            actual = actual_output[label]
+            assert abs(expected - actual) < FP_ERROR_TOLERANCE, (
+            f"Weight for label '{label}' differs by more than {FP_ERROR_TOLERANCE}: "
+            f"expected={expected}, actual={actual}, diff={abs(expected - actual)}"
+            )

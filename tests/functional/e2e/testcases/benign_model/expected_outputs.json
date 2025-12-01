@@ -1,11 +1,11 @@
 {
     "classification_labels": [
-        "Lakeside",
-        "Mountains",
-        "Trees",
-        "Seashore",
-        "Ducks",
-        "Goose"
+        "UnknownCSAM-Lakeside",
+        "UnknownCSAM-Mountains",
+        "UnknownCSAM-Trees",
+        "UnknownCSAM-Seashore",
+        "UnknownCSAM-Ducks",
+        "UnknownCSAM-Goose"
     ],
     "images": [
         [
