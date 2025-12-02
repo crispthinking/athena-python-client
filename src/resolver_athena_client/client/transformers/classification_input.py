@@ -52,7 +52,7 @@ class ClassificationInputTransformer(
         # If format is still UNSPECIFIED, default to RAW_UINT8
         image_format = image_data.image_format
         if image_format == ImageFormat.IMAGE_FORMAT_UNSPECIFIED:
-            image_format = ImageFormat.IMAGE_FORMAT_RAW_UINT8
+            image_format = ImageFormat.IMAGE_FORMAT_RAW_UINT8_BGR
 
         return ClassificationInput(
             affiliate=self.affiliate,

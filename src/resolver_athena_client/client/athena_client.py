@@ -243,7 +243,7 @@ class AthenaClient:
         # If format is still UNSPECIFIED, default to RAW_UINT8
         image_format = processed_image.image_format
         if image_format == ImageFormat.IMAGE_FORMAT_UNSPECIFIED:
-            image_format = ImageFormat.IMAGE_FORMAT_RAW_UINT8
+            image_format = ImageFormat.IMAGE_FORMAT_RAW_UINT8_BGR
 
         classification_input = ClassificationInput(
             affiliate=self.options.affiliate,
