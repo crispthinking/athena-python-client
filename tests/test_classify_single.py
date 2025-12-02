@@ -378,3 +378,81 @@ async def test_classify_single_empty_classifications(
     assert len(result.classifications) == 0
     assert not result.HasField("error")  # Check protobuf field is not set
     assert result.correlation_id == "test-correlation"
+
+
+@pytest.mark.asyncio
+async def test_classify_single_with_png_format(
+    athena_client: AthenaClient,
+) -> None:
+    """Test that PNG format is detected and preserved."""
+    # Create ImageData with PNG header
+    png_data = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+    image_data = ImageData(png_data)
+
+    # Setup mock response
+    mock_output = ClassificationOutput(
+        correlation_id="test-correlation",
+        classifications=[],
+    )
+    athena_client.classifier.classify_single = AsyncMock(
+        return_value=mock_output
+    )
+
+    # Call classify_single
+    _ = await athena_client.classify_single(image_data)
+
+    # Verify PNG format was detected and sent
+    call_args = athena_client.classifier.classify_single.call_args[0][0]
+    assert call_args.format == ImageFormat.IMAGE_FORMAT_PNG
+
+
+@pytest.mark.asyncio
+async def test_classify_single_with_jpeg_format(
+    athena_client: AthenaClient,
+) -> None:
+    """Test that JPEG format is detected and preserved."""
+    # Create ImageData with JPEG header
+    jpeg_data = b"\xff\xd8\xff\xe0" + b"\x00" * 100
+    image_data = ImageData(jpeg_data)
+
+    # Setup mock response
+    mock_output = ClassificationOutput(
+        correlation_id="test-correlation",
+        classifications=[],
+    )
+    athena_client.classifier.classify_single = AsyncMock(
+        return_value=mock_output
+    )
+
+    # Call classify_single
+    _ = await athena_client.classify_single(image_data)
+
+    # Verify JPEG format was detected and sent
+    call_args = athena_client.classifier.classify_single.call_args[0][0]
+    assert call_args.format == ImageFormat.IMAGE_FORMAT_JPEG
+
+
+@pytest.mark.asyncio
+async def test_classify_single_never_sends_unspecified(
+    athena_client: AthenaClient,
+) -> None:
+    """Test that UNSPECIFIED format is never sent over the API."""
+    # Create ImageData with unrecognizable data
+    unknown_data = ImageData(b"not_a_valid_image_format")
+
+    # Setup mock response
+    mock_output = ClassificationOutput(
+        correlation_id="test-correlation",
+        classifications=[],
+    )
+    athena_client.classifier.classify_single = AsyncMock(
+        return_value=mock_output
+    )
+
+    # Call classify_single
+    _ = await athena_client.classify_single(unknown_data)
+
+    # Verify UNSPECIFIED was converted to RAW_UINT8
+    call_args = athena_client.classifier.classify_single.call_args[0][0]
+    assert call_args.format != ImageFormat.IMAGE_FORMAT_UNSPECIFIED
+    assert call_args.format == ImageFormat.IMAGE_FORMAT_RAW_UINT8_BGR

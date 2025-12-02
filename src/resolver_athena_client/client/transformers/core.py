@@ -13,6 +13,7 @@ from PIL import Image
 
 from resolver_athena_client.client.consts import EXPECTED_HEIGHT, EXPECTED_WIDTH
 from resolver_athena_client.client.models import ImageData
+from resolver_athena_client.generated.athena.models_pb2 import ImageFormat
 
 # Global optimization constants
 _target_size = (EXPECTED_WIDTH, EXPECTED_HEIGHT)
@@ -73,6 +74,7 @@ async def resize_image(image_data: ImageData) -> ImageData:
     # Only modify data and add hashes if transformation occurred
     if was_transformed:
         image_data.data = resized_bytes
+        image_data.image_format = ImageFormat.IMAGE_FORMAT_RAW_UINT8_BGR
         image_data.add_transformation_hashes()
 
     return image_data

@@ -239,12 +239,18 @@ class AthenaClient:
             else RequestEncoding.REQUEST_ENCODING_UNCOMPRESSED
         )
 
+        # Ensure we never send UNSPECIFIED format over the API
+        # If format is still UNSPECIFIED, default to RAW_UINT8
+        image_format = processed_image.image_format
+        if image_format == ImageFormat.IMAGE_FORMAT_UNSPECIFIED:
+            image_format = ImageFormat.IMAGE_FORMAT_RAW_UINT8_BGR
+
         classification_input = ClassificationInput(
             affiliate=self.options.affiliate,
             correlation_id=correlation_id,
             encoding=request_encoding,
             data=processed_image.data,
-            format=ImageFormat.IMAGE_FORMAT_RAW_UINT8_BGR,
+            format=image_format,
             hashes=[
                 ImageHash(
                     value=hash_value,

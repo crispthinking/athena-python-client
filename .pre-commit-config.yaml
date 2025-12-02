@@ -13,7 +13,7 @@ repos:
     hooks:
       - id: basedpyright
         name: basedpyright
-        entry: basedpyright
+        entry: uv run basedpyright
         language: system
         types_or: [python, pyi]
         pass_filenames: false
