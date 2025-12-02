@@ -3,7 +3,7 @@
 from resolver_athena_client.generated.athena.models_pb2 import ImageFormat
 
 PNG_MAGIC_BYTES = b"\x89PNG"
-JPEG_MAGIC_BYTES = b"\xFF\xD8\xFF"
+JPEG_MAGIC_BYTES = b"\xff\xd8\xff"
 GIF87A_MAGIC_BYTES = b"GIF87a"
 GIF89A_MAGIC_BYTES = b"GIF89a"
 BMP_MAGIC_BYTES = b"BM"
