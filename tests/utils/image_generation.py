@@ -10,6 +10,14 @@ from PIL import Image, ImageDraw
 
 from resolver_athena_client.client.models import ImageData
 
+
+def _rgb_to_bgr(raw_rgb: bytes) -> bytes:
+    data = bytearray(raw_rgb)
+    for i in range(0, len(data), 3):
+        data[i], data[i + 2] = data[i + 2], data[i]
+    return bytes(data)
+
+
 # Global cache for reusable objects and constants
 _image_cache: dict[
     tuple[int, int], tuple[Image.Image, ImageDraw.ImageDraw]
@@ -61,8 +69,8 @@ def create_random_image(
     x2, y2 = (width * 3) // 4, (height * 3) // 4
     draw.rectangle([x1, y1, x2, y2], fill=accent_color)
 
-    if img_format.upper() == "RAW_UINT8":
-        return image.tobytes()
+    if img_format.upper() in {"RAW_UINT8", "RAW_UINT8_BGR"}:
+        return _rgb_to_bgr(image.tobytes())
 
     # Convert to PNG bytes
     buffer = io.BytesIO()
