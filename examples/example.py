@@ -58,7 +58,7 @@ async def run_oauth_example(
 
     async with AthenaClient(channel, options) as client:
         logger.info(
-            "Generating %d test images...", max_test_images or "unlimited"
+            "Generating %s test images...", max_test_images or "unlimited"
         )
         results = client.classify_images(
             count_and_yield(iter_images(max_test_images), sent_counter)
