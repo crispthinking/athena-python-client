@@ -42,8 +42,6 @@ class WorkerBatcher(Generic[T]):
             queue_size: Size of internal processing queue
             keepalive_interval: Seconds between keepalive requests
             batch_timeout: Max seconds to wait before sending partial batch
-
-
         """
         self.source: AsyncIterator[T] = source
         self.transformer_func: Callable[[T], Awaitable[ClassificationInput]] = (
