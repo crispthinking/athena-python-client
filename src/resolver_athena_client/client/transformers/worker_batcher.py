@@ -242,7 +242,7 @@ class WorkerBatcher(Generic[T]):
                 await asyncio.wait_for(
                     self._wait_for_items(), timeout=self.batch_timeout
                 )
-            except asyncio.TimeoutError:  # noqa: PERF203 needed for proper handling of cancellation
+            except asyncio.TimeoutError:  # noqa: PERF203 used to trigger batch send on timeout
                 # Timeout - send current batch if we have items
                 if self.processed_items:
                     break
