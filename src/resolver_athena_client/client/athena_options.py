@@ -49,7 +49,6 @@ class AthenaOptions:
             sends empty requests at this interval to prevent stream timeouts.
             Defaults to None (auto-detect).
 
-
     """
 
     host: str = "localhost"
