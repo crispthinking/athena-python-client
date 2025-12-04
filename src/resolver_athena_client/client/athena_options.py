@@ -38,10 +38,10 @@ class AthenaOptions:
         correlation_provider: Class that generates correlation IDs for requests.
             Used for request tracing and debugging.
             Defaults to HashCorrelationProvider.
-        timeout: Optional timeout in seconds for receiving responses.
-            When None, allows infinite streaming with no timeout.
-            When set to a float value, stream will stop after that many seconds
-            without receiving a response.
+        timeout: Optional timeout in seconds for individual gRPC calls.
+            When None, uses gRPC default timeouts.
+            When set to a float value, individual gRPC requests will timeout
+            after that many seconds.
             Defaults to 120.0 seconds.
         keepalive_interval: Optional interval in seconds for sending keepalive
             requests to maintain stream connection. When None, uses a sensible

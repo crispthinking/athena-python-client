@@ -92,12 +92,12 @@ class RequestBatcher:
         self._last_send_time = current_time
 
         if not self._stream_started:
-            self.logger.info(
+            self.logger.debug(
                 "Sending initial keepalive to establish persistent stream"
             )
             self._stream_started = True
         else:
-            self.logger.info(
+            self.logger.debug(
                 "Sending keepalive after %.1fs to maintain connection",
                 time_since_last,
             )

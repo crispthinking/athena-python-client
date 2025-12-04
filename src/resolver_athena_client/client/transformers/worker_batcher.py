@@ -108,7 +108,7 @@ class WorkerBatcher(Generic[T]):
 
     async def _start_workers(self) -> None:
         """Start all worker tasks."""
-        self.logger.info("Starting %d worker tasks", self.num_workers)
+        self.logger.debug("Starting %d worker tasks", self.num_workers)
 
         # Start feeder task (reads from source)
         self.feeder_task = asyncio.create_task(self._feed_input_queue())
@@ -368,7 +368,7 @@ class WorkerBatcher(Generic[T]):
                         "Worker task %d cleanup completed/timed out", i
                     )
 
-        self.logger.info("Worker cleanup complete")
+        self.logger.debug("Worker cleanup complete")
 
     async def shutdown(self) -> None:
         """Explicitly shutdown the worker batcher and clean up resources.
@@ -376,5 +376,5 @@ class WorkerBatcher(Generic[T]):
         This should only be called when manually terminating the stream,
         not during normal operation completion.
         """
-        self.logger.info("Explicit shutdown requested, cleaning up resources")
+        self.logger.debug("Explicit shutdown requested, cleaning up resources")
         await self._cleanup()

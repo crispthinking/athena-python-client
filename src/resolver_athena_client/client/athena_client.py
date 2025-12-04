@@ -33,7 +33,6 @@ from resolver_athena_client.grpc_wrappers.classifier_service import (
 )
 
 # Constants
-MINIMUM_TIMEOUT_SECONDS = 60.0
 
 
 async def _filter_none_requests(
@@ -109,10 +108,7 @@ class AthenaClient:
 
         start_time = asyncio.get_running_loop().time()
 
-        self.logger.info(
-            "Starting persistent classification with max timeout: %.1fs",
-            self.options.timeout or -1,
-        )
+        self.logger.debug("Starting persistent classification")
 
         # Single persistent stream - let WorkerBatcher handle all cancellations
         async for response in self._process_persistent_stream(
@@ -284,53 +280,18 @@ class AthenaClient:
             keepalive_interval=self.options.keepalive_interval or 30.0,
         )
 
-    def _create_dummy_pipeline(self) -> WorkerBatcher[None]:
-        """Create a pipeline that sends dummy requests for shared results."""
-
-        async def dummy_generator() -> AsyncGenerator[None, None]:
-            """Generate infinite dummy items to keep stream active."""
-            while True:
-                await asyncio.sleep(10.0)  # Send dummy every 10 seconds
-                yield None  # Dummy item
-
-        async def dummy_transform(_: object) -> ClassificationInput:
-            """Transform dummy item into minimal classification input."""
-            correlation_provider = self.options.correlation_provider()
-
-            return ClassificationInput(
-                affiliate="shared-queue-listener",
-                correlation_id=correlation_provider.get_correlation_id(
-                    b"dummy"
-                ),
-                data=b"dummy",
-                encoding=RequestEncoding.REQUEST_ENCODING_UNCOMPRESSED,
-                format=ImageFormat.IMAGE_FORMAT_RAW_UINT8_BGR,
-            )
-
-        return WorkerBatcher(
-            source=dummy_generator(),
-            transformer_func=dummy_transform,
-            deployment_id=self.options.deployment_id,
-            max_batch_size=1,  # Send one dummy at a time
-            num_workers=1,  # Only need one worker for dummies
-            keepalive_interval=self.options.keepalive_interval or 30.0,
-        )
-
     async def _process_persistent_stream(
         self,
         request_batcher: AsyncIterable[ClassifyRequest | None],
         start_time: float,
     ) -> AsyncIterator[ClassifyResponse]:
         """Process a persistent gRPC stream with keepalives."""
-        self.logger.info(
-            "Starting persistent stream (max duration: %.1fs)",
-            self.options.timeout or -1,
-        )
+        self.logger.debug("Starting persistent stream")
 
         while True:
             try:
                 async for response in self._iterate_stream_responses(
-                    request_batcher, start_time
+                    request_batcher
                 ):
                     yield response
                 # Stream ended naturally - continue loop to recreate
@@ -358,9 +319,8 @@ class AthenaClient:
     async def _iterate_stream_responses(
         self,
         request_batcher: AsyncIterable[ClassifyRequest | None],
-        start_time: float,
     ) -> AsyncIterator[ClassifyResponse]:
-        """Iterate over stream responses with timeout handling."""
+        """Iterate over stream responses."""
         # Never apply timeout at gRPC level - handle timeout ourselves
         self.logger.debug("Creating gRPC classify stream...")
         response_stream = await self.classifier.classify(
@@ -368,23 +328,12 @@ class AthenaClient:
         )
         self.logger.debug("gRPC classify stream created successfully")
 
-        last_result_time = start_time
-
         self.logger.debug("Starting to iterate over response stream...")
         async for response in response_stream:
-            current_time = asyncio.get_running_loop().time()
-
-            # Handle timeout logic
-            if self._should_timeout_stream(
-                current_time, start_time, last_result_time
-            ):
-                return
-
-            # Update last result time if we got results
+            # Log results if we got them
             if response.outputs and len(response.outputs) > 0:
-                last_result_time = current_time
                 self.logger.debug(
-                    "Received %d results, resetting timeout countdown",
+                    "Received %d results",
                     len(response.outputs),
                 )
 
@@ -392,32 +341,6 @@ class AthenaClient:
                 self._raise_athena_error(response.global_error.message)
 
             yield response
-
-    def _should_timeout_stream(
-        self,
-        current_time: float,
-        start_time: float,
-        last_result_time: float,
-    ) -> bool:
-        """Check if stream should timeout based on response timing."""
-        time_since_last_result = current_time - last_result_time
-
-        should_timeout = (
-            self.options.timeout
-            and time_since_last_result >= self.options.timeout
-            and (current_time - start_time) >= MINIMUM_TIMEOUT_SECONDS
-        )
-
-        if should_timeout:
-            self.logger.info(
-                "No results received for %.1fs (timeout=%.1fs)"
-                "closing stream after %.1fs total",
-                time_since_last_result,
-                self.options.timeout,
-                current_time - start_time,
-            )
-            return True
-        return False
 
     async def _reopen_stream_with_keepalive(self) -> None:
         """Reopen the stream by sending an empty keepalive request."""
