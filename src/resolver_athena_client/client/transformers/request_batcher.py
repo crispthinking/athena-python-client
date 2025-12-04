@@ -64,19 +64,14 @@ class RequestBatcher:
         # Build batch
         await self._ensure_batch_has_items()
 
-        # If source is exhausted and no batch items, wait for keepalive interval
+        # If source is exhausted and no batch items, send keepalive to
+        # maintain stream
         if self._source_exhausted and not self._batch:
-            # Sleep until next keepalive time
-            time_to_next_keepalive = self.keepalive_interval - (
-                current_time - self._last_send_time
+            self.logger.debug(
+                "Source exhausted and no batch items, "
+                "sending keepalive to maintain stream"
             )
-            if time_to_next_keepalive > 0:
-                await asyncio.sleep(time_to_next_keepalive)
-
-            self.logger.info(
-                "Source exhausted, sending keepalive to maintain stream"
-            )
-            return self._create_keepalive_request(time.time())
+            return self._create_keepalive_request(current_time)
 
         await self._fill_batch()
 

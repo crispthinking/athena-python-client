@@ -4,28 +4,19 @@ import asyncio
 import logging
 import types
 import uuid
-from collections.abc import AsyncGenerator, AsyncIterator
+from collections.abc import AsyncGenerator, AsyncIterable, AsyncIterator
 
 import grpc
 
 from resolver_athena_client.client.athena_options import AthenaOptions
 from resolver_athena_client.client.exceptions import AthenaError
 from resolver_athena_client.client.models import ImageData
-from resolver_athena_client.client.transformers.brotli_compressor import (
-    BrotliCompressor,
-)
-from resolver_athena_client.client.transformers.classification_input import (
-    ClassificationInputTransformer,
-)
 from resolver_athena_client.client.transformers.core import (
     compress_image,
     resize_image,
 )
-from resolver_athena_client.client.transformers.image_resizer import (
-    ImageResizer,
-)
-from resolver_athena_client.client.transformers.request_batcher import (
-    RequestBatcher,
+from resolver_athena_client.client.transformers.worker_batcher import (
+    WorkerBatcher,
 )
 from resolver_athena_client.generated.athena.models_pb2 import (
     ClassificationInput,
@@ -43,6 +34,15 @@ from resolver_athena_client.grpc_wrappers.classifier_service import (
 
 # Constants
 MINIMUM_TIMEOUT_SECONDS = 60.0
+
+
+async def _filter_none_requests(
+    request_iter: AsyncIterable[ClassifyRequest | None],
+) -> AsyncIterator[ClassifyRequest]:
+    """Filter out None values from request iterator."""
+    async for request in request_iter:
+        if request is not None:
+            yield request
 
 
 class AthenaClient:
@@ -114,62 +114,11 @@ class AthenaClient:
             self.options.timeout or -1,
         )
 
-        # Single persistent stream with keepalives and reconnection handling
-        max_reconnects = 3
-        reconnect_count = 0
-
-        while reconnect_count <= max_reconnects:
-            try:
-                async for response in self._process_persistent_stream(
-                    request_batcher, start_time
-                ):
-                    yield response
-                # Stream ended normally, no need to reconnect
-                break
-
-            except grpc.aio.AioRpcError as e:
-                elapsed = asyncio.get_running_loop().time() - start_time
-
-                if (
-                    e.code() == grpc.StatusCode.INTERNAL
-                    and "RST_STREAM" in str(e)
-                    and reconnect_count < max_reconnects
-                ):
-                    reconnect_count += 1
-                    self.logger.info(
-                        "RST_STREAM error after %.1fs, reconnecting "
-                        "(attempt %d/%d): %s",
-                        elapsed,
-                        reconnect_count,
-                        max_reconnects,
-                        str(e),
-                    )
-
-                    # Send empty keepalive request to reopen stream
-                    await self._reopen_stream_with_keepalive()
-                    continue
-                else:
-                    # Other gRPC errors or max reconnects reached
-                    self.logger.info(
-                        "Stream ended after %.1fs (%s), reconnects: %d/%d",
-                        elapsed,
-                        self._get_error_code_name(e),
-                        reconnect_count,
-                        max_reconnects,
-                    )
-                    break
-
-            except Exception:
-                raise
-
-        # Log final stats
-        total_duration = asyncio.get_running_loop().time() - start_time
-        self.logger.info(
-            "Classification completed after %.1fs (reconnects: %d/%d)",
-            total_duration,
-            reconnect_count,
-            max_reconnects,
-        )
+        # Single persistent stream - let WorkerBatcher handle all cancellations
+        async for response in self._process_persistent_stream(
+            request_batcher, start_time
+        ):
+            yield response
 
     async def classify_single(
         self, image_data: ImageData, correlation_id: str | None = None
@@ -278,43 +227,98 @@ class AthenaClient:
 
     def _create_request_pipeline(
         self, images: AsyncIterator[ImageData]
-    ) -> RequestBatcher:
+    ) -> WorkerBatcher[ImageData]:
         """Create the request processing pipeline."""
-        image_stream = images
+        return self._create_worker_based_pipeline(images)
 
-        # Apply image resizing if enabled
-        if self.options.resize_images:
-            image_stream = ImageResizer(image_stream)
+    def _create_worker_based_pipeline(
+        self, images: AsyncIterator[ImageData]
+    ) -> WorkerBatcher[ImageData]:
+        """Create worker-based pipeline for better concurrency."""
 
-        # Apply compression if enabled
-        if self.options.compress_images:
-            image_stream = BrotliCompressor(image_stream)
+        async def transform_image(image_data: ImageData) -> ClassificationInput:
+            """Transform a single image through the full pipeline."""
+            # Apply image resizing if enabled
+            if self.options.resize_images:
+                resized_image = await resize_image(image_data)
+            else:
+                resized_image = image_data
 
-        # Set request encoding based on compression setting
-        request_encoding = (
-            RequestEncoding.REQUEST_ENCODING_BROTLI
-            if self.options.compress_images
-            else RequestEncoding.REQUEST_ENCODING_UNCOMPRESSED
-        )
+            # Apply compression if enabled
+            if self.options.compress_images:
+                compressed_image = compress_image(resized_image)
+            else:
+                compressed_image = resized_image
 
-        input_transformer = ClassificationInputTransformer(
-            image_stream,
-            deployment_id=self.options.deployment_id,
-            affiliate=self.options.affiliate,
-            request_encoding=request_encoding,
-            correlation_provider=self.options.correlation_provider,
-        )
+            # Set request encoding based on compression setting
+            request_encoding = (
+                RequestEncoding.REQUEST_ENCODING_BROTLI
+                if self.options.compress_images
+                else RequestEncoding.REQUEST_ENCODING_UNCOMPRESSED
+            )
 
-        return RequestBatcher(
-            input_transformer,
+            # Create classification input directly
+            correlation_provider = self.options.correlation_provider()
+
+            # Ensure we never send UNSPECIFIED format over the API
+            image_format = compressed_image.image_format
+            if image_format == ImageFormat.IMAGE_FORMAT_UNSPECIFIED:
+                image_format = ImageFormat.IMAGE_FORMAT_RAW_UINT8_BGR
+
+            return ClassificationInput(
+                affiliate=self.options.affiliate,
+                correlation_id=correlation_provider.get_correlation_id(
+                    compressed_image.data
+                ),
+                data=compressed_image.data,
+                encoding=request_encoding,
+                format=image_format,
+            )
+
+        return WorkerBatcher(
+            source=images,
+            transformer_func=transform_image,
             deployment_id=self.options.deployment_id,
             max_batch_size=self.options.max_batch_size,
-            keepalive_interval=self.options.keepalive_interval,
+            num_workers=5,  # Configurable number of workers
+            keepalive_interval=self.options.keepalive_interval or 30.0,
+        )
+
+    def _create_dummy_pipeline(self) -> WorkerBatcher[None]:
+        """Create a pipeline that sends dummy requests for shared results."""
+
+        async def dummy_generator() -> AsyncGenerator[None, None]:
+            """Generate infinite dummy items to keep stream active."""
+            while True:
+                await asyncio.sleep(10.0)  # Send dummy every 10 seconds
+                yield None  # Dummy item
+
+        async def dummy_transform(_: object) -> ClassificationInput:
+            """Transform dummy item into minimal classification input."""
+            correlation_provider = self.options.correlation_provider()
+
+            return ClassificationInput(
+                affiliate="shared-queue-listener",
+                correlation_id=correlation_provider.get_correlation_id(
+                    b"dummy"
+                ),
+                data=b"dummy",
+                encoding=RequestEncoding.REQUEST_ENCODING_UNCOMPRESSED,
+                format=ImageFormat.IMAGE_FORMAT_RAW_UINT8_BGR,
+            )
+
+        return WorkerBatcher(
+            source=dummy_generator(),
+            transformer_func=dummy_transform,
+            deployment_id=self.options.deployment_id,
+            max_batch_size=1,  # Send one dummy at a time
+            num_workers=1,  # Only need one worker for dummies
+            keepalive_interval=self.options.keepalive_interval or 30.0,
         )
 
     async def _process_persistent_stream(
         self,
-        request_batcher: RequestBatcher,
+        request_batcher: AsyncIterable[ClassifyRequest | None],
         start_time: float,
     ) -> AsyncIterator[ClassifyResponse]:
         """Process a persistent gRPC stream with keepalives."""
@@ -323,65 +327,97 @@ class AthenaClient:
             self.options.timeout or -1,
         )
 
-        try:
-            # Never apply timeout at gRPC level - handle timeout logic ourselves
-            self.logger.debug("Creating gRPC classify stream...")
-            response_stream = await self.classifier.classify(
-                request_batcher, timeout=None
-            )
-            self.logger.debug("gRPC classify stream created successfully")
+        while True:
+            try:
+                async for response in self._iterate_stream_responses(
+                    request_batcher, start_time
+                ):
+                    yield response
+                # Stream ended naturally - continue loop to recreate
+                self.logger.debug("Stream ended naturally, recreating...")
+                continue
+            except asyncio.CancelledError:
+                # Handle cancellation gracefully - continue the stream
+                self.logger.debug("Stream cancelled, continuing...")
+                continue
+            except grpc.aio.AioRpcError:
+                # Re-raise gRPC errors to be handled by outer reconnection logic
+                raise
+            except KeyboardInterrupt:
+                raise
+            except AthenaError:
+                # Re-raise Athena classification errors to caller
+                raise
+            except Exception:
+                elapsed = asyncio.get_running_loop().time() - start_time
+                self.logger.exception(
+                    "Unexpected error in stream after %.1fs", elapsed
+                )
+                continue
 
-            last_result_time = start_time
-            response_count = 0
+    async def _iterate_stream_responses(
+        self,
+        request_batcher: AsyncIterable[ClassifyRequest | None],
+        start_time: float,
+    ) -> AsyncIterator[ClassifyResponse]:
+        """Iterate over stream responses with timeout handling."""
+        # Never apply timeout at gRPC level - handle timeout ourselves
+        self.logger.debug("Creating gRPC classify stream...")
+        response_stream = await self.classifier.classify(
+            _filter_none_requests(request_batcher), timeout=None
+        )
+        self.logger.debug("gRPC classify stream created successfully")
 
-            self.logger.debug("Starting to iterate over response stream...")
-            async for response in response_stream:
-                response_count += 1
-                current_time = asyncio.get_running_loop().time()
+        last_result_time = start_time
 
-                # Check if this response contains actual results
-                has_results = response.outputs and len(response.outputs) > 0
+        self.logger.debug("Starting to iterate over response stream...")
+        async for response in response_stream:
+            current_time = asyncio.get_running_loop().time()
 
-                # If we have results, reset the countdown timer
-                if has_results:
-                    last_result_time = current_time
-                    self.logger.debug(
-                        "Received %d results, resetting timeout countdown",
-                        len(response.outputs),
-                    )
+            # Handle timeout logic
+            if self._should_timeout_stream(
+                current_time, start_time, last_result_time
+            ):
+                return
 
-                time_since_last_result = current_time - last_result_time
-
-                should_timeout = (
-                    self.options.timeout
-                    and time_since_last_result >= self.options.timeout
-                    and (current_time - start_time) >= MINIMUM_TIMEOUT_SECONDS
+            # Update last result time if we got results
+            if response.outputs and len(response.outputs) > 0:
+                last_result_time = current_time
+                self.logger.debug(
+                    "Received %d results, resetting timeout countdown",
+                    len(response.outputs),
                 )
 
-                if should_timeout:
-                    self.logger.info(
-                        "No results received for %.1fs (timeout=%.1fs)"
-                        "closing stream after %.1fs total",
-                        time_since_last_result,
-                        self.options.timeout,
-                        current_time - start_time,
-                    )
-                    return
+            if response.global_error and response.global_error.message:
+                self._raise_athena_error(response.global_error.message)
 
-                if response.global_error and response.global_error.message:
-                    self._raise_athena_error(response.global_error.message)
+            yield response
 
-                yield response
+    def _should_timeout_stream(
+        self,
+        current_time: float,
+        start_time: float,
+        last_result_time: float,
+    ) -> bool:
+        """Check if stream should timeout based on response timing."""
+        time_since_last_result = current_time - last_result_time
 
-        except grpc.aio.AioRpcError:
-            # Re-raise gRPC errors to be handled by outer reconnection logic
-            raise
-        except Exception:
-            elapsed = asyncio.get_running_loop().time() - start_time
-            self.logger.exception(
-                "Unexpected error in stream after %.1fs", elapsed
+        should_timeout = (
+            self.options.timeout
+            and time_since_last_result >= self.options.timeout
+            and (current_time - start_time) >= MINIMUM_TIMEOUT_SECONDS
+        )
+
+        if should_timeout:
+            self.logger.info(
+                "No results received for %.1fs (timeout=%.1fs)"
+                "closing stream after %.1fs total",
+                time_since_last_result,
+                self.options.timeout,
+                current_time - start_time,
             )
-            raise
+            return True
+        return False
 
     async def _reopen_stream_with_keepalive(self) -> None:
         """Reopen the stream by sending an empty keepalive request."""

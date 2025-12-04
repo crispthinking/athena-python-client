@@ -15,7 +15,8 @@ class AthenaOptions:
     This class provides configuration options for controlling how the client
     connects to and interacts with the Athena service.
 
-    Attributes:
+    Attributes
+    ----------
         host: The hostname of the Athena service to connect to.
             Defaults to "localhost".
         resize_images: Whether to automatically resize images before sending.
@@ -47,6 +48,7 @@ class AthenaOptions:
             default based on server configuration. When set to a float value,
             sends empty requests at this interval to prevent stream timeouts.
             Defaults to None (auto-detect).
+
 
     """
 

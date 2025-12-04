@@ -1,5 +1,7 @@
 """Tests for AthenaClient."""
 
+import asyncio
+import contextlib
 from unittest import mock
 
 import pytest
@@ -71,12 +73,31 @@ async def test_classify_images_success(
 
         # Create client and classify images
         client = AthenaClient(mock_channel, mock_options)
-        responses = [
-            response
-            async for response in client.classify_images(
-                MockAsyncIterator(test_images)
-            )
-        ]
+
+        # Collect only the expected number of responses
+        responses: list[ClassifyResponse] = []
+        classify_task = None
+
+        try:
+
+            async def collect_responses() -> None:
+                response_iter = aiter(
+                    client.classify_images(MockAsyncIterator(test_images))
+                )
+                for _ in range(len(test_responses)):
+                    response: ClassifyResponse = await anext(response_iter)
+                    responses.append(response)
+
+            # Create task and use timeout to prevent hanging
+            classify_task = asyncio.create_task(collect_responses())
+            await asyncio.wait_for(classify_task, timeout=5.0)
+        finally:
+            # Cleanup: cancel the task if it's still running
+            if classify_task and not classify_task.done():
+                _ = classify_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await classify_task
+            await client.close()
 
         # Verify responses
         assert len(responses) == len(test_responses)
@@ -112,11 +133,27 @@ async def test_client_context_manager_success(
             assert isinstance(client, AthenaClient)
             # Send a test image to trigger the classify call
             test_image = ImageData(b"test_image")
-            async for _ in client.classify_images(
-                MockAsyncIterator([test_image])
-            ):
-                pass
-            assert mock_classify.call_count == 1
+
+            classify_task = None
+            try:
+
+                async def get_one_response() -> None:
+                    response_iter = aiter(
+                        client.classify_images(MockAsyncIterator([test_image]))
+                    )
+                    # Get one response to verify the stream is working
+                    _ = await anext(response_iter)
+
+                # Create task and use timeout to prevent hanging
+                classify_task = asyncio.create_task(get_one_response())
+                await asyncio.wait_for(classify_task, timeout=5.0)
+                assert mock_classify.call_count == 1
+            finally:
+                # Cleanup: cancel the task if it's still running
+                if classify_task and not classify_task.done():
+                    _ = classify_task.cancel()
+                    with contextlib.suppress(asyncio.CancelledError):
+                        await classify_task
 
         # Verify channel was closed
         mock_channel.close.assert_called_once()
@@ -151,11 +188,27 @@ async def test_client_context_manager_error(
 
         # Verify error is raised when processing images
         test_image = ImageData(b"test_image")
-        with pytest.raises(AthenaError, match="Test error"):
-            async for _ in client.classify_images(
-                MockAsyncIterator([test_image])
-            ):
-                pass
+        classify_task = None
+
+        try:
+
+            async def get_error_response() -> None:
+                response_iter = aiter(
+                    client.classify_images(MockAsyncIterator([test_image]))
+                )
+                _ = await anext(response_iter)
+
+            classify_task = asyncio.create_task(get_error_response())
+
+            with pytest.raises(AthenaError, match="Test error"):
+                await asyncio.wait_for(classify_task, timeout=5.0)
+        finally:
+            # Cleanup: cancel the task if it's still running
+            if classify_task and not classify_task.done():
+                _ = classify_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await classify_task
+            await client.close()
 
 
 @pytest.mark.asyncio
@@ -182,16 +235,29 @@ async def test_client_transformers_disabled(
 
         # Send raw test image that would normally be resized/compressed
         raw_image = ImageData(b"uncompressed_test_image")
-        responses = [
-            response
-            async for response in client.classify_images(
-                MockAsyncIterator([raw_image])
-            )
-        ]
+
+        classify_task = None
+        try:
+
+            async def get_response() -> ClassifyResponse:
+                response_iter = aiter(
+                    client.classify_images(MockAsyncIterator([raw_image]))
+                )
+                return await anext(response_iter)
+
+            # Create task and use timeout to prevent hanging
+            classify_task = asyncio.create_task(get_response())
+            response = await asyncio.wait_for(classify_task, timeout=5.0)
+        finally:
+            # Cleanup: cancel the task if it's still running
+            if classify_task and not classify_task.done():
+                _ = classify_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await classify_task
+            await client.close()
 
         # Verify response was received
-        assert len(responses) == 1
-        assert responses[0].outputs[0].correlation_id == "1"
+        assert response.outputs[0].correlation_id == "1"
 
         # Verify classify was called
         assert mock_classify.call_count == 1
@@ -221,16 +287,29 @@ async def test_client_transformers_enabled(
 
         # Send test image that should be resized/compressed
         raw_image = ImageData(b"uncompressed_test_image")
-        responses = [
-            response
-            async for response in client.classify_images(
-                MockAsyncIterator([raw_image])
-            )
-        ]
+
+        classify_task = None
+        try:
+
+            async def get_response() -> ClassifyResponse:
+                response_iter = aiter(
+                    client.classify_images(MockAsyncIterator([raw_image]))
+                )
+                return await anext(response_iter)
+
+            # Create task and use timeout to prevent hanging
+            classify_task = asyncio.create_task(get_response())
+            response = await asyncio.wait_for(classify_task, timeout=5.0)
+        finally:
+            # Cleanup: cancel the task if it's still running
+            if classify_task and not classify_task.done():
+                _ = classify_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await classify_task
+            await client.close()
 
         # Verify response was received
-        assert len(responses) == 1
-        assert responses[0].outputs[0].correlation_id == "1"
+        assert response.outputs[0].correlation_id == "1"
 
         # Verify classify was called
         assert mock_classify.call_count == 1
