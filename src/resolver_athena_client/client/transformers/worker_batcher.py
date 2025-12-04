@@ -270,7 +270,7 @@ class WorkerBatcher(Generic[T]):
         # results
         if self.workers_done:
             self.logger.debug(
-                "All work complete, sending keepalive to continue"
+                "All work complete, sending keepalive to continue "
                 "receiving shared queue results"
             )
             return self._create_keepalive_request(time.time())
