@@ -41,6 +41,7 @@ def mock_options() -> AthenaOptions:
         resize_images=False,
         compress_images=False,
         max_batch_size=2,
+        num_workers=3,
     )
 
 
@@ -313,6 +314,73 @@ async def test_client_transformers_enabled(
 
         # Verify classify was called
         assert mock_classify.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_client_num_workers_configuration(
+    mock_channel: mock.Mock,
+) -> None:
+    """Test that num_workers option is passed to WorkerBatcher."""
+    custom_num_workers = 7
+    options = AthenaOptions(
+        deployment_id="test-deployment",
+        affiliate="test-affiliate",
+        resize_images=False,
+        compress_images=False,
+        max_batch_size=2,
+        num_workers=custom_num_workers,
+    )
+
+    test_response = ClassifyResponse(
+        outputs=[ClassificationOutput(correlation_id="1")]
+    )
+
+    with (
+        mock.patch(
+            "resolver_athena_client.client.athena_client.ClassifierServiceClient"
+        ) as mock_client_cls,
+        mock.patch(
+            "resolver_athena_client.client.athena_client.WorkerBatcher"
+        ) as mock_worker_batcher_cls,
+    ):
+        mock_client = mock_client_cls.return_value
+        mock_classify = MockAsyncIterator([test_response])
+        mock_client.classify = mock_classify
+
+        # Mock WorkerBatcher to track constructor args
+        mock_batcher = mock.Mock()
+        mock_batcher.__aiter__ = mock.Mock(return_value=MockAsyncIterator([]))
+        mock_worker_batcher_cls.return_value = mock_batcher
+
+        client = AthenaClient(mock_channel, options)
+        test_image = ImageData(b"test_image")
+
+        classify_task = None
+        try:
+
+            async def start_classification() -> None:
+                response_iter = aiter(
+                    client.classify_images(MockAsyncIterator([test_image]))
+                )
+                with contextlib.suppress(StopAsyncIteration):
+                    _ = await anext(response_iter)
+
+            classify_task = asyncio.create_task(start_classification())
+            await asyncio.wait_for(classify_task, timeout=1.0)
+        except asyncio.TimeoutError:
+            # Expected since we're just testing the setup
+            pass
+        finally:
+            if classify_task and not classify_task.done():
+                _ = classify_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await classify_task
+            await client.close()
+
+        # Verify WorkerBatcher was created with correct num_workers
+        mock_worker_batcher_cls.assert_called_once()
+        call_kwargs = mock_worker_batcher_cls.call_args.kwargs
+        assert call_kwargs["num_workers"] == custom_num_workers
 
 
 @pytest.mark.asyncio

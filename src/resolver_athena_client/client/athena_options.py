@@ -35,6 +35,11 @@ class AthenaOptions:
         max_batch_size: Maximum number of images to batch together in one
             request. Larger batches improve throughput but increase latency.
             Defaults to 100.
+        num_workers: Number of concurrent worker tasks for processing images.
+            More workers allow parallel processing but use more CPU/memory.
+            For CPU-intensive transformations (resize, compression), consider
+            setting this to the number of CPU cores. For I/O bound operations,
+            higher values may be beneficial. Defaults to 5.
         correlation_provider: Class that generates correlation IDs for requests.
             Used for request tracing and debugging.
             Defaults to HashCorrelationProvider.
@@ -57,6 +62,7 @@ class AthenaOptions:
     deployment_id: str = "default"
     affiliate: str = "default"
     max_batch_size: int = 10
+    num_workers: int = 5
     correlation_provider: type[CorrelationProvider] = HashCorrelationProvider
     timeout: float | None = 120.0
     keepalive_interval: float | None = None

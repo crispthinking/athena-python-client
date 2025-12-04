@@ -265,7 +265,7 @@ class AthenaClient:
             transformer_func=transform_image,
             deployment_id=self.options.deployment_id,
             max_batch_size=self.options.max_batch_size,
-            num_workers=self.options.num_workers,  # Configurable number of workers
+            num_workers=self.options.num_workers,
             keepalive_interval=self.options.keepalive_interval or 30.0,
         )
 
