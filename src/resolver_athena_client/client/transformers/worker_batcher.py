@@ -77,34 +77,30 @@ class WorkerBatcher(Generic[T]):
 
         self.logger: logging.Logger = logging.getLogger(__name__)
 
-    async def __aiter__(self) -> AsyncIterator[ClassifyRequest | None]:
-        """Start workers and return batched requests."""
+    def __aiter__(self) -> AsyncIterator[ClassifyRequest]:
+        """Return self as an async iterator."""
+        return self
+
+    async def __anext__(self) -> ClassifyRequest:
+        """Get the next batched request."""
         if not self.workers_started:
             await self._start_workers()
 
-        # Main batching loop - never terminate automatically
-        while True:
+        try:
+            return await self._get_next_batch()
+        except asyncio.CancelledError:
+            self.logger.debug(
+                "Batch generation cancelled, attempting keepalive"
+            )
             try:
-                request = await self._get_next_batch()
-                yield request
-            except asyncio.CancelledError:  # noqa: PERF203 needed for proper handling of cancellation
-                self.logger.debug(
-                    "Batch generation cancelled, attempting keepalive"
+                return self._create_keepalive_request(time.time())
+            except (ValueError, RuntimeError) as e:
+                self.logger.warning(
+                    "Failed to send keepalive after cancellation: %s", e
                 )
-                try:
-                    keepalive_request = self._create_keepalive_request(
-                        time.time()
-                    )
-                    yield keepalive_request
-                    # Continue the loop to keep the stream alive
-                    continue
-                except (ValueError, RuntimeError) as e:
-                    self.logger.warning(
-                        "Failed to send keepalive after cancellation: %s", e
-                    )
-                    # Continue trying to keep stream alive even after errors
-                    await asyncio.sleep(1.0)  # Brief delay before retry
-                    continue
+                # Return keepalive to keep stream alive
+                await asyncio.sleep(1.0)  # Brief delay before retry
+                return self._create_keepalive_request(time.time())
 
     async def _start_workers(self) -> None:
         """Start all worker tasks."""
@@ -229,7 +225,7 @@ class WorkerBatcher(Generic[T]):
         self.workers_done = True
         self.logger.debug("All workers finished processing")
 
-    async def _get_next_batch(self) -> ClassifyRequest | None:
+    async def _get_next_batch(self) -> ClassifyRequest:
         """Get the next batch of requests."""
         current_time = time.time()
 

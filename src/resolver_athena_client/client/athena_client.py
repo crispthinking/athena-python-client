@@ -33,15 +33,6 @@ from resolver_athena_client.grpc_wrappers.classifier_service import (
 )
 
 
-async def _filter_none_requests(
-    request_iter: AsyncIterable[ClassifyRequest | None],
-) -> AsyncIterator[ClassifyRequest]:
-    """Filter out None values from request iterator."""
-    async for request in request_iter:
-        if request is not None:
-            yield request
-
-
 class AthenaClient:
     """The Athena Client Class.
 
@@ -280,7 +271,7 @@ class AthenaClient:
 
     async def _process_persistent_stream(
         self,
-        request_batcher: AsyncIterable[ClassifyRequest | None],
+        request_batcher: AsyncIterable[ClassifyRequest],
         start_time: float,
     ) -> AsyncIterator[ClassifyResponse]:
         """Process a persistent gRPC stream with keepalives."""
@@ -316,13 +307,13 @@ class AthenaClient:
 
     async def _iterate_stream_responses(
         self,
-        request_batcher: AsyncIterable[ClassifyRequest | None],
+        request_batcher: AsyncIterable[ClassifyRequest],
     ) -> AsyncIterator[ClassifyResponse]:
         """Iterate over stream responses."""
         # Never apply timeout at gRPC level - handle timeout ourselves
         self.logger.debug("Creating gRPC classify stream...")
         response_stream = await self.classifier.classify(
-            _filter_none_requests(request_batcher), timeout=None
+            request_batcher, timeout=None
         )
         self.logger.debug("gRPC classify stream created successfully")
 

@@ -4,12 +4,12 @@ from resolver_athena_client.client.transformers.core import (
     compress_image,
     resize_image,
 )
-from resolver_athena_client.client.transformers.request_batcher import (
-    RequestBatcher,
+from resolver_athena_client.client.transformers.worker_batcher import (
+    WorkerBatcher,
 )
 
 __all__ = [
-    "RequestBatcher",
+    "WorkerBatcher",
     "compress_image",
     "resize_image",
 ]
