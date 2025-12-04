@@ -208,7 +208,7 @@ class WorkerBatcher(Generic[T]):
                 # Add to batch
                 self.processed_items.append(processed_item)
 
-            except asyncio.TimeoutError:  # noqa: PERF203 Needed for timeout handling
+            except asyncio.TimeoutError:  # noqa: PERF203 Exception used in control flow to detect empty queue
                 # No items available, continue waiting
                 if self.source_exhausted and self.output_queue.empty():
                     break
