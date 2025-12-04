@@ -32,8 +32,6 @@ from resolver_athena_client.grpc_wrappers.classifier_service import (
     ClassifierServiceClient,
 )
 
-# Constants
-
 
 async def _filter_none_requests(
     request_iter: AsyncIterable[ClassifyRequest | None],
