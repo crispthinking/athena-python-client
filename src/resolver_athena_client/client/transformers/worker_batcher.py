@@ -66,7 +66,6 @@ class WorkerBatcher(Generic[T]):
         # Coordination
         self.workers_started: bool = False
         self.source_exhausted: bool = False
-        self.workers_done: bool = False
         self.last_send_time: float = time.time()
 
         # Tasks
@@ -195,9 +194,7 @@ class WorkerBatcher(Generic[T]):
 
     async def _collect_processed_items(self) -> None:
         """Collect processed items from workers."""
-        active_workers = self.num_workers
-
-        while active_workers > 0 or not self.output_queue.empty():
+        while not self._all_workers_done() or not self.output_queue.empty():
             try:
                 # Wait for processed item with timeout
                 processed_item = await asyncio.wait_for(
@@ -209,7 +206,7 @@ class WorkerBatcher(Generic[T]):
 
             except asyncio.TimeoutError:  # noqa: PERF203 Exception used in control flow to detect empty queue
                 # No items available, continue waiting
-                if self.source_exhausted and self.output_queue.empty():
+                if self._all_workers_done() and self.output_queue.empty():
                     break
             except asyncio.CancelledError:
                 # If cancelled, always continue collecting to keep workers
@@ -221,7 +218,6 @@ class WorkerBatcher(Generic[T]):
                 # Never break - always continue to keep the stream alive
                 continue
 
-        self.workers_done = True
         self.logger.debug("All workers finished processing")
 
     async def _get_next_batch(self) -> ClassifyRequest:
@@ -235,7 +231,7 @@ class WorkerBatcher(Generic[T]):
         # Wait for batch to fill up or timeout
         while (
             len(self.processed_items) < self.max_batch_size
-            and not self.workers_done
+            and not self._all_workers_done()
         ):
             try:
                 await asyncio.wait_for(
@@ -263,7 +259,7 @@ class WorkerBatcher(Generic[T]):
 
         # Keep stream alive with keepalives to continue receiving shared queue
         # results
-        if self.workers_done:
+        if self._all_workers_done():
             self.logger.debug(
                 "All work complete, sending keepalive to continue "
                 "receiving shared queue results"
@@ -279,11 +275,17 @@ class WorkerBatcher(Generic[T]):
         await asyncio.sleep(0.1)
         return self._create_keepalive_request(time.time())
 
+    def _all_workers_done(self) -> bool:
+        """Check if all worker tasks are done."""
+        if not self.worker_tasks:
+            return True
+        return all(task.done() for task in self.worker_tasks)
+
     async def _wait_for_items(self) -> None:
         """Wait for items to become available."""
         while (
             len(self.processed_items) < self.max_batch_size
-            and not self.workers_done
+            and not self._all_workers_done()
         ):
             try:
                 await asyncio.sleep(0.01)  # Small delay to prevent busy waiting
