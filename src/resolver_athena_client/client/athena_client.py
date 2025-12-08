@@ -57,6 +57,7 @@ class AthenaClient:
         self.classifier: ClassifierServiceClient = ClassifierServiceClient(
             self.channel
         )
+        self._active_workers: list[WorkerBatcher[ImageData]] = []
 
     async def classify_images(
         self, images: AsyncIterator[ImageData]
@@ -274,7 +275,7 @@ class AthenaClient:
                 format=image_format,
             )
 
-        return WorkerBatcher(
+        worker_batcher = WorkerBatcher(
             source=images,
             transformer_func=transform_image,
             deployment_id=self.options.deployment_id,
@@ -282,6 +283,11 @@ class AthenaClient:
             num_workers=self.options.num_workers,
             keepalive_interval=self.options.keepalive_interval or 30.0,
         )
+
+        # Track the worker for cleanup
+        self._active_workers.append(worker_batcher)
+
+        return worker_batcher
 
     async def _process_persistent_stream(
         self,
@@ -380,7 +386,67 @@ class AthenaClient:
             return "UNKNOWN"
 
     async def close(self) -> None:
-        """Close the client and gRPC channel."""
+        """Close the client, shutdown active workers, and close gRPC channel."""
+        # Shutdown all active workers cleanly
+        if self._active_workers:
+            self.logger.debug(
+                "Shutting down %d active worker batcher(s)",
+                len(self._active_workers),
+            )
+
+            # Create shutdown tasks for all workers
+            async def shutdown_worker(
+                worker_batcher: WorkerBatcher[ImageData],
+            ) -> None:
+                """Safely shutdown a single worker, handling mocks/errors."""
+                try:
+                    shutdown_method = getattr(worker_batcher, "shutdown", None)
+                    if shutdown_method and callable(shutdown_method):
+                        shutdown_coro = shutdown_method()
+                        # Only await if it's actually a coroutine (not a mock)
+                        if asyncio.iscoroutine(shutdown_coro):
+                            await shutdown_coro
+                        else:
+                            # Skip non-coroutine returns (like mocks)
+                            self.logger.debug(
+                                "Skipping non-coroutine shutdown method"
+                            )
+                    else:
+                        self.logger.debug("Worker has no shutdown method")
+                except (AttributeError, TypeError):
+                    # Worker doesn't have shutdown method or it's not callable
+                    self.logger.debug("Worker shutdown failed, skipping")
+
+            shutdown_tasks = [
+                shutdown_worker(worker_batcher)
+                for worker_batcher in self._active_workers
+            ]
+
+            # Wait for all shutdowns to complete, collecting any errors
+            if shutdown_tasks:
+                results = await asyncio.gather(
+                    *shutdown_tasks, return_exceptions=True
+                )
+                errors = [
+                    str(result)
+                    for result in results
+                    if isinstance(
+                        result,
+                        (asyncio.CancelledError, ConnectionError, OSError),
+                    )
+                ]
+
+                if errors:
+                    self.logger.warning(
+                        "Errors during worker shutdown: %s",
+                        "; ".join(errors),
+                    )
+
+            # Clear the list after shutdown
+            self._active_workers.clear()
+            self.logger.debug("All worker batchers shut down")
+
+        # Close the gRPC channel
         try:
             await self.channel.close()
         except (grpc.aio.AioRpcError, ConnectionError, OSError) as e:

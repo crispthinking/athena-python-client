@@ -56,7 +56,8 @@ async def run_oauth_example(
     sent_counter = [0]  # Use list to allow mutation in closure
     received_count = 0
 
-    async with AthenaClient(channel, options) as client:
+    client = AthenaClient(channel, options)
+    try:
         logger.info(
             "Generating %s test images...", max_test_images or "unlimited"
         )
@@ -114,6 +115,19 @@ async def run_oauth_example(
                         top_classification.label,
                         top_classification.weight,
                     )
+
+            # Close client when we've received all expected outputs
+            if received_count >= sent_counter[0]:
+                logger.info(
+                    "Received %d outputs matching %d inputs - closing client",
+                    received_count,
+                    sent_counter[0],
+                )
+                break
+
+    finally:
+        await client.close()
+
     return (sent_counter[0], received_count)
 
 
