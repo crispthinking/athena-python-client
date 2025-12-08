@@ -77,6 +77,13 @@ class AthenaClient:
         ------
             Classification responses from the service.
 
+        Raises:
+        ------
+            grpc.aio.AioRpcError: For gRPC communication errors. If the stream
+                fails, the error is propagated to the caller rather than being
+                retried indefinitely.
+            AthenaError: For classification errors from the service.
+
         Example:
         -------
             # Create ImageData from raw bytes
@@ -87,10 +94,17 @@ class AthenaClient:
                 yield image_data
 
             async with AthenaClient(channel, options) as client:
-                async for response in client.classify_images(image_stream()):
-                    # Process classification response
-                    # ImageData will have accumulated transformation hashes
-                    pass
+                try:
+                    async for response in client.classify_images(
+                        image_stream()
+                    ):
+                        # Process classification response
+                        # ImageData will have accumulated transformation hashes
+                        pass
+                except grpc.aio.AioRpcError as e:
+                    # Handle stream failure - client should decide whether to
+                    # retry
+                    print(f"Stream failed: {e}")
 
         """
         request_batcher = self._create_request_pipeline(images)
@@ -274,36 +288,35 @@ class AthenaClient:
         request_batcher: AsyncIterable[ClassifyRequest],
         start_time: float,
     ) -> AsyncIterator[ClassifyResponse]:
-        """Process a persistent gRPC stream with keepalives."""
-        self.logger.debug("Starting persistent stream")
+        """Process a gRPC stream without infinite recreation attempts."""
+        self.logger.debug("Starting stream")
 
-        while True:
-            try:
-                async for response in self._iterate_stream_responses(
-                    request_batcher
-                ):
-                    yield response
-                # Stream ended naturally - continue loop to recreate
-                self.logger.debug("Stream ended naturally, recreating...")
-                continue
-            except asyncio.CancelledError:
-                # Handle cancellation gracefully - continue the stream
-                self.logger.debug("Stream cancelled, continuing...")
-                continue
-            except grpc.aio.AioRpcError:
-                # Re-raise gRPC errors to be handled by outer reconnection logic
-                raise
-            except KeyboardInterrupt:
-                raise
-            except AthenaError:
-                # Re-raise Athena classification errors to caller
-                raise
-            except Exception:
-                elapsed = asyncio.get_running_loop().time() - start_time
-                self.logger.exception(
-                    "Unexpected error in stream after %.1fs", elapsed
-                )
-                continue
+        try:
+            async for response in self._iterate_stream_responses(
+                request_batcher
+            ):
+                yield response
+        except asyncio.CancelledError:
+            self.logger.debug("Stream cancelled")
+            raise
+        except grpc.aio.AioRpcError as e:
+            elapsed = asyncio.get_running_loop().time() - start_time
+            error_code = self._get_error_code_name(e)
+            self.logger.exception(
+                "gRPC stream error after %.1fs (%s)",
+                elapsed,
+                error_code,
+            )
+            raise
+        except AthenaError:
+            # Re-raise Athena classification errors to caller
+            raise
+        except Exception:
+            elapsed = asyncio.get_running_loop().time() - start_time
+            self.logger.exception(
+                "Unexpected error in stream after %.1fs", elapsed
+            )
+            raise
 
     async def _iterate_stream_responses(
         self,
