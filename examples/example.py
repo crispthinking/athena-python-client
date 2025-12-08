@@ -170,16 +170,15 @@ async def main() -> int:
 
     logger.info("Using deployment: %s", deployment_id)
 
-    # Run classification with OAuth authentication - maximize resilience
+    # Run classification with OAuth authentication
     options = AthenaOptions(
         host=host,
         resize_images=True,
         deployment_id=deployment_id,
         compress_images=True,
-        timeout=None,  # No timeout - allow infinite streaming
-        keepalive_interval=5.0,  # Frequent keepalives for max resilience
+        keepalive_interval=5.0,
         affiliate=affiliate,
-        max_batch_size=10,  # Test with larger batch size
+        max_batch_size=10,
     )
 
     sent, received = await run_oauth_example(
