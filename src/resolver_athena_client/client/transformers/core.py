@@ -29,9 +29,11 @@ async def resize_image(image_data: ImageData) -> ImageData:
     """Resize an image to expected dimensions.
 
     Args:
+    ----
         image_data: The ImageData object to resize
 
     Returns:
+    -------
         The same ImageData object with resized data (modified in-place)
 
     """
@@ -84,9 +86,11 @@ def compress_image(image_data: ImageData) -> ImageData:
     """Compress image data using Brotli compression.
 
     Args:
+    ----
         image_data: The ImageData object to compress
 
     Returns:
+    -------
         The same ImageData object with compressed data (modified in-place)
 
     """
