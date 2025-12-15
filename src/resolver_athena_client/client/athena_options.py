@@ -15,7 +15,8 @@ class AthenaOptions:
     This class provides configuration options for controlling how the client
     connects to and interacts with the Athena service.
 
-    Attributes:
+    Attributes
+    ----------
         host: The hostname of the Athena service to connect to.
             Defaults to "localhost".
         resize_images: Whether to automatically resize images before sending.
@@ -34,13 +35,18 @@ class AthenaOptions:
         max_batch_size: Maximum number of images to batch together in one
             request. Larger batches improve throughput but increase latency.
             Defaults to 100.
+        num_workers: Number of concurrent worker tasks for processing images.
+            More workers allow parallel processing but use more CPU/memory.
+            For CPU-intensive transformations (resize, compression), consider
+            setting this to the number of CPU cores. For I/O bound operations,
+            higher values may be beneficial. Defaults to 5.
         correlation_provider: Class that generates correlation IDs for requests.
             Used for request tracing and debugging.
             Defaults to HashCorrelationProvider.
-        timeout: Optional timeout in seconds for receiving responses.
-            When None, allows infinite streaming with no timeout.
-            When set to a float value, stream will stop after that many seconds
-            without receiving a response.
+        timeout: Optional timeout in seconds for individual gRPC calls.
+            When None, uses gRPC default timeouts.
+            When set to a float value, individual gRPC requests will timeout
+            after that many seconds.
             Defaults to 120.0 seconds.
         keepalive_interval: Optional interval in seconds for sending keepalive
             requests to maintain stream connection. When None, uses a sensible
@@ -56,6 +62,7 @@ class AthenaOptions:
     deployment_id: str = "default"
     affiliate: str = "default"
     max_batch_size: int = 10
+    num_workers: int = 5
     correlation_provider: type[CorrelationProvider] = HashCorrelationProvider
     timeout: float | None = 120.0
     keepalive_interval: float | None = None
