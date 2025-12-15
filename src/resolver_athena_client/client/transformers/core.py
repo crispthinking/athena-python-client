@@ -53,7 +53,7 @@ async def resize_image(image_data: ImageData) -> ImageData:
             # Resize if needed
             if rgb_image.size != _target_size:
                 resized_image = rgb_image.resize(
-                    _target_size, Image.Resampling.LANCZOS
+                    _target_size, Image.Resampling.BILINEAR
                 )
             else:
                 resized_image = rgb_image
