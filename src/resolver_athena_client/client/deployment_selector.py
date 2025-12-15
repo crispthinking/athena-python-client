@@ -20,7 +20,8 @@ class DeploymentSelector:
     with the Athena client. It can be used as an async context manager to ensure
     proper cleanup of resources.
 
-    Attributes:
+    Attributes
+    ----------
         classifier (ClassifierServiceClient): The classifier service client used
             to communicate with the Athena service.
 
@@ -33,6 +34,7 @@ class DeploymentSelector:
         """Initialize the deployment selector.
 
         Args:
+        ----
             channel (grpc.aio.Channel): Channel with which to communicate with
                 the Athena service.
 
@@ -43,7 +45,8 @@ class DeploymentSelector:
     async def list_deployments(self) -> ListDeploymentsResponse:
         """Retrieve a list of all active deployments.
 
-        Returns:
+        Returns
+        -------
             ListDeploymentsResponse: Response containing the list of
                 deployments.
 
@@ -70,7 +73,8 @@ class DeploymentSelector:
     async def __aenter__(self) -> "DeploymentSelector":
         """Enter the async context manager.
 
-        Returns:
+        Returns
+        -------
             DeploymentSelector: This instance.
 
         """
@@ -85,6 +89,7 @@ class DeploymentSelector:
         """Exit the async context manager.
 
         Args:
+        ----
             exc_type: The type of the exception that was raised
             exc_val: The instance of the exception that was raised
             exc_tb: The traceback of the exception that was raised
