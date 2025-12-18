@@ -9,6 +9,7 @@ from collections.abc import AsyncIterator
 from PIL import Image, ImageDraw
 
 from resolver_athena_client.client.models import ImageData
+from resolver_athena_client.generated.athena.models_pb2 import ImageFormat
 
 
 def _rgb_to_bgr(raw_rgb: bytes) -> bytes:
@@ -201,3 +202,20 @@ def create_random_image_generator(
         return rate_limited_image_iter(rate_limit_min_interval_ms, max_images)
 
     return iter_images(max_images)
+
+
+def create_random_image_generator_uint8(
+    max_images: int, image_format: ImageFormat.ValueType
+) -> AsyncIterator[ImageData]:
+    """
+    Create an async generator that yields random images in RAW_UINT8 format.
+
+    This generator is significantly slower than the optimized PNG generator.
+    """
+
+    async def generator() -> AsyncIterator[ImageData]:
+        for _ in range(max_images):
+            b = random.randbytes(448 * 448 * 3)  # noqa: S311 - Not used for cryptographic purposes
+            yield ImageData(b, img_format=image_format)
+
+    return generator()

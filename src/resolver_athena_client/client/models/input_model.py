@@ -67,7 +67,11 @@ class ImageData:
 
     """
 
-    def __init__(self, image_bytes: bytes) -> None:
+    def __init__(
+        self,
+        image_bytes: bytes,
+        img_format: "ImageFormat.ValueType | None" = None,
+    ) -> None:
         """Initialize ImageData with bytes and calculate hashes.
 
         Args:
@@ -76,9 +80,12 @@ class ImageData:
 
         """
         self.data: bytes = image_bytes
-        self.image_format: ImageFormat.ValueType = detect_image_format(
-            image_bytes
-        )
+        if img_format is not None:
+            self.image_format = img_format
+        else:
+            self.image_format: ImageFormat.ValueType = detect_image_format(
+                image_bytes
+            )
         self.sha256_hashes: list[str] = [
             hashlib.sha256(image_bytes).hexdigest()
         ]
