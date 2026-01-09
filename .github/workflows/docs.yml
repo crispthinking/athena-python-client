@@ -82,14 +82,14 @@ jobs:
           path: docs/_build/html
 
       - name: Upload documentation artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: github.event_name != 'release'
         with:
           name: documentation
           path: docs/_build/html
 
       - name: Upload build artifacts for debugging
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: docs-build-artifacts
