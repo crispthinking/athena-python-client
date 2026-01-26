@@ -92,8 +92,9 @@ def valid_formatted_image(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> bytes:
     image_format = request.param
-    if ((magick_path := shutil.which("magick")) is None and
-            (magick_path := shutil.which("convert")) is None):
+    if (magick_path := shutil.which("magick")) is None and (
+        magick_path := shutil.which("convert")
+    ) is None:
         pytest.fail(
             "ImageMagick 'magick' or 'convert' command not found - cannot "
             "run multi-format test"
