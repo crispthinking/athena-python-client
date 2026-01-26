@@ -92,10 +92,12 @@ def valid_formatted_image(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> bytes:
     image_format = request.param
-    if (magick_path := shutil.which("magick")) is None:
+    if (magick_path := shutil.which("magick")) is None and (
+        magick_path := shutil.which("convert")
+    ) is None:
         pytest.fail(
-            "ImageMagick 'magick' command not found - cannot run "
-            "multi-format test"
+            "ImageMagick 'magick' or 'convert' command not found - cannot "
+            "run multi-format test"
         )
 
     image_dir = tmp_path_factory.mktemp("images")
@@ -119,9 +121,9 @@ def valid_formatted_image(
 
     image_path = image_dir / f"test_image.{image_format}"
     if not image_path.exists():
-        cmd = f'magick "{base_image_path}" "{image_path}"'
+        cmd = [magick_path, str(base_image_path), str(image_path)]
         _ = subprocess.run(  # noqa: S603 - false positive :(
-            [magick_path, str(base_image_path), str(image_path)],
+            cmd,
             check=True,
             shell=False,
         )
