@@ -7,11 +7,9 @@ from unittest import mock
 
 import httpx
 import pytest
-from grpc.aio import Channel
 
 from resolver_athena_client.client.channel import (
     CredentialHelper,
-    TokenMetadataPlugin,
     create_channel_with_credentials,
 )
 from resolver_athena_client.client.exceptions import (
@@ -19,23 +17,6 @@ from resolver_athena_client.client.exceptions import (
     InvalidHostError,
     OAuthError,
 )
-
-
-def test_token_metadata_plugin() -> None:
-    """Test TokenMetadataPlugin functionality."""
-    test_token = "test-token"
-    plugin = TokenMetadataPlugin(test_token)
-
-    # Mock callback
-    mock_callback = mock.Mock()
-    mock_context = mock.Mock()
-
-    # Call the plugin
-    plugin(mock_context, mock_callback)
-
-    # Verify the callback was called with correct metadata
-    expected_metadata = (("authorization", f"Token {test_token}"),)
-    mock_callback.assert_called_once_with(expected_metadata, None)
 
 
 @pytest.mark.asyncio
@@ -46,18 +27,6 @@ async def test_create_channel_with_credentials_validation() -> None:
     mock_helper = mock.Mock(spec=CredentialHelper)
 
     with pytest.raises(InvalidHostError, match="host cannot be empty"):
-        _ = await create_channel_with_credentials(test_host, mock_helper)
-
-
-@pytest.mark.asyncio
-async def test_create_channel_with_credentials_oauth_failure() -> None:
-    """Test channel creation when OAuth token acquisition fails."""
-    test_host = "test-host:50051"
-
-    mock_helper = mock.Mock(spec=CredentialHelper)
-    mock_helper.get_token.side_effect = OAuthError("Token acquisition failed")
-
-    with pytest.raises(OAuthError, match="Token acquisition failed"):
         _ = await create_channel_with_credentials(test_host, mock_helper)
 
 
@@ -153,8 +122,7 @@ class TestCredentialHelper:
 
         assert not helper._is_token_valid()
 
-    @pytest.mark.asyncio
-    async def test_get_token_success(self) -> None:
+    def test_get_token_success(self) -> None:
         """Test successful token acquisition."""
         helper = CredentialHelper(
             client_id="test_client_id",
@@ -168,18 +136,17 @@ class TestCredentialHelper:
         }
         mock_response.raise_for_status.return_value = None
 
-        with mock.patch("httpx.AsyncClient") as mock_client:
-            mock_response_obj = mock_client.return_value.__aenter__.return_value
+        with mock.patch("httpx.Client") as mock_client:
+            mock_response_obj = mock_client.return_value.__enter__.return_value
             mock_response_obj.post.return_value = mock_response
 
-            token = await helper.get_token()
+            token = helper.get_token()
 
             assert token == "new_access_token"
             assert helper._token == "new_access_token"
             assert helper._token_expires_at is not None
 
-    @pytest.mark.asyncio
-    async def test_get_token_cached(self) -> None:
+    def test_get_token_cached(self) -> None:
         """Test that cached token is returned when valid."""
         helper = CredentialHelper(
             client_id="test_client_id",
@@ -190,12 +157,11 @@ class TestCredentialHelper:
         helper._token = "cached_token"
         helper._token_expires_at = time.time() + 3600
 
-        token = await helper.get_token()
+        token = helper.get_token()
 
         assert token == "cached_token"
 
-    @pytest.mark.asyncio
-    async def test_refresh_token_http_error(self) -> None:
+    def test_refresh_token_http_error(self) -> None:
         """Test token refresh with HTTP error."""
         helper = CredentialHelper(
             client_id="test_client_id",
@@ -215,17 +181,16 @@ class TestCredentialHelper:
             response=mock_response,
         )
 
-        with mock.patch("httpx.AsyncClient") as mock_client:
-            mock_response_obj = mock_client.return_value.__aenter__.return_value
+        with mock.patch("httpx.Client") as mock_client:
+            mock_response_obj = mock_client.return_value.__enter__.return_value
             mock_response_obj.post.side_effect = http_error
 
             with pytest.raises(
                 OAuthError, match="OAuth request failed with status 401"
             ):
-                _ = await helper.get_token()
+                _ = helper.get_token()
 
-    @pytest.mark.asyncio
-    async def test_refresh_token_request_error(self) -> None:
+    def test_refresh_token_request_error(self) -> None:
         """Test token refresh with request error."""
         helper = CredentialHelper(
             client_id="test_client_id",
@@ -234,17 +199,16 @@ class TestCredentialHelper:
 
         request_error = httpx.RequestError("Connection failed")
 
-        with mock.patch("httpx.AsyncClient") as mock_client:
-            mock_response_obj = mock_client.return_value.__aenter__.return_value
+        with mock.patch("httpx.Client") as mock_client:
+            mock_response_obj = mock_client.return_value.__enter__.return_value
             mock_response_obj.post.side_effect = request_error
 
             with pytest.raises(
                 OAuthError, match="Failed to connect to OAuth server"
             ):
-                _ = await helper.get_token()
+                _ = helper.get_token()
 
-    @pytest.mark.asyncio
-    async def test_refresh_token_invalid_response(self) -> None:
+    def test_refresh_token_invalid_response(self) -> None:
         """Test token refresh with invalid response format."""
         helper = CredentialHelper(
             client_id="test_client_id",
@@ -257,17 +221,16 @@ class TestCredentialHelper:
         }
         mock_response.raise_for_status.return_value = None
 
-        with mock.patch("httpx.AsyncClient") as mock_client:
-            mock_response_obj = mock_client.return_value.__aenter__.return_value
+        with mock.patch("httpx.Client") as mock_client:
+            mock_response_obj = mock_client.return_value.__enter__.return_value
             mock_response_obj.post.return_value = mock_response
 
             with pytest.raises(
                 OAuthError, match="Invalid OAuth response format"
             ):
-                _ = await helper.get_token()
+                _ = helper.get_token()
 
-    @pytest.mark.asyncio
-    async def test_invalidate_token(self) -> None:
+    def test_invalidate_token(self) -> None:
         """Test token invalidation."""
         helper = CredentialHelper(
             client_id="test_client_id",
@@ -278,44 +241,11 @@ class TestCredentialHelper:
         helper._token = "valid_token"
         helper._token_expires_at = time.time() + 3600
 
-        await helper.invalidate_token()
+        helper.invalidate_token()
 
         assert helper._token is None
         assert helper._token_expires_at is None
 
-
-@pytest.mark.asyncio
-async def test_create_channel_with_credentials_success() -> None:
-    """Test successful channel creation with credential helper."""
-    test_host = "test-host:50051"
-
-    mock_helper = mock.Mock(spec=CredentialHelper)
-    mock_helper.get_token.return_value = "test_token"
-
-    mock_credentials = mock.Mock()
-    mock_channel = mock.Mock(spec=Channel)
-
-    with (
-        mock.patch("grpc.ssl_channel_credentials") as mock_ssl_creds,
-        mock.patch("grpc.access_token_call_credentials") as mock_token_creds,
-        mock.patch(
-            "grpc.composite_channel_credentials"
-        ) as mock_composite_creds,
-        mock.patch("grpc.aio.secure_channel") as mock_secure_channel,
-    ):
-        # Set up mocks
-        mock_ssl_creds.return_value = mock.Mock()
-        mock_token_creds.return_value = mock.Mock()
-        mock_composite_creds.return_value = mock_credentials
-        mock_secure_channel.return_value = mock_channel
-
-        # Create channel
-        channel = await create_channel_with_credentials(test_host, mock_helper)
-
-        # Verify channel creation
-        assert channel == mock_channel
-        mock_helper.get_token.assert_called_once()
-        mock_token_creds.assert_called_once_with("test_token")
 
 
 @pytest.mark.asyncio
@@ -328,14 +258,3 @@ async def test_create_channel_with_credentials_invalid_host() -> None:
     with pytest.raises(InvalidHostError, match="host cannot be empty"):
         _ = await create_channel_with_credentials(test_host, mock_helper)
 
-
-@pytest.mark.asyncio
-async def test_create_channel_with_credentials_oauth_error() -> None:
-    """Test channel creation with credentials when OAuth fails."""
-    test_host = "test-host:50051"
-
-    mock_helper = mock.Mock(spec=CredentialHelper)
-    mock_helper.get_token.side_effect = OAuthError("OAuth failed")
-
-    with pytest.raises(OAuthError, match="OAuth failed"):
-        _ = await create_channel_with_credentials(test_host, mock_helper)
