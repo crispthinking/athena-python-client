@@ -76,14 +76,6 @@ Set these environment variables for OAuth authentication:
             audience=os.getenv("OAUTH_AUDIENCE", "crisp-athena-live"),
         )
 
-        # Test token acquisition
-        try:
-            token = await credential_helper.get_token()
-            print(f"Successfully acquired token (length: {len(token)})")
-        except Exception as e:
-            print(f"Failed to acquire OAuth token: {e}")
-            return
-
         # Create authenticated channel
         channel = await create_channel_with_credentials(
             host=os.getenv("ATHENA_HOST"),
@@ -261,7 +253,7 @@ Handle OAuth-specific errors gracefully:
     from resolver_athena_client.client.exceptions import AuthenticationError
 
     try:
-        token = await credential_helper.get_token()
+        token = credential_helper.get_token()
     except AuthenticationError as e:
         logger.error(f"OAuth authentication failed: {e}")
         # Handle authentication failure
@@ -356,7 +348,7 @@ Test your authentication setup:
                 client_secret=os.getenv("OAUTH_CLIENT_SECRET"),
             )
 
-            token = await credential_helper.get_token()
+            token = credential_helper.get_token()
             print(f"✓ Authentication successful (token length: {len(token)})")
             return True
 
