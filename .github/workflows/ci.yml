@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+      - feature/*
+      - fix/*
   pull_request:
     branches:
       - main
@@ -111,7 +113,17 @@ jobs:
             echo "Setting version to: $VERSION"
             uv version "$VERSION"
           else
-            echo "Not building from a tag, using default version"
+            if [[ "$GITHUB_REF" == refs/heads/main ]]; then
+              echo "On main branch, using default version"
+            else
+              # we want to build pre-release versioning for other branches, but only feature/* and fix/* will get published.
+              BRANCH_NAME="${GITHUB_REF##*/}"
+              SANITIZED_BRANCH_NAME=$(echo "$BRANCH_NAME" | tr '-' '_')
+              SHORT_SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
+              LAST_TAG=$(git describe --abbrev=0 --tags)
+              VERSION="$LAST_TAG-${SANITIZED_BRANCH_NAME}_${SHORT_SHA}"
+              uv version "$VERSION"
+            fi
           fi
 
       - name: Build package
@@ -126,7 +138,11 @@ jobs:
   publish:
     needs: [test, build]
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' && github.event.action == 'published'
+    if: >
+      (github.event_name == 'release' && github.event.action == 'published') ||
+      (github.event_name == 'push' && (
+        startsWith(github.ref, 'refs/heads/feature') ||
+        startsWith(github.ref, 'refs/heads/fix')))
     environment:
       name: pypi
       url: https://pypi.org/p/resolver-athena-client
