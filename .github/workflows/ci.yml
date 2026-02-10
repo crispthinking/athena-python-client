@@ -121,12 +121,9 @@ jobs:
               echo "On main branch, using default version"
             else
               # we want to build pre-release versioning for other branches, but only feature/* and fix/* will get published.
-              BRANCH_NAME="${GITHUB_REF##*/}"
-              SANITIZED_BRANCH_NAME=$(echo "$BRANCH_NAME" | tr -d '-')
-              SHORT_SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
               LAST_TAG=$(git describe --abbrev=0 --tags)
-              VERSION="$LAST_TAG-${SANITIZED_BRANCH_NAME}.${SHORT_SHA}"
-              uv version "$VERSION"
+              uv version "$LAST_TAG"
+              uv version --bump patch --bump dev="$(date +%Y%m%d%H%M%S)"
             fi
           fi
 
