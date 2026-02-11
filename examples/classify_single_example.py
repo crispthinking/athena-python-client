@@ -69,9 +69,8 @@ async def classify_single_image_example(
             logger.info("Classifying single image...")
             correlation_id = uuid.uuid4().hex[:MAX_DEPLOYMENT_ID_LENGTH]
             logger.info("Correlation ID: %s", correlation_id)
-            result = await client.classify_single(
-                image_data, correlation_id=correlation_id
-            )
+            image_data.correlation_id = correlation_id  # Optional
+            result = await client.classify_single(image_data)
 
             # Process the result
             logger.info("Classification completed successfully!")
