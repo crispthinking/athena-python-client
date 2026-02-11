@@ -82,19 +82,21 @@ async def resize_image(image_data: ImageData) -> ImageData:
     return image_data
 
 
-def compress_image(image_data: ImageData) -> ImageData:
+def compress_image(image_data: ImageData, quality: int = 11) -> ImageData:
     """Compress image data using Brotli compression.
 
     Args:
     ----
         image_data: The ImageData object to compress
+        quality: Compression quality level (0-11), higher is better compression
+            but slower. Default is 11 for maximum compression.
 
     Returns:
     -------
         The same ImageData object with compressed data (modified in-place)
 
     """
-    compressed_bytes = brotli.compress(image_data.data)
+    compressed_bytes = brotli.compress(image_data.data, quality=quality)
     # Modify existing ImageData with compressed bytes but preserve hashes
     # since compression doesn't change image content
     image_data.data = compressed_bytes

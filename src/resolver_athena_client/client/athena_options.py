@@ -66,3 +66,4 @@ class AthenaOptions:
     correlation_provider: type[CorrelationProvider] = HashCorrelationProvider
     timeout: float | None = 120.0
     keepalive_interval: float | None = None
+    compression_quality: int = 11  # Brotli quality level (0-11)
