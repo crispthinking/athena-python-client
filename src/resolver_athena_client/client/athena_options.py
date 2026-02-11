@@ -2,11 +2,12 @@
 
 from dataclasses import dataclass
 
-from PIL.Image import Resampling
-
 from resolver_athena_client.client.correlation import (
     CorrelationProvider,
     HashCorrelationProvider,
+)
+from resolver_athena_client.client.transformers.core import (
+    OpenCVResamplingAlgorithm,
 )
 
 
@@ -69,4 +70,6 @@ class AthenaOptions:
     timeout: float | None = 120.0
     keepalive_interval: float | None = None
     compression_quality: int = 11  # Brotli quality level (0-11)
-    resampling_algorithm: Resampling = Resampling.LANCZOS
+    resampling_algorithm: OpenCVResamplingAlgorithm = (
+        OpenCVResamplingAlgorithm.BILINEAR
+    )

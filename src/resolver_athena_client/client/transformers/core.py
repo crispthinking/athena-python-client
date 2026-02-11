@@ -6,20 +6,32 @@ composable.
 """
 
 import asyncio
-from io import BytesIO
+import enum
 
 import brotli
-from PIL import Image
+import cv2
+import numpy as np
 
 from resolver_athena_client.client.consts import EXPECTED_HEIGHT, EXPECTED_WIDTH
 from resolver_athena_client.client.models import ImageData
 from resolver_athena_client.generated.athena.models_pb2 import ImageFormat
-import cv2
-import numpy as np
 
 # Global optimization constants
 _target_size = (EXPECTED_WIDTH, EXPECTED_HEIGHT)
 _expected_raw_size = EXPECTED_WIDTH * EXPECTED_HEIGHT * 3
+
+
+class OpenCVResamplingAlgorithm(enum.Enum):
+    """Open CV Resampling Configuration.
+
+    Enum for ease of configuration and type-safety when selecting OpenCV
+    resampling algorithms.
+    """
+
+    NEAREST = cv2.INTER_NEAREST
+    BOX = cv2.INTER_AREA  # Best match for PIL's BOX
+    BILINEAR = cv2.INTER_LINEAR
+    LANCZOS = cv2.INTER_LANCZOS4
 
 
 def _is_raw_bgr_expected_size(data: bytes) -> bool:
@@ -29,7 +41,9 @@ def _is_raw_bgr_expected_size(data: bytes) -> bool:
 
 async def resize_image(
     image_data: ImageData,
-    sampling_algorithm: Image.Resampling = Image.Resampling.LANCZOS,
+    sampling_algorithm: OpenCVResamplingAlgorithm = (
+        OpenCVResamplingAlgorithm.BILINEAR
+    ),
 ) -> ImageData:
     """Resize an image to expected dimensions.
 
@@ -62,7 +76,7 @@ async def resize_image(
             resized_img = img
         else:
             resized_img = cv2.resize(
-                img, _target_size, interpolation=cv2.INTER_LINEAR
+                img, _target_size, interpolation=sampling_algorithm.value
             )
 
         # openCV loads in BGR format by default, so we can directly convert to
