@@ -173,7 +173,9 @@ class AthenaClient:
 
         # Apply image resizing if enabled
         if self.options.resize_images:
-            processed_image = await resize_image(processed_image)
+            processed_image = await resize_image(
+                processed_image, self.options.resampling_algorithm
+            )
 
         # Apply compression if enabled
         if self.options.compress_images:
@@ -239,7 +241,9 @@ class AthenaClient:
             """Transform a single image through the full pipeline."""
             # Apply image resizing if enabled
             if self.options.resize_images:
-                resized_image = await resize_image(image_data)
+                resized_image = await resize_image(
+                    image_data, self.options.resampling_algorithm
+                )
             else:
                 resized_image = image_data
 

@@ -25,12 +25,17 @@ def _is_raw_bgr_expected_size(data: bytes) -> bool:
     return len(data) == _expected_raw_size
 
 
-async def resize_image(image_data: ImageData) -> ImageData:
+async def resize_image(
+    image_data: ImageData,
+    sampling_algorithm: Image.Resampling = Image.Resampling.LANCZOS,
+) -> ImageData:
     """Resize an image to expected dimensions.
 
     Args:
     ----
         image_data: The ImageData object to resize
+        sampling_algorithm: The resampling algorithm to use for resizing.
+            Defaults to LANCZOS.
 
     Returns:
     -------
@@ -53,7 +58,7 @@ async def resize_image(image_data: ImageData) -> ImageData:
             # Resize if needed
             if rgb_image.size != _target_size:
                 resized_image = rgb_image.resize(
-                    _target_size, Image.Resampling.LANCZOS
+                    _target_size, sampling_algorithm
                 )
             else:
                 resized_image = rgb_image
