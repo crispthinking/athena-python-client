@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+from PIL.Image import Resampling
+
 from resolver_athena_client.client.correlation import (
     CorrelationProvider,
     HashCorrelationProvider,
