@@ -1,5 +1,7 @@
 # Athena Client Library
 
+![PyPI - Version](https://img.shields.io/pypi/v/resolver-athena-client)
+
 This is a Python library for interacting with the Athena API (Resolver Unknown
 CSAM Detection).
 
