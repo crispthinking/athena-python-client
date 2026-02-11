@@ -177,7 +177,9 @@ class AthenaClient:
 
         # Apply compression if enabled
         if self.options.compress_images:
-            processed_image = compress_image(processed_image, self.options.compression_quality)
+            processed_image = compress_image(
+                processed_image, self.options.compression_quality
+            )
 
         request_encoding = (
             RequestEncoding.REQUEST_ENCODING_BROTLI
@@ -243,7 +245,9 @@ class AthenaClient:
 
             # Apply compression if enabled
             if self.options.compress_images:
-                compressed_image = compress_image(resized_image, self.options.compression_quality)
+                compressed_image = compress_image(
+                    resized_image, self.options.compression_quality
+                )
             else:
                 compressed_image = resized_image
 
@@ -253,7 +257,6 @@ class AthenaClient:
                 if self.options.compress_images
                 else RequestEncoding.REQUEST_ENCODING_UNCOMPRESSED
             )
-
 
             # Ensure we never send UNSPECIFIED format over the API
             image_format = compressed_image.image_format

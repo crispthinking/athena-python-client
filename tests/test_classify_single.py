@@ -122,7 +122,9 @@ async def test_classify_single_with_correlation_id(
         return_value=mock_output
     )
 
-    copied_image_data = ImageData(sample_image_data.data, correlation_id=custom_correlation_id)
+    copied_image_data = ImageData(
+        sample_image_data.data, correlation_id=custom_correlation_id
+    )
 
     # Call classify_single with custom correlation ID
     _ = await athena_client.classify_single(copied_image_data)

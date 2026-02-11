@@ -67,7 +67,9 @@ class ImageData:
 
     """
 
-    def __init__(self, image_bytes: bytes, correlation_id: None | str = None) -> None:
+    def __init__(
+        self, image_bytes: bytes, correlation_id: None | str = None
+    ) -> None:
         """Initialize ImageData with bytes and calculate hashes.
 
         Args:
