@@ -14,6 +14,8 @@ from PIL import Image
 from resolver_athena_client.client.consts import EXPECTED_HEIGHT, EXPECTED_WIDTH
 from resolver_athena_client.client.models import ImageData
 from resolver_athena_client.generated.athena.models_pb2 import ImageFormat
+import cv2
+import numpy as np
 
 # Global optimization constants
 _target_size = (EXPECTED_WIDTH, EXPECTED_HEIGHT)
@@ -49,31 +51,23 @@ async def resize_image(
             return image_data.data, False  # No transformation needed
 
         # Try to load the image data directly
-        input_buffer = BytesIO(image_data.data)
+        img_data_buf = np.frombuffer(image_data.data, dtype=np.uint8)
+        img = cv2.imdecode(img_data_buf, cv2.IMREAD_COLOR)
 
-        with Image.open(input_buffer) as image:
-            # Convert to RGB if needed
-            rgb_image = image.convert("RGB") if image.mode != "RGB" else image
+        if img is None:
+            err = "Failed to decode image data for resizing"
+            raise ValueError(err)
 
-            # Resize if needed
-            if rgb_image.size != _target_size:
-                resized_image = rgb_image.resize(
-                    _target_size, sampling_algorithm
-                )
-            else:
-                resized_image = rgb_image
+        if img.shape[0] == EXPECTED_HEIGHT and img.shape[1] == EXPECTED_WIDTH:
+            resized_img = img
+        else:
+            resized_img = cv2.resize(
+                img, _target_size, interpolation=cv2.INTER_LINEAR
+            )
 
-            rgb_bytes = resized_image.tobytes()
-
-            # Convert RGB to BGR by swapping channels
-            bgr_bytes = bytearray(len(rgb_bytes))
-
-            for i in range(0, len(rgb_bytes), 3):
-                bgr_bytes[i] = rgb_bytes[i + 2]
-                bgr_bytes[i + 1] = rgb_bytes[i + 1]
-                bgr_bytes[i + 2] = rgb_bytes[i]
-
-            return bytes(bgr_bytes), True  # Data was transformed
+        # openCV loads in BGR format by default, so we can directly convert to
+        # bytes
+        return resized_img.tobytes(), True  # Data was transformed
 
     # Use thread pool for CPU-intensive processing
     resized_bytes, was_transformed = await asyncio.to_thread(process_image)
