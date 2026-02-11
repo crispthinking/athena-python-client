@@ -121,7 +121,7 @@ class AthenaClient:
             yield response
 
     async def classify_single(
-        self, image_data: ImageData, correlation_id: str | None = None
+        self, image_data: ImageData
     ) -> ClassificationOutput:
         """Classify a single image synchronously without deployment context.
 
@@ -169,9 +169,6 @@ class AthenaClient:
                               f"Weight: {classification.weight}")
 
         """
-        if correlation_id is None:
-            correlation_id = str(uuid.uuid4())
-
         processed_image = image_data
 
         # Apply image resizing if enabled
@@ -196,7 +193,7 @@ class AthenaClient:
 
         classification_input = ClassificationInput(
             affiliate=self.options.affiliate,
-            correlation_id=correlation_id,
+            correlation_id=processed_image.correlation_id or str(uuid.uuid4()),
             encoding=request_encoding,
             data=processed_image.data,
             format=image_format,
@@ -257,19 +254,24 @@ class AthenaClient:
                 else RequestEncoding.REQUEST_ENCODING_UNCOMPRESSED
             )
 
-            # Create classification input directly
-            correlation_provider = self.options.correlation_provider()
 
             # Ensure we never send UNSPECIFIED format over the API
             image_format = compressed_image.image_format
             if image_format == ImageFormat.IMAGE_FORMAT_UNSPECIFIED:
                 image_format = ImageFormat.IMAGE_FORMAT_RAW_UINT8_BGR
 
+            if compressed_image.correlation_id:
+                correlation_id = compressed_image.correlation_id
+            else:
+                # Create classification input directly
+                correlation_provider = self.options.correlation_provider()
+                correlation_id = correlation_provider.get_correlation_id(
+                    compressed_image.data
+                )
+
             return ClassificationInput(
                 affiliate=self.options.affiliate,
-                correlation_id=correlation_provider.get_correlation_id(
-                    compressed_image.data
-                ),
+                correlation_id=correlation_id,
                 data=compressed_image.data,
                 encoding=request_encoding,
                 format=image_format,
