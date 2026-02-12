@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+      - feature/*
+      - fix/*
   pull_request:
     branches:
       - main
@@ -82,6 +84,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          # required for guessing versioning for pre-releases
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Initialize submodules
         run: git submodule update --init --recursive
@@ -111,7 +117,14 @@ jobs:
             echo "Setting version to: $VERSION"
             uv version "$VERSION"
           else
-            echo "Not building from a tag, using default version"
+            if [[ "$GITHUB_REF" == refs/heads/main ]]; then
+              echo "On main branch, using default version"
+            else
+              # we want to build pre-release versioning for other branches, but only feature/* and fix/* will get published.
+              LAST_TAG=$(git describe --abbrev=0 --tags)
+              uv version "$LAST_TAG"
+              uv version --bump patch --bump dev="$(date +%Y%m%d%H%M%S)"
+            fi
           fi
 
       - name: Build package
@@ -126,7 +139,11 @@ jobs:
   publish:
     needs: [test, build]
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' && github.event.action == 'published'
+    if: >
+      (github.event_name == 'release' && github.event.action == 'published') ||
+      (github.event_name == 'push' && (
+        startsWith(github.ref, 'refs/heads/feature') ||
+        startsWith(github.ref, 'refs/heads/fix')))
     environment:
       name: pypi
       url: https://pypi.org/p/resolver-athena-client
