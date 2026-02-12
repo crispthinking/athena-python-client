@@ -7,7 +7,7 @@ from resolver_athena_client.client.channel import (
     create_channel_with_credentials,
 )
 from resolver_athena_client.client.models import ImageData
-from tests.utils.image_generation import create_test_image
+from resolver_athena_client.image_generation import create_test_image
 
 
 @pytest.mark.asyncio

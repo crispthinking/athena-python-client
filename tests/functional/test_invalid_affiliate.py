@@ -11,7 +11,7 @@ from resolver_athena_client.client.channel import (
 )
 from resolver_athena_client.client.exceptions import AthenaError
 from resolver_athena_client.client.models import ImageData
-from tests.utils.image_generation import create_test_image
+from resolver_athena_client.image_generation import create_test_image
 
 
 @pytest.mark.asyncio

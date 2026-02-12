@@ -1,4 +1,9 @@
-"""Ultra-fast random image creation utilities for maximum throughput."""
+"""Ultra-fast random image creation utilities for maximum throughput.
+
+This file is intended to be used for generating benign test images for the
+purposes of integration testing the client, as is provided as a convenience
+for API consumers.
+"""
 
 import asyncio
 import random

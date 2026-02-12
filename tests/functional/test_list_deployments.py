@@ -7,7 +7,7 @@ from resolver_athena_client.client.channel import (
     create_channel_with_credentials,
 )
 from resolver_athena_client.client.deployment_selector import DeploymentSelector
-from tests.utils.image_generation import iter_images
+from resolver_athena_client.image_generation import iter_images
 
 
 @pytest.mark.asyncio
