@@ -60,7 +60,7 @@ SUPPORTED_TEST_FORMATS = [
 ]
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(scope="session")
 async def credential_helper() -> CredentialHelper:
     _ = load_dotenv()
     client_id = os.environ["OAUTH_CLIENT_ID"]

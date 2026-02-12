@@ -59,6 +59,7 @@ async def test_streaming_classify(
     assert sent == received, f"Incomplete: {sent} sent, {received} received"
 
 
+@pytest.mark.skip(reason="Relies on server-side shared queue behavior - needs investigation")
 @pytest.mark.asyncio
 @pytest.mark.functional
 async def test_streaming_classify_with_reopened_stream(

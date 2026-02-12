@@ -66,7 +66,7 @@ async def test_classify_color_channels(
         red_image_bytes = create_color_channel_image("red")
         red_image_data = ImageData(red_image_bytes)
 
-        red_result = await client.classify_single(red_image_data, "red-channel-test")
+        red_result = await client.classify_single(red_image_data)
 
         if red_result.error.code:
             msg = f"Red image classification error: {red_result.error.message}"
@@ -78,7 +78,7 @@ async def test_classify_color_channels(
         green_image_bytes = create_color_channel_image("green")
         green_image_data = ImageData(green_image_bytes)
 
-        green_result = await client.classify_single(green_image_data, "green-channel-test")
+        green_result = await client.classify_single(green_image_data)
 
         if green_result.error.code:
             msg = (
@@ -94,7 +94,7 @@ async def test_classify_color_channels(
         blue_image_bytes = create_color_channel_image("blue")
         blue_image_data = ImageData(blue_image_bytes)
 
-        blue_result = await client.classify_single(blue_image_data, "blue-channel-test")
+        blue_result = await client.classify_single(blue_image_data)
 
         if blue_result.error.code:
             msg = f"Blue image classification error: {blue_result.error.message}"
