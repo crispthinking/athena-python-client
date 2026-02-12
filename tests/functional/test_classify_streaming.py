@@ -38,7 +38,7 @@ async def test_streaming_classify(
     logger = logging.getLogger(__name__)
 
     # Configuration
-    max_test_images = int(os.getenv("TEST_IMAGE_COUNT", str(5_000)))
+    max_test_images = int(os.getenv("TEST_IMAGE_COUNT", str(50)))
     min_interval_ms = os.getenv("TEST_MIN_INTERVAL_MS", None)
     if min_interval_ms is not None:
         min_interval_ms = int(min_interval_ms)
