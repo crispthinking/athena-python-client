@@ -127,6 +127,8 @@ async def classify_images(
                         received_count,
                         error_count,
                     )
+                    # Explicitly close the async generator to terminate the stream
+                    await results.aclose()
                     break
 
         except Exception:
@@ -211,6 +213,8 @@ async def classify_images_break_on_first_result(
 
                 error_count = process_errors(logger, result, error_count)
 
+                # Explicitly close the async generator to terminate the stream
+                await results.aclose()
                 break
 
         except Exception:
