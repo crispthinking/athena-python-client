@@ -132,7 +132,6 @@ You will need:
 - An Athena host URL.
 - An OAuth client ID and secret with access to the Athena environment.
 - An affiliate with Athena enabled.
-- `imagemagick` installed on your system and on your path at `magick`.
 
 
 #### Preparing your environment

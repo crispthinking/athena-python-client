@@ -1,8 +1,8 @@
 import os
-import shutil
-import subprocess
 import uuid
 
+import cv2
+import numpy as np
 import pytest
 import pytest_asyncio
 from dotenv import load_dotenv
@@ -14,7 +14,32 @@ from resolver_athena_client.client.consts import (
     EXPECTED_WIDTH,
     MAX_DEPLOYMENT_ID_LENGTH,
 )
-from tests.utils.image_generation import create_test_image
+
+
+def _create_base_test_image_opencv(width: int, height: int) -> np.ndarray:
+    """Create a test image using only OpenCV2.
+
+    Creates a simple test pattern with background and accent colors.
+
+    Args:
+        width: Image width in pixels
+        height: Image height in pixels
+
+    Returns:
+        numpy array in BGR format suitable for cv2.imencode
+    """
+    # Create a simple test image with random colors
+    # Background color (blue-green)
+    img_bgr = np.zeros((height, width, 3), dtype=np.uint8)
+    img_bgr[:, :] = (100, 150, 200)  # BGR format
+
+    # Add an accent rectangle for visual variation
+    x1, y1 = width // 4, height // 4
+    x2, y2 = (width * 3) // 4, (height * 3) // 4
+    cv2.rectangle(img_bgr, (x1, y1), (x2, y2), (200, 100, 50), -1)
+
+    return img_bgr
+
 
 SUPPORTED_TEST_FORMATS = [
     "gif",
@@ -25,13 +50,16 @@ SUPPORTED_TEST_FORMATS = [
     "pbm",
     "pgm",
     "ppm",
-    "pxm",
     "pnm",
     "sr",
     "ras",
     "tiff",
     "pic",
     "raw_uint8",
+
+    # pxm - OpenCV2 has issues with this format, the docs state its
+    # supported, but pxm is also used to mean PBM/PGM/PPM which are supported,
+    # so its unclear if this format is truly supported.
 ]
 
 
@@ -91,47 +119,45 @@ def valid_formatted_image(
     request: pytest.FixtureRequest,
     tmp_path_factory: pytest.TempPathFactory,
 ) -> bytes:
+    """Generate test images in various formats using OpenCV2.
+
+    Images are cached to disk to avoid regenerating on every test run.
+    """
     image_format = request.param
-    if (magick_path := shutil.which("magick")) is None and (
-        magick_path := shutil.which("convert")
-    ) is None:
-        pytest.fail(
-            "ImageMagick 'magick' or 'convert' command not found - cannot "
-            "run multi-format test"
-        )
-
     image_dir = tmp_path_factory.mktemp("images")
+    base_image = _create_base_test_image_opencv(EXPECTED_WIDTH, EXPECTED_HEIGHT)
 
-    base_image_format = "png"
-    base_image = create_test_image(
-        EXPECTED_WIDTH, EXPECTED_HEIGHT, img_format=base_image_format
-    )
-    base_image_path = image_dir / "base_image.png"
-    if not base_image_path.exists():
-        with base_image_path.open("wb") as f:
-            _ = f.write(base_image)
-
-    if image_format == base_image_format:
-        return base_image
-
+    # Handle raw_uint8 format separately - return raw BGR bytes
     if image_format == "raw_uint8":
-        return create_test_image(
-            EXPECTED_WIDTH, EXPECTED_HEIGHT, img_format="raw_uint8"
-        )
+        return base_image.tobytes()
 
+    # Check if image already exists in cache
     image_path = image_dir / f"test_image.{image_format}"
-    if not image_path.exists():
-        cmd = [magick_path, str(base_image_path), str(image_path)]
-        _ = subprocess.run(  # noqa: S603 - false positive :(
-            cmd,
-            check=True,
-            shell=False,
-        )
+    if image_path.exists():
+        with image_path.open("rb") as f:
+            return f.read()
 
-        if not image_path.exists():
+    # Convert format using OpenCV2 and cache to disk
+    try:
+        # Encode image in the target format
+        if image_format in ["pgm", "pbm"]:
+            # PGM and PBM are grayscale, so convert the image to grayscale
+            gray_image = cv2.cvtColor(base_image, cv2.COLOR_BGR2GRAY)
+            success, encoded = cv2.imencode(f".{image_format}", gray_image)
+        else:
+            success, encoded = cv2.imencode(f".{image_format}", base_image)
+
+        if not success:
             pytest.fail(
-                f"Failed to create {image_format} image with command: {cmd}"
+                f"OpenCV failed to encode image in {image_format} format"
             )
 
-    with image_path.open("rb") as f:
-        return f.read()
+        image_bytes = encoded.tobytes()
+
+        # Cache the image to disk
+        with image_path.open("wb") as f:
+            _ = f.write(image_bytes)
+
+        return image_bytes
+    except Exception as e:
+        pytest.fail(f"Failed to create {image_format} image with OpenCV: {e}")
