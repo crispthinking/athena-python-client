@@ -1,31 +1,26 @@
 """Ultra-fast random image creation utilities for maximum throughput."""
 
 import asyncio
-import io
 import random
 import time
 from collections.abc import AsyncIterator
 
-from PIL import Image, ImageDraw
+import cv2 as cv
+import numpy as np
 
 from resolver_athena_client.client.models import ImageData
 
 # Global cache for reusable objects and constants
-_image_cache: dict[
-    tuple[int, int], tuple[Image.Image, ImageDraw.ImageDraw]
-] = {}
+_image_cache: dict[tuple[int, int], np.ndarray] = {}
 _rng = random.Random()  # noqa: S311 - Not used for cryptographic purposes
 
 
-def _get_cached_image(
-    width: int, height: int
-) -> tuple[Image.Image, ImageDraw.ImageDraw]:
-    """Get cached image and draw objects, creating if needed."""
+def _get_cached_image(width: int, height: int) -> np.ndarray:
+    """Get cached image array, creating if needed."""
     key = (width, height)
     if key not in _image_cache:
-        img = Image.new("RGB", (width, height), (0, 0, 0))
-        draw = ImageDraw.Draw(img)
-        _image_cache[key] = (img, draw)
+        img = np.zeros((height, width, 3), dtype=np.uint8)
+        _image_cache[key] = img
     return _image_cache[key]
 
 
@@ -45,8 +40,9 @@ def create_random_image(
         PNG image bytes
 
     """
-    # Get cached image and draw objects
-    image, draw = _get_cached_image(width, height)
+    # Get cached image array
+    image = _get_cached_image(width, height)
+    img = image.copy()
 
     # Random background color
     bg_r, bg_g, bg_b = (
@@ -56,21 +52,24 @@ def create_random_image(
     )
 
     # Fill with background color
-    draw.rectangle([0, 0, width, height], fill=(bg_r, bg_g, bg_b))
+    img[:, :] = (bg_b, bg_g, bg_r)  # OpenCV uses BGR
 
     # Add single accent rectangle for visual variation
-    accent_color = (255 - bg_r, 255 - bg_g, 255 - bg_b)
+    accent_color = (255 - bg_b, 255 - bg_g, 255 - bg_r)  # BGR
     x1, y1 = width // 4, height // 4
     x2, y2 = (width * 3) // 4, (height * 3) // 4
-    draw.rectangle([x1, y1, x2, y2], fill=accent_color)
+    img = cv.rectangle(img, (x1, y1), (x2, y2), accent_color, thickness=-1)
 
     if img_format.upper() == "RAW_UINT8":
-        return image.tobytes()
+        return img.tobytes()
 
-    # Convert to PNG bytes
-    buffer = io.BytesIO()
-    image.save(buffer, format=img_format)
-    return buffer.getvalue()
+    # Convert to PNG/JPEG bytes
+    ext = f".{img_format.lower()}"
+    success, buf = cv.imencode(ext, img)
+    if not success:
+        err = f"Failed to encode image as {img_format}"
+        raise RuntimeError(err)
+    return buf.tobytes()
 
 
 def create_batch_images(
@@ -90,29 +89,32 @@ def create_batch_images(
 
     """
     images: list[bytes] = []
-    image, draw = _get_cached_image(width, height)
+    image = _get_cached_image(width, height)
 
     # Pre-calculate accent rectangle coordinates
     x1, y1 = width // 4, height // 4
     x2, y2 = (width * 3) // 4, (height * 3) // 4
 
     for _ in range(count):
+        img = image.copy()
         # Random background
         bg_r, bg_g, bg_b = (
             _rng.randint(0, 255),
             _rng.randint(0, 255),
             _rng.randint(0, 255),
         )
-        draw.rectangle([0, 0, width, height], fill=(bg_r, bg_g, bg_b))
+        img[:, :] = (bg_b, bg_g, bg_r)  # OpenCV uses BGR
 
         # Complement accent color
-        accent_color = (255 - bg_r, 255 - bg_g, 255 - bg_b)
-        draw.rectangle([x1, y1, x2, y2], fill=accent_color)
+        accent_color = (255 - bg_b, 255 - bg_g, 255 - bg_r)  # BGR
+        img = cv.rectangle(img, (x1, y1), (x2, y2), accent_color, thickness=-1)
 
         # Convert to PNG bytes
-        buffer = io.BytesIO()
-        image.save(buffer, format="PNG")
-        images.append(buffer.getvalue())
+        success, buf = cv.imencode(".png", img)
+        if not success:
+            msg = "Failed to encode image as PNG"
+            raise RuntimeError(msg)
+        images.append(buf.tobytes())
 
     return images
 

@@ -1,12 +1,12 @@
 """Tests for the classify_single method in AthenaClient."""
 
-import io
 import uuid
 from unittest.mock import AsyncMock, Mock
 
+import cv2 as cv
 import grpc.aio
+import numpy as np
 import pytest
-from PIL import Image
 
 from resolver_athena_client.client.athena_client import AthenaClient
 from resolver_athena_client.client.athena_options import AthenaOptions
@@ -196,10 +196,11 @@ async def test_classify_single_error_handling(
     # Create a simple valid image for testing
 
     # Create a simple 1x1 pixel image
-    img = Image.new("RGB", (1, 1), color="red")
-    img_bytes = io.BytesIO()
-    img.save(img_bytes, format="PNG")
-    valid_image_data = ImageData(img_bytes.getvalue())
+    img_arr = np.ndarray((1, 1, 3), dtype=np.uint8)
+    img_arr.fill(255)
+    success, img = cv.imencode(".png", img_arr, [])
+    assert success, "Failed to encode test image"
+    valid_image_data = ImageData(img.tobytes())
 
     # Enable resizing
     athena_client.options.resize_images = True

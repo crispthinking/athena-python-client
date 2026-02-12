@@ -1,9 +1,8 @@
 """Test core transformation functions."""
 
-from io import BytesIO
-
+import cv2 as cv
+import numpy as np
 import pytest
-from PIL import Image
 
 from resolver_athena_client.client.consts import (
     EXPECTED_HEIGHT,
@@ -19,11 +18,24 @@ from resolver_athena_client.client.transformers.core import (
 def create_test_image(
     width: int = 100, height: int = 100, mode: str = "RGB"
 ) -> bytes:
-    """Create a test image with specified dimensions."""
-    img = Image.new(mode, (width, height), color="red")
-    img_bytes = BytesIO()
-    img.save(img_bytes, format="PNG")
-    return img_bytes.getvalue()
+    """Create a test image with specified dimensions using OpenCV."""
+    # Map mode to OpenCV color shape
+    if mode == "RGB":
+        color = (255, 0, 0)  # Red in RGB
+        img = np.full((height, width, 3), color, dtype=np.uint8)
+    elif mode == "L":
+        color = 76  # Red in grayscale
+        img = np.full((height, width), color, dtype=np.uint8)
+    else:
+        err = f"Unsupported mode: {mode}"
+        raise ValueError(err)
+
+    success, buf = cv.imencode(".png", img)
+    if not success:
+        err = "Failed to encode image to PNG"
+        raise RuntimeError(err)
+
+    return buf.tobytes()
 
 
 @pytest.mark.asyncio

@@ -36,9 +36,7 @@ def _create_base_test_image_opencv(width: int, height: int) -> np.ndarray:
     # Add an accent rectangle for visual variation
     x1, y1 = width // 4, height // 4
     x2, y2 = (width * 3) // 4, (height * 3) // 4
-    cv2.rectangle(img_bgr, (x1, y1), (x2, y2), (200, 100, 50), -1)
-
-    return img_bgr
+    return cv2.rectangle(img_bgr, (x1, y1), (x2, y2), (200, 100, 50), -1)
 
 
 SUPPORTED_TEST_FORMATS = [
@@ -56,7 +54,6 @@ SUPPORTED_TEST_FORMATS = [
     "tiff",
     "pic",
     "raw_uint8",
-
     # pxm - OpenCV2 has issues with this format, the docs state its
     # supported, but pxm is also used to mean PBM/PGM/PPM which are supported,
     # so its unclear if this format is truly supported.
@@ -138,26 +135,21 @@ def valid_formatted_image(
             return f.read()
 
     # Convert format using OpenCV2 and cache to disk
-    try:
-        # Encode image in the target format
-        if image_format in ["pgm", "pbm"]:
-            # PGM and PBM are grayscale, so convert the image to grayscale
-            gray_image = cv2.cvtColor(base_image, cv2.COLOR_BGR2GRAY)
-            success, encoded = cv2.imencode(f".{image_format}", gray_image)
-        else:
-            success, encoded = cv2.imencode(f".{image_format}", base_image)
+    # Encode image in the target format
+    if image_format in ["pgm", "pbm"]:
+        # PGM and PBM are grayscale, so convert the image to grayscale
+        gray_image = cv2.cvtColor(base_image, cv2.COLOR_BGR2GRAY)
+        success, encoded = cv2.imencode(f".{image_format}", gray_image)
+    else:
+        success, encoded = cv2.imencode(f".{image_format}", base_image)
 
-        if not success:
-            pytest.fail(
-                f"OpenCV failed to encode image in {image_format} format"
-            )
+    if not success:
+        pytest.fail(f"OpenCV failed to encode image in {image_format} format")
 
-        image_bytes = encoded.tobytes()
+    image_bytes = encoded.tobytes()
 
-        # Cache the image to disk
-        with image_path.open("wb") as f:
-            _ = f.write(image_bytes)
+    # Cache the image to disk
+    with image_path.open("wb") as f:
+        _ = f.write(image_bytes)
 
-        return image_bytes
-    except Exception as e:
-        pytest.fail(f"Failed to create {image_format} image with OpenCV: {e}")
+    return image_bytes
