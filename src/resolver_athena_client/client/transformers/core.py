@@ -79,7 +79,7 @@ async def resize_image(
                 img, _target_size, interpolation=sampling_algorithm.value
             )
 
-        # openCV loads in BGR format by default, so we can directly convert to
+        # OpenCV loads in BGR format by default, so we can directly convert to
         # bytes
         return resized_img.tobytes(), True  # Data was transformed
 
