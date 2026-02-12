@@ -3,11 +3,9 @@ import os
 
 import pytest
 
+from common_utils.image_generation import create_random_image_generator
 from resolver_athena_client.client.athena_options import AthenaOptions
 from resolver_athena_client.client.channel import CredentialHelper
-from resolver_athena_client.image_generation import (
-    create_random_image_generator,
-)
 from tests.utils.streaming_classify_utils import (
     classify_images,
     classify_images_break_on_first_result,

@@ -203,18 +203,7 @@ async def rate_limited_image_iter(
 def create_random_image_generator(
     max_images: int, rate_limit_min_interval_ms: int | None = None
 ) -> AsyncIterator[ImageData]:
-    """Generate a stream of random test images.
-
-    Args:
-    ----
-        max_images: Maximum number of images to generate
-        rate_limit_min_interval_ms: Minimum interval in ms between images
-
-    Yields:
-    ------
-        ImageData objects containing random image bytes
-
-    """
+    """Create an async generator for images with optional rate limiting."""
     if rate_limit_min_interval_ms is not None:
         return rate_limited_image_iter(rate_limit_min_interval_ms, max_images)
 

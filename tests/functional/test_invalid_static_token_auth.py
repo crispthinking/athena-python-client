@@ -5,10 +5,10 @@ import pytest
 from dotenv import load_dotenv
 from grpc.aio import Channel
 
+from common_utils.image_generation import create_test_image
 from resolver_athena_client.client.athena_client import AthenaClient
 from resolver_athena_client.client.athena_options import AthenaOptions
 from resolver_athena_client.client.models.input_model import ImageData
-from resolver_athena_client.image_generation import create_test_image
 
 
 def create_channel(host: str, token: str) -> Channel:

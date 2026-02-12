@@ -3,6 +3,7 @@ import os
 import pytest
 from dotenv import load_dotenv
 
+from common_utils.image_generation import create_test_image
 from resolver_athena_client.client.athena_client import AthenaClient
 from resolver_athena_client.client.athena_options import AthenaOptions
 from resolver_athena_client.client.channel import (
@@ -11,7 +12,6 @@ from resolver_athena_client.client.channel import (
 )
 from resolver_athena_client.client.exceptions import AthenaError
 from resolver_athena_client.client.models import ImageData
-from resolver_athena_client.image_generation import create_test_image
 
 
 @pytest.mark.asyncio

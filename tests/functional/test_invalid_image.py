@@ -3,6 +3,7 @@ from collections.abc import AsyncIterator
 
 import pytest
 
+from common_utils.image_generation import create_test_image
 from resolver_athena_client.client.athena_client import AthenaClient
 from resolver_athena_client.client.athena_options import AthenaOptions
 from resolver_athena_client.client.channel import (
@@ -12,7 +13,6 @@ from resolver_athena_client.client.channel import (
 from resolver_athena_client.client.consts import EXPECTED_HEIGHT, EXPECTED_WIDTH
 from resolver_athena_client.client.exceptions import AthenaError
 from resolver_athena_client.client.models import ImageData
-from resolver_athena_client.image_generation import create_test_image
 from tests.utils.streaming_classify_utils import classify_images
 
 
