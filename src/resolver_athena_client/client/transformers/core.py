@@ -29,7 +29,7 @@ class OpenCVResamplingAlgorithm(enum.Enum):
     """
 
     NEAREST = cv2.INTER_NEAREST
-    BOX = cv2.INTER_AREA  # Best match for PIL's BOX
+    BOX = cv2.INTER_AREA
     BILINEAR = cv2.INTER_LINEAR
     LANCZOS = cv2.INTER_LANCZOS4
 
