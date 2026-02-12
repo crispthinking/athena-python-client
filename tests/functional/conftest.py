@@ -54,9 +54,9 @@ SUPPORTED_TEST_FORMATS = [
     "tiff",
     "pic",
     "raw_uint8",
-    # pxm - OpenCV2 has issues with this format, the docs state its
+    # pxm - OpenCV2 has issues with this format, the docs state it's
     # supported, but pxm is also used to mean PBM/PGM/PPM which are supported,
-    # so its unclear if this format is truly supported.
+    # so it's unclear if this format is truly supported.
 ]
 
 
