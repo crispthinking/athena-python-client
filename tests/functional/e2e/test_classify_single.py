@@ -14,7 +14,7 @@ from tests.functional.e2e.testcases.parser import (
     load_test_cases,
 )
 
-TEST_CASES = load_test_cases("benign_model")
+TEST_CASES = load_test_cases("live_model")
 
 FP_ERROR_TOLERANCE = 1e-4
 
