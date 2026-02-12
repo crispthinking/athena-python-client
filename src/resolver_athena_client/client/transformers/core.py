@@ -9,7 +9,7 @@ import asyncio
 import enum
 
 import brotli
-import cv2
+import cv2 as cv
 import numpy as np
 
 from resolver_athena_client.client.consts import EXPECTED_HEIGHT, EXPECTED_WIDTH
@@ -28,10 +28,10 @@ class OpenCVResamplingAlgorithm(enum.Enum):
     resampling algorithms.
     """
 
-    NEAREST = cv2.INTER_NEAREST
-    BOX = cv2.INTER_AREA
-    BILINEAR = cv2.INTER_LINEAR
-    LANCZOS = cv2.INTER_LANCZOS4
+    NEAREST = cv.INTER_NEAREST
+    BOX = cv.INTER_AREA
+    BILINEAR = cv.INTER_LINEAR
+    LANCZOS = cv.INTER_LANCZOS4
 
 
 def _is_raw_bgr_expected_size(data: bytes) -> bool:
@@ -66,7 +66,7 @@ async def resize_image(
 
         # Try to load the image data directly
         img_data_buf = np.frombuffer(image_data.data, dtype=np.uint8)
-        img = cv2.imdecode(img_data_buf, cv2.IMREAD_COLOR)
+        img = cv.imdecode(img_data_buf, cv.IMREAD_COLOR)
 
         if img is None:
             err = "Failed to decode image data for resizing"
@@ -75,7 +75,7 @@ async def resize_image(
         if img.shape[0] == EXPECTED_HEIGHT and img.shape[1] == EXPECTED_WIDTH:
             resized_img = img
         else:
-            resized_img = cv2.resize(
+            resized_img = cv.resize(
                 img, _target_size, interpolation=sampling_algorithm.value
             )
 

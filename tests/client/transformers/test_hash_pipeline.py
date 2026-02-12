@@ -2,7 +2,7 @@
 
 import hashlib
 
-import cv2
+import cv2 as cv
 import numpy as np
 import pytest
 
@@ -27,7 +27,7 @@ def create_test_png_image(width: int = 200, height: int = 200) -> bytes:
     img[:] = (255, 0, 0)  # Red color
 
     # Encode image as PNG to memory
-    success, buffer = cv2.imencode(".png", img)
+    success, buffer = cv.imencode(".png", img)
     if not success:
         err = "Failed to encode image as PNG"
         raise RuntimeError(err)

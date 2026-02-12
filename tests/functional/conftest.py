@@ -1,7 +1,7 @@
 import os
 import uuid
 
-import cv2
+import cv2 as cv
 import numpy as np
 import pytest
 import pytest_asyncio
@@ -26,7 +26,7 @@ def _create_base_test_image_opencv(width: int, height: int) -> np.ndarray:
         height: Image height in pixels
 
     Returns:
-        numpy array in BGR format suitable for cv2.imencode
+        numpy array in BGR format suitable for cv.imencode
     """
     # Create a simple test image with random colors
     # Background color (blue-green)
@@ -36,7 +36,7 @@ def _create_base_test_image_opencv(width: int, height: int) -> np.ndarray:
     # Add an accent rectangle for visual variation
     x1, y1 = width // 4, height // 4
     x2, y2 = (width * 3) // 4, (height * 3) // 4
-    return cv2.rectangle(img_bgr, (x1, y1), (x2, y2), (200, 100, 50), -1)
+    return cv.rectangle(img_bgr, (x1, y1), (x2, y2), (200, 100, 50), -1)
 
 
 SUPPORTED_TEST_FORMATS = [
@@ -138,10 +138,10 @@ def valid_formatted_image(
     # Encode image in the target format
     if image_format in ["pgm", "pbm"]:
         # PGM and PBM are grayscale, so convert the image to grayscale
-        gray_image = cv2.cvtColor(base_image, cv2.COLOR_BGR2GRAY)
-        success, encoded = cv2.imencode(f".{image_format}", gray_image)
+        gray_image = cv.cvtColor(base_image, cv.COLOR_BGR2GRAY)
+        success, encoded = cv.imencode(f".{image_format}", gray_image)
     else:
-        success, encoded = cv2.imencode(f".{image_format}", base_image)
+        success, encoded = cv.imencode(f".{image_format}", base_image)
 
     if not success:
         pytest.fail(f"OpenCV failed to encode image in {image_format} format")
