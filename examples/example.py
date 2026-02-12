@@ -10,7 +10,6 @@ import uuid
 
 from dotenv import load_dotenv
 
-from resolver_athena_client.image_generation import iter_images
 from examples.utils.streaming_classify_utils import count_and_yield
 from resolver_athena_client.client.athena_client import AthenaClient
 from resolver_athena_client.client.athena_options import AthenaOptions
@@ -24,6 +23,7 @@ from resolver_athena_client.client.utils import (
     has_output_errors,
     process_classification_outputs,
 )
+from resolver_athena_client.image_generation import iter_images
 
 # Constants
 INITIAL_PROGRESS_THRESHOLD = 10
