@@ -5,8 +5,6 @@ from pathlib import Path
 _REPO_ROOT = Path(__file__).parent.parent.parent.parent.parent
 TESTCASES_DIR = _REPO_ROOT / "athena-protobufs" / "testcases"
 
-EXCLUDED_FILENAMES: list[str] = []
-
 
 class AthenaTestCase:
     def __init__(
@@ -37,5 +35,4 @@ def load_test_cases(dirname: str = "benign_model") -> list[AthenaTestCase]:
             test_cases["classification_labels"],
         )
         for item in test_cases["images"]
-        if item[0] not in EXCLUDED_FILENAMES
     ]
