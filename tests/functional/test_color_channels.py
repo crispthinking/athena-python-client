@@ -72,9 +72,9 @@ async def test_classify_color_channels(
             msg = f"Red image classification error: {red_result.error.message}"
             pytest.fail(msg)
 
-        assert (
-            len(red_result.classifications) > 0
-        ), "No classifications for red image"
+        assert len(red_result.classifications) > 0, (
+            "No classifications for red image"
+        )
 
         # Test green channel image
         green_image_bytes = create_color_channel_image("green")
@@ -89,9 +89,9 @@ async def test_classify_color_channels(
             )
             pytest.fail(msg)
 
-        assert (
-            len(green_result.classifications) > 0
-        ), "No classifications for green image"
+        assert len(green_result.classifications) > 0, (
+            "No classifications for green image"
+        )
 
         # Test blue channel image
         blue_image_bytes = create_color_channel_image("blue")
@@ -101,20 +101,17 @@ async def test_classify_color_channels(
 
         if blue_result.error.code:
             msg = (
-                "Blue image classification error: "
-                f"{blue_result.error.message}"
+                f"Blue image classification error: {blue_result.error.message}"
             )
             pytest.fail(msg)
 
-        assert (
-            len(blue_result.classifications) > 0
-        ), "No classifications for blue image"
+        assert len(blue_result.classifications) > 0, (
+            "No classifications for blue image"
+        )
 
         # Verify all three images were successfully classified
         assert red_result.classifications, "Red image has no classifications"
-        assert (
-            green_result.classifications
-        ), "Green image has no classifications"
-        assert (
-            blue_result.classifications
-        ), "Blue image has no classifications"
+        assert green_result.classifications, (
+            "Green image has no classifications"
+        )
+        assert blue_result.classifications, "Blue image has no classifications"
