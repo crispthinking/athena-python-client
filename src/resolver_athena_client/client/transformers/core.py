@@ -6,10 +6,11 @@ composable.
 """
 
 import asyncio
-from io import BytesIO
+import enum
 
 import brotli
-from PIL import Image
+import cv2 as cv
+import numpy as np
 
 from resolver_athena_client.client.consts import EXPECTED_HEIGHT, EXPECTED_WIDTH
 from resolver_athena_client.client.models import ImageData
@@ -20,6 +21,19 @@ _target_size = (EXPECTED_WIDTH, EXPECTED_HEIGHT)
 _expected_raw_size = EXPECTED_WIDTH * EXPECTED_HEIGHT * 3
 
 
+class OpenCVResamplingAlgorithm(enum.Enum):
+    """Open CV Resampling Configuration.
+
+    Enum for ease of configuration and type-safety when selecting OpenCV
+    resampling algorithms.
+    """
+
+    NEAREST = cv.INTER_NEAREST
+    BOX = cv.INTER_AREA
+    BILINEAR = cv.INTER_LINEAR
+    LANCZOS = cv.INTER_LANCZOS4
+
+
 def _is_raw_bgr_expected_size(data: bytes) -> bool:
     """Detect if data is already a raw BGR array of expected size."""
     return len(data) == _expected_raw_size
@@ -27,7 +41,9 @@ def _is_raw_bgr_expected_size(data: bytes) -> bool:
 
 async def resize_image(
     image_data: ImageData,
-    sampling_algorithm: Image.Resampling = Image.Resampling.LANCZOS,
+    sampling_algorithm: OpenCVResamplingAlgorithm = (
+        OpenCVResamplingAlgorithm.BILINEAR
+    ),
 ) -> ImageData:
     """Resize an image to expected dimensions.
 
@@ -49,31 +65,23 @@ async def resize_image(
             return image_data.data, False  # No transformation needed
 
         # Try to load the image data directly
-        input_buffer = BytesIO(image_data.data)
+        img_data_buf = np.frombuffer(image_data.data, dtype=np.uint8)
+        img = cv.imdecode(img_data_buf, cv.IMREAD_COLOR)
 
-        with Image.open(input_buffer) as image:
-            # Convert to RGB if needed
-            rgb_image = image.convert("RGB") if image.mode != "RGB" else image
+        if img is None:
+            err = "Failed to decode image data for resizing"
+            raise ValueError(err)
 
-            # Resize if needed
-            if rgb_image.size != _target_size:
-                resized_image = rgb_image.resize(
-                    _target_size, sampling_algorithm
-                )
-            else:
-                resized_image = rgb_image
+        if img.shape[0] == EXPECTED_HEIGHT and img.shape[1] == EXPECTED_WIDTH:
+            resized_img = img
+        else:
+            resized_img = cv.resize(
+                img, _target_size, interpolation=sampling_algorithm.value
+            )
 
-            rgb_bytes = resized_image.tobytes()
-
-            # Convert RGB to BGR by swapping channels
-            bgr_bytes = bytearray(len(rgb_bytes))
-
-            for i in range(0, len(rgb_bytes), 3):
-                bgr_bytes[i] = rgb_bytes[i + 2]
-                bgr_bytes[i + 1] = rgb_bytes[i + 1]
-                bgr_bytes[i + 2] = rgb_bytes[i]
-
-            return bytes(bgr_bytes), True  # Data was transformed
+        # OpenCV loads in BGR format by default, so we can directly convert to
+        # bytes
+        return resized_img.tobytes(), True  # Data was transformed
 
     # Use thread pool for CPU-intensive processing
     resized_bytes, was_transformed = await asyncio.to_thread(process_image)

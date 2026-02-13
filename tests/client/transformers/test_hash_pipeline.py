@@ -1,10 +1,10 @@
 """Tests for hash list behavior throughout the transformation pipeline."""
 
 import hashlib
-from io import BytesIO
 
+import cv2 as cv
+import numpy as np
 import pytest
-from PIL import Image
 
 from resolver_athena_client.client.consts import EXPECTED_HEIGHT, EXPECTED_WIDTH
 from resolver_athena_client.client.models import ImageData
@@ -21,10 +21,17 @@ AFTER_SECOND_RESIZE_COUNT = 3
 
 def create_test_png_image(width: int = 200, height: int = 200) -> bytes:
     """Create a test PNG image with specified dimensions."""
-    img = Image.new("RGB", (width, height), color=(255, 0, 0))
-    buffer = BytesIO()
-    img.save(buffer, format="PNG")
-    return buffer.getvalue()
+
+    # Create a red RGB image using numpy
+    img = np.zeros((height, width, 3), dtype=np.uint8)
+    img[:] = (255, 0, 0)  # Red color
+
+    # Encode image as PNG to memory
+    success, buffer = cv.imencode(".png", img)
+    if not success:
+        err = "Failed to encode image as PNG"
+        raise RuntimeError(err)
+    return buffer.tobytes()
 
 
 @pytest.mark.asyncio

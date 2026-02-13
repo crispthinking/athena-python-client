@@ -2,8 +2,8 @@ import logging
 from collections.abc import AsyncIterator
 
 import pytest
-from PIL import UnidentifiedImageError
 
+from common_utils.image_generation import create_test_image
 from resolver_athena_client.client.athena_client import AthenaClient
 from resolver_athena_client.client.athena_options import AthenaOptions
 from resolver_athena_client.client.channel import (
@@ -13,7 +13,6 @@ from resolver_athena_client.client.channel import (
 from resolver_athena_client.client.consts import EXPECTED_HEIGHT, EXPECTED_WIDTH
 from resolver_athena_client.client.exceptions import AthenaError
 from resolver_athena_client.client.models import ImageData
-from tests.utils.image_generation import create_test_image
 from tests.utils.streaming_classify_utils import classify_images
 
 
@@ -39,11 +38,10 @@ async def test_classify_single_invalid_image(
             image_bytes = b"this is not a valid image file"
             image_data = ImageData(image_bytes)
 
-            with pytest.raises(UnidentifiedImageError) as e:
+            with pytest.raises(
+                ValueError, match="Failed to decode image data for resizing"
+            ) as e:
                 _ = await client.classify_single(image_data)
-
-            expected_msg = "cannot identify image file"
-            assert expected_msg in str(e.value)
 
         except Exception as e:
             msg = "Unexpected exception during invalid image test"

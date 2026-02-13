@@ -241,7 +241,7 @@ Transformers accept configuration through their constructors:
 **ImageResizer Configuration:**
 
 * ``target_size``: Tuple of (width, height) for output dimensions
-* ``resampling``: PIL resampling algorithm (default: ``Image.LANCZOS``)
+* ``resampling``: OpenCV resampling algorithm (default: ``cv.INTER_LINEAR``)
 * ``maintain_aspect_ratio``: Whether to preserve aspect ratio (default: ``True``)
 
 **BrotliCompressor Configuration:**
