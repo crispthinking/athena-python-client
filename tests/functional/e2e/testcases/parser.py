@@ -1,6 +1,10 @@
 import json
 from pathlib import Path
 
+# Path to the shared testcases directory in athena-protobufs
+_REPO_ROOT = Path(__file__).parent.parent.parent.parent.parent
+TESTCASES_DIR = _REPO_ROOT / "athena-protobufs" / "testcases"
+
 # These files were NOT in the original Roke test set and were added later so
 # manually excluded from tests.
 EXCLUDED_FILENAMES = [
@@ -30,12 +34,12 @@ class AthenaTestCase:
 
 def load_test_cases(dirname: str = "benign_model") -> list[AthenaTestCase]:
     with Path.open(
-        Path(Path(__file__).parent / dirname / "expected_outputs.json"),
+        Path(TESTCASES_DIR / dirname / "expected_outputs.json"),
     ) as f:
         test_cases = json.load(f)
     return [
         AthenaTestCase(
-            str(Path(Path(__file__).parent / dirname / "images" / item[0])),
+            str(Path(TESTCASES_DIR / dirname / "images" / item[0])),
             item[1],
             test_cases["classification_labels"],
         )
