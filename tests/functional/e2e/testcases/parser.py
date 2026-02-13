@@ -5,11 +5,7 @@ from pathlib import Path
 _REPO_ROOT = Path(__file__).parent.parent.parent.parent.parent
 TESTCASES_DIR = _REPO_ROOT / "athena-protobufs" / "testcases"
 
-# These files were NOT in the original Roke test set and were added later so
-# manually excluded from tests.
-EXCLUDED_FILENAMES: list[str] = [
-    # No longer any excluded files - all entries now match actual files
-]
+EXCLUDED_FILENAMES: list[str] = []
 
 
 class AthenaTestCase:
