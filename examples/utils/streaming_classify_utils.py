@@ -132,14 +132,10 @@ async def classify_images(
                         received_count,
                         error_count,
                     )
-                    # Close async generator to terminate stream
-                    await results.aclose()
                     break
 
         except Exception:
             logger.exception("Error during classification")
-            # Always close the stream on error to prevent hanging
-            await results.aclose()
             if received_count == 0:
                 raise
         finally:
@@ -221,15 +217,10 @@ async def classify_images_break_on_first_result(
                     )
 
                 error_count = process_errors(logger, result, error_count)
-
-                # Explicitly close the async generator to terminate the stream
-                await results.aclose()
                 break
 
         except Exception:
             logger.exception("Error during classification")
-            # Always close the stream on error to prevent hanging
-            await results.aclose()
             if received_count == 0:
                 raise
 
