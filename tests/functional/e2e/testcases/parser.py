@@ -7,11 +7,8 @@ TESTCASES_DIR = _REPO_ROOT / "athena-protobufs" / "testcases"
 
 # These files were NOT in the original Roke test set and were added later so
 # manually excluded from tests.
-EXCLUDED_FILENAMES = [
-    "mountains/pexels-suketdedhia-671659.jpg",
-    "lakeside/pexels-pixabay-210289.jpg",
-    "lakeside/pexels-pixabay-210290.jpg",
-    "lakeside/pexels-pixabay-210291.jpg",
+EXCLUDED_FILENAMES: list[str] = [
+    # No longer any excluded files - all entries now match actual files
 ]
 
 
