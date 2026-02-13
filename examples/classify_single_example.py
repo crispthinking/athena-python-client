@@ -228,7 +228,7 @@ async def main() -> int:
         resize_images=True,
         compress_images=True,
         timeout=30.0,  # Shorter timeout for single requests
-        affiliate="Crisp",
+        affiliate=os.getenv("ATHENA_AFFILIATE", "athena-test"),
         deployment_id="single-example-deployment",  # Not used
     )
 

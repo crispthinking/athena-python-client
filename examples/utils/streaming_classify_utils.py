@@ -217,7 +217,6 @@ async def classify_images_break_on_first_result(
                     )
 
                 error_count = process_errors(logger, result, error_count)
-
                 break
 
         except Exception:
