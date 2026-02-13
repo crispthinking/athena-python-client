@@ -108,10 +108,3 @@ async def test_classify_color_channels(
         assert len(blue_result.classifications) > 0, (
             "No classifications for blue image"
         )
-
-        # Verify all three images were successfully classified
-        assert red_result.classifications, "Red image has no classifications"
-        assert green_result.classifications, (
-            "Green image has no classifications"
-        )
-        assert blue_result.classifications, "Blue image has no classifications"
