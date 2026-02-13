@@ -132,7 +132,7 @@ async def classify_images(
                         received_count,
                         error_count,
                     )
-                    # Explicitly close the async generator to terminate the stream
+                    # Close async generator to terminate stream
                     await results.aclose()
                     break
 

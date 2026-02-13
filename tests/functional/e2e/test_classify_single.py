@@ -62,7 +62,9 @@ async def test_classify_single(
         for label in test_case.expected_output:
             expected = test_case.expected_output[label]
             actual = actual_output[label]
-            assert abs(expected - actual) < FP_ERROR_TOLERANCE, (
-            f"Weight for label '{label}' differs by more than {FP_ERROR_TOLERANCE}: "
-            f"expected={expected}, actual={actual}, diff={abs(expected - actual)}"
+            diff = abs(expected - actual)
+            assert diff < FP_ERROR_TOLERANCE, (
+                f"Weight for label '{label}' differs by more than "
+                f"{FP_ERROR_TOLERANCE}: expected={expected}, actual={actual}, "
+                f"diff={diff}"
             )

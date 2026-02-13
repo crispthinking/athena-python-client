@@ -72,7 +72,9 @@ async def test_classify_color_channels(
             msg = f"Red image classification error: {red_result.error.message}"
             pytest.fail(msg)
 
-        assert len(red_result.classifications) > 0, "No classifications for red image"
+        assert (
+            len(red_result.classifications) > 0
+        ), "No classifications for red image"
 
         # Test green channel image
         green_image_bytes = create_color_channel_image("green")
@@ -82,7 +84,8 @@ async def test_classify_color_channels(
 
         if green_result.error.code:
             msg = (
-                f"Green image classification error: {green_result.error.message}"
+                "Green image classification error: "
+                f"{green_result.error.message}"
             )
             pytest.fail(msg)
 
@@ -97,7 +100,10 @@ async def test_classify_color_channels(
         blue_result = await client.classify_single(blue_image_data)
 
         if blue_result.error.code:
-            msg = f"Blue image classification error: {blue_result.error.message}"
+            msg = (
+                "Blue image classification error: "
+                f"{blue_result.error.message}"
+            )
             pytest.fail(msg)
 
         assert (
@@ -106,5 +112,9 @@ async def test_classify_color_channels(
 
         # Verify all three images were successfully classified
         assert red_result.classifications, "Red image has no classifications"
-        assert green_result.classifications, "Green image has no classifications"
-        assert blue_result.classifications, "Blue image has no classifications"
+        assert (
+            green_result.classifications
+        ), "Green image has no classifications"
+        assert (
+            blue_result.classifications
+        ), "Blue image has no classifications"
