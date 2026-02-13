@@ -14,7 +14,7 @@ class AthenaTestCase:
         classification_labels: list[str],
     ) -> None:
         self.id: str = "/".join(
-            filepath.split("/")[-2:]
+            Path(filepath).parts[-2:]
         )  # e.g. "ducks/duck1.jpg"
         self.filepath: str = filepath
         self.expected_output: dict[str, float] = dict(
