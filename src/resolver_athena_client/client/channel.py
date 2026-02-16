@@ -1,7 +1,7 @@
 """Channel creation utilities for the Athena client."""
 
-import asyncio
 import json
+import threading
 import time
 from typing import override
 
@@ -14,39 +14,6 @@ from resolver_athena_client.client.exceptions import (
     InvalidHostError,
     OAuthError,
 )
-
-
-class TokenMetadataPlugin(grpc.AuthMetadataPlugin):
-    """Plugin that adds authorization token to gRPC metadata."""
-
-    def __init__(self, token: str) -> None:
-        """Initialize the plugin with the auth token.
-
-        Args:
-        ----
-            token: The authorization token to add to requests
-
-        """
-        self._token: str = token
-
-    @override
-    def __call__(
-        self,
-        _: grpc.AuthMetadataContext,
-        callback: grpc.AuthMetadataPluginCallback,
-    ) -> None:
-        """Pass authentication metadata to the provided callback.
-
-        This method will be invoked asynchronously in a separate thread.
-
-        Args:
-        ----
-            callback: An AuthMetadataPluginCallback to be invoked either
-            synchronously or asynchronously.
-
-        """
-        metadata = (("authorization", f"Token {self._token}"),)
-        callback(metadata, None)
 
 
 class CredentialHelper:
@@ -82,13 +49,14 @@ class CredentialHelper:
         self._audience: str = audience
         self._token: str | None = None
         self._token_expires_at: float | None = None
-        self._lock: asyncio.Lock = asyncio.Lock()
+        self._lock: threading.Lock = threading.Lock()
 
-    async def get_token(self) -> str:
+    def get_token(self) -> str:
         """Get a valid authentication token.
 
-        This method will return a cached token if it's still valid,
-        or fetch a new token if needed.
+        Returns a cached token if still valid, or acquires a new one.
+        The entire check-and-refresh cycle runs under a single lock
+        acquisition to prevent TOCTOU races with ``invalidate_token``.
 
         Returns
         -------
@@ -97,21 +65,18 @@ class CredentialHelper:
         Raises
         ------
             OAuthError: If token acquisition fails
-            TokenExpiredError: If token has expired and refresh fails
+            RuntimeError: If token is unexpectedly None after refresh
 
         """
-        async with self._lock:
-            if self._is_token_valid():
-                if self._token is None:
-                    msg = "Token should be valid but is None"
-                    raise RuntimeError(msg)
-                return self._token
+        with self._lock:
+            if not self._is_token_valid():
+                self._refresh_token()
 
-            await self._refresh_token()
-            if self._token is None:
-                msg = "Token refresh failed"
+            token = self._token
+            if token is None:
+                msg = "Token is unexpectedly None after validity check"
                 raise RuntimeError(msg)
-            return self._token
+            return token
 
     def _is_token_valid(self) -> bool:
         """Check if the current token is valid and not expired.
@@ -127,8 +92,11 @@ class CredentialHelper:
         # Add 30 second buffer before expiration
         return time.time() < (self._token_expires_at - 30)
 
-    async def _refresh_token(self) -> None:
+    def _refresh_token(self) -> None:
         """Refresh the authentication token by making an OAuth request.
+
+        This is a synchronous call (suitable for the gRPC metadata-plugin
+        thread) and must be called while ``self._lock`` is held.
 
         Raises
         ------
@@ -145,8 +113,8 @@ class CredentialHelper:
         headers = {"content-type": "application/json"}
 
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
+            with httpx.Client() as client:
+                response = client.post(
                     self._auth_url,
                     json=payload,
                     headers=headers,
@@ -154,12 +122,10 @@ class CredentialHelper:
                 )
                 _ = response.raise_for_status()
 
-                token_data = response.json()
-                self._token = token_data["access_token"]
-                expires_in = token_data.get(
-                    "expires_in", 3600
-                )  # Default 1 hour
-                self._token_expires_at = time.time() + expires_in
+            token_data = response.json()
+            self._token = token_data["access_token"]
+            expires_in = token_data.get("expires_in", 3600)  # Default 1 hour
+            self._token_expires_at = time.time() + expires_in
 
         except httpx.HTTPStatusError as e:
             error_detail = ""
@@ -190,11 +156,57 @@ class CredentialHelper:
             msg = f"Unexpected error during OAuth: {e}"
             raise OAuthError(msg) from e
 
-    async def invalidate_token(self) -> None:
+    def invalidate_token(self) -> None:
         """Invalidate the current token to force a refresh on next use."""
-        async with self._lock:
+        with self._lock:
             self._token = None
             self._token_expires_at = None
+
+
+class _AutoRefreshTokenAuthMetadataPlugin(grpc.AuthMetadataPlugin):
+    """gRPC auth plugin that fetches a fresh token for every RPC.
+
+    The plugin delegates to ``CredentialHelper.get_token()`` which
+    handles caching, expiry checks, and thread-safe refresh internally.
+    This callback is invoked by gRPC on a *separate* thread, so the
+    underlying ``CredentialHelper`` must use ``threading.Lock`` (not
+    ``asyncio.Lock``).
+    """
+
+    def __init__(self, credential_helper: CredentialHelper) -> None:
+        """Initialize with a credential helper.
+
+        Args:
+        ----
+            credential_helper: The helper that manages token lifecycle
+
+        """
+        self._credential_helper: CredentialHelper = credential_helper
+
+    @override
+    def __call__(
+        self,
+        _: grpc.AuthMetadataContext,
+        callback: grpc.AuthMetadataPluginCallback,
+    ) -> None:
+        """Supply authorization metadata for an RPC.
+
+        Called by the gRPC runtime on a background thread before each
+        RPC.  On success the token is forwarded as a Bearer token; on
+        failure the error is passed to the callback so gRPC can surface
+        it as an RPC error.
+
+        Args:
+        ----
+            callback: gRPC callback to receive metadata or an error
+
+        """
+        try:
+            token = self._credential_helper.get_token()
+            metadata = (("authorization", f"Bearer {token}"),)
+            callback(metadata, None)
+        except OAuthError as err:
+            callback(None, err)  # pyright: ignore[reportArgumentType]
 
 
 async def create_channel_with_credentials(
@@ -215,19 +227,23 @@ async def create_channel_with_credentials(
     Raises:
     ------
         InvalidHostError: If host is empty
-        OAuthError: If OAuth authentication fails
+
+    Note:
+    ----
+        OAuth errors are no longer raised at channel-creation time.
+        Instead, they surface as RPC errors when the per-request auth
+        metadata plugin attempts to acquire a token.
 
     """
     if not host:
         raise InvalidHostError(InvalidHostError.default_message)
 
-    # Get a valid token from the credential helper
-    token = await credential_helper.get_token()
-
-    # Create credentials with token authentication
+    # Create credentials with per-RPC token refresh
     credentials = grpc.composite_channel_credentials(
         grpc.ssl_channel_credentials(),
-        grpc.access_token_call_credentials(token),
+        grpc.metadata_call_credentials(
+            _AutoRefreshTokenAuthMetadataPlugin(credential_helper)
+        ),
     )
 
     # Configure gRPC options for persistent connections
