@@ -7,6 +7,7 @@ import uuid
 from collections.abc import AsyncGenerator, AsyncIterable, AsyncIterator
 
 import grpc
+from typing_extensions import Self
 
 from resolver_athena_client.client.athena_options import AthenaOptions
 from resolver_athena_client.client.exceptions import AthenaError
@@ -465,7 +466,7 @@ class AthenaClient:
         """Raise an AthenaError with the given message."""
         raise AthenaError(message)
 
-    async def __aenter__(self) -> "AthenaClient":
+    async def __aenter__(self) -> Self:
         """Context manager entry point."""
         return self
 
