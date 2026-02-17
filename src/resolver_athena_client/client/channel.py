@@ -222,7 +222,7 @@ class _AutoRefreshTokenAuthMetadataPlugin(grpc.AuthMetadataPlugin):
             metadata = (("authorization", f"{scheme} {token}"),)
             callback(metadata, None)
         except Exception as err:  # noqa: BLE001
-            callback(None, err)  # pyright: ignore[reportArgumentType]
+            callback((), err)
 
 
 async def create_channel_with_credentials(

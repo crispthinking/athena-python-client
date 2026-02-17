@@ -411,7 +411,7 @@ class TestAutoRefreshTokenAuthMetadataPlugin:
 
         plugin(mock_context, mock_callback)
 
-        mock_callback.assert_called_once_with(None, oauth_error)
+        mock_callback.assert_called_once_with((), oauth_error)
 
     def test_plugin_catches_unexpected_exceptions(self) -> None:
         """Non-OAuthError exceptions are forwarded to callback."""
@@ -425,7 +425,7 @@ class TestAutoRefreshTokenAuthMetadataPlugin:
 
         plugin(mock_context, mock_callback)
 
-        mock_callback.assert_called_once_with(None, runtime_error)
+        mock_callback.assert_called_once_with((), runtime_error)
 
 
 @pytest.mark.asyncio
