@@ -3,7 +3,7 @@
 import json
 import threading
 import time
-from typing import override
+from typing import NamedTuple, override
 
 import grpc
 import httpx
@@ -14,6 +14,24 @@ from resolver_athena_client.client.exceptions import (
     InvalidHostError,
     OAuthError,
 )
+
+
+class TokenData(NamedTuple):
+    """Immutable snapshot of token state.
+
+    Storing token, expiry, and scheme together as a single object
+    ensures that validity checks and token reads are always consistent,
+    eliminating TOCTOU races between ``get_token`` and
+    ``invalidate_token``.
+    """
+
+    access_token: str
+    expires_at: float
+    scheme: str
+
+    def is_valid(self) -> bool:
+        """Check if this token is still valid (with a 30-second buffer)."""
+        return time.time() < (self.expires_at - 30)
 
 
 class CredentialHelper:
@@ -47,20 +65,19 @@ class CredentialHelper:
         self._client_secret: str = client_secret
         self._auth_url: str = auth_url
         self._audience: str = audience
-        self._token: str | None = None
-        self._token_expires_at: float | None = None
+        self._token_data: TokenData | None = None
         self._lock: threading.Lock = threading.Lock()
 
-    def get_token(self) -> str:
-        """Get a valid authentication token.
+    def get_token(self) -> TokenData:
+        """Get valid token data, refreshing if necessary.
 
-        Returns a cached token if still valid, or acquires a new one.
-        The entire check-and-refresh cycle runs under a single lock
-        acquisition to prevent TOCTOU races with ``invalidate_token``.
+        Uses double-checked locking: the happy path (token is valid)
+        avoids acquiring the lock entirely.  The lock is only taken
+        when the token needs to be refreshed.
 
         Returns
         -------
-            A valid authentication token
+            A valid ``TokenData`` containing access token, expiry, and scheme
 
         Raises
         ------
@@ -68,29 +85,22 @@ class CredentialHelper:
             RuntimeError: If token is unexpectedly None after refresh
 
         """
+        token_data = self._token_data
+        if token_data is not None and token_data.is_valid():
+            return token_data
+
         with self._lock:
-            if not self._is_token_valid():
-                self._refresh_token()
+            token_data = self._token_data
+            if token_data is not None and token_data.is_valid():
+                return token_data
 
-            token = self._token
-            if token is None:
-                msg = "Token is unexpectedly None after validity check"
+            self._refresh_token()
+
+            token_data = self._token_data
+            if token_data is None:
+                msg = "Token is unexpectedly None after refresh"
                 raise RuntimeError(msg)
-            return token
-
-    def _is_token_valid(self) -> bool:
-        """Check if the current token is valid and not expired.
-
-        Returns
-        -------
-            True if token is valid, False otherwise
-
-        """
-        if not self._token or not self._token_expires_at:
-            return False
-
-        # Add 30 second buffer before expiration
-        return time.time() < (self._token_expires_at - 30)
+            return token_data
 
     def _refresh_token(self) -> None:
         """Refresh the authentication token by making an OAuth request.
@@ -122,10 +132,15 @@ class CredentialHelper:
                 )
                 _ = response.raise_for_status()
 
-            token_data = response.json()
-            self._token = token_data["access_token"]
-            expires_in = token_data.get("expires_in", 3600)  # Default 1 hour
-            self._token_expires_at = time.time() + expires_in
+            raw = response.json()
+            access_token: str = raw["access_token"]
+            expires_in: int = raw.get("expires_in", 3600)  # Default 1 hour
+            scheme: str = raw.get("token_type", "Bearer").capitalize()
+            self._token_data = TokenData(
+                access_token=access_token,
+                expires_at=time.time() + expires_in,
+                scheme=scheme,
+            )
 
         except httpx.HTTPStatusError as e:
             error_detail = ""
@@ -159,8 +174,7 @@ class CredentialHelper:
     def invalidate_token(self) -> None:
         """Invalidate the current token to force a refresh on next use."""
         with self._lock:
-            self._token = None
-            self._token_expires_at = None
+            self._token_data = None
 
 
 class _AutoRefreshTokenAuthMetadataPlugin(grpc.AuthMetadataPlugin):
@@ -202,10 +216,12 @@ class _AutoRefreshTokenAuthMetadataPlugin(grpc.AuthMetadataPlugin):
 
         """
         try:
-            token = self._credential_helper.get_token()
-            metadata = (("authorization", f"Bearer {token}"),)
+            token_data = self._credential_helper.get_token()
+            scheme = token_data.scheme
+            token = token_data.access_token
+            metadata = (("authorization", f"{scheme} {token}"),)
             callback(metadata, None)
-        except OAuthError as err:
+        except Exception as err:  # noqa: BLE001
             callback(None, err)  # pyright: ignore[reportArgumentType]
 
 

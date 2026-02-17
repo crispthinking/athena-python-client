@@ -10,6 +10,7 @@ import pytest
 
 from resolver_athena_client.client.channel import (
     CredentialHelper,
+    TokenData,
     _AutoRefreshTokenAuthMetadataPlugin,
     create_channel_with_credentials,
 )
@@ -64,8 +65,7 @@ class TestCredentialHelper:
         assert helper._client_secret == "test_client_secret"
         assert helper._auth_url == "https://crispthinking.auth0.com/oauth/token"
         assert helper._audience == "crisp-athena-live"
-        assert helper._token is None
-        assert helper._token_expires_at is None
+        assert helper._token_data is None
 
     def test_init_with_custom_params(self) -> None:
         """Test CredentialHelper initialization with custom parameters."""
@@ -98,49 +98,58 @@ class TestCredentialHelper:
             )
 
     def test_is_token_valid_with_no_token(self) -> None:
-        """Test _is_token_valid returns False when no token is set."""
+        """Test token is not valid when no token data is set."""
         helper = CredentialHelper(
             client_id="test_client_id",
             client_secret="test_client_secret",
         )
 
-        assert not helper._is_token_valid()
+        assert helper._token_data is None
 
     def test_is_token_valid_with_expired_token(self) -> None:
-        """Test _is_token_valid returns False when token is expired."""
+        """Test TokenData.is_valid returns False when token is expired."""
         helper = CredentialHelper(
             client_id="test_client_id",
             client_secret="test_client_secret",
         )
 
-        helper._token = "test_token"
-        helper._token_expires_at = time.time() - 100  # Expired
+        helper._token_data = TokenData(
+            access_token="test_token",
+            expires_at=time.time() - 100,
+            scheme="Bearer",
+        )
 
-        assert not helper._is_token_valid()
+        assert not helper._token_data.is_valid()
 
     def test_is_token_valid_with_valid_token(self) -> None:
-        """Test _is_token_valid returns True when token is valid."""
+        """Test TokenData.is_valid returns True when token is valid."""
         helper = CredentialHelper(
             client_id="test_client_id",
             client_secret="test_client_secret",
         )
 
-        helper._token = "test_token"
-        helper._token_expires_at = time.time() + 3600  # Valid for 1 hour
+        helper._token_data = TokenData(
+            access_token="test_token",
+            expires_at=time.time() + 3600,
+            scheme="Bearer",
+        )
 
-        assert helper._is_token_valid()
+        assert helper._token_data.is_valid()
 
     def test_is_token_valid_with_soon_expiring_token(self) -> None:
-        """Test _is_token_valid returns False when token expires soon."""
+        """Test is_valid returns False when token expires within 30s."""
         helper = CredentialHelper(
             client_id="test_client_id",
             client_secret="test_client_secret",
         )
 
-        helper._token = "test_token"
-        helper._token_expires_at = time.time() + 20  # Expires in 20 seconds
+        helper._token_data = TokenData(
+            access_token="test_token",
+            expires_at=time.time() + 20,
+            scheme="Bearer",
+        )
 
-        assert not helper._is_token_valid()
+        assert not helper._token_data.is_valid()
 
     def test_get_token_success(self) -> None:
         """Test successful token acquisition."""
@@ -153,6 +162,7 @@ class TestCredentialHelper:
         mock_response.json.return_value = {
             "access_token": "new_access_token",
             "expires_in": 3600,
+            "token_type": "bearer",
         }
         mock_response.raise_for_status.return_value = None
 
@@ -160,11 +170,57 @@ class TestCredentialHelper:
             mock_response_obj = mock_client.return_value.__enter__.return_value
             mock_response_obj.post.return_value = mock_response
 
-            token = helper.get_token()
+            token_data = helper.get_token()
 
-            assert token == "new_access_token"
-            assert helper._token == "new_access_token"
-            assert helper._token_expires_at is not None
+            assert token_data.access_token == "new_access_token"
+            assert token_data.scheme == "Bearer"
+            assert helper._token_data is not None
+            assert helper._token_data.expires_at is not None
+
+    def test_get_token_respects_token_type(self) -> None:
+        """Test that token_type from OAuth response is respected."""
+        helper = CredentialHelper(
+            client_id="test_client_id",
+            client_secret="test_client_secret",
+        )
+
+        mock_response = mock.Mock()
+        mock_response.json.return_value = {
+            "access_token": "some_token",
+            "expires_in": 3600,
+            "token_type": "DPoP",
+        }
+        mock_response.raise_for_status.return_value = None
+
+        with mock.patch("httpx.Client") as mock_client:
+            mock_response_obj = mock_client.return_value.__enter__.return_value
+            mock_response_obj.post.return_value = mock_response
+
+            token_data = helper.get_token()
+
+            assert token_data.scheme == "Dpop"
+
+    def test_get_token_defaults_to_bearer(self) -> None:
+        """Test that scheme defaults to Bearer when token_type is absent."""
+        helper = CredentialHelper(
+            client_id="test_client_id",
+            client_secret="test_client_secret",
+        )
+
+        mock_response = mock.Mock()
+        mock_response.json.return_value = {
+            "access_token": "some_token",
+            "expires_in": 3600,
+        }
+        mock_response.raise_for_status.return_value = None
+
+        with mock.patch("httpx.Client") as mock_client:
+            mock_response_obj = mock_client.return_value.__enter__.return_value
+            mock_response_obj.post.return_value = mock_response
+
+            token_data = helper.get_token()
+
+            assert token_data.scheme == "Bearer"
 
     def test_get_token_cached(self) -> None:
         """Test that cached token is returned when valid."""
@@ -174,12 +230,15 @@ class TestCredentialHelper:
         )
 
         # Set up a valid cached token
-        helper._token = "cached_token"
-        helper._token_expires_at = time.time() + 3600
+        helper._token_data = TokenData(
+            access_token="cached_token",
+            expires_at=time.time() + 3600,
+            scheme="Bearer",
+        )
 
-        token = helper.get_token()
+        token_data = helper.get_token()
 
-        assert token == "cached_token"
+        assert token_data.access_token == "cached_token"
 
     def test_refresh_token_http_error(self) -> None:
         """Test token refresh with HTTP error."""
@@ -258,13 +317,15 @@ class TestCredentialHelper:
         )
 
         # Set up a valid token
-        helper._token = "valid_token"
-        helper._token_expires_at = time.time() + 3600
+        helper._token_data = TokenData(
+            access_token="valid_token",
+            expires_at=time.time() + 3600,
+            scheme="Bearer",
+        )
 
         helper.invalidate_token()
 
-        assert helper._token is None
-        assert helper._token_expires_at is None
+        assert helper._token_data is None
 
     def test_get_token_refreshes_after_invalidation(self) -> None:
         """Test that get_token refreshes after invalidation."""
@@ -274,14 +335,18 @@ class TestCredentialHelper:
         )
 
         # Set up a valid token, then invalidate it
-        helper._token = "old_token"
-        helper._token_expires_at = time.time() + 3600
+        helper._token_data = TokenData(
+            access_token="old_token",
+            expires_at=time.time() + 3600,
+            scheme="Bearer",
+        )
         helper.invalidate_token()
 
         mock_response = mock.Mock()
         mock_response.json.return_value = {
             "access_token": "refreshed_token",
             "expires_in": 3600,
+            "token_type": "bearer",
         }
         mock_response.raise_for_status.return_value = None
 
@@ -289,9 +354,9 @@ class TestCredentialHelper:
             mock_response_obj = mock_client.return_value.__enter__.return_value
             mock_response_obj.post.return_value = mock_response
 
-            token = helper.get_token()
+            token_data = helper.get_token()
 
-        assert token == "refreshed_token"
+        assert token_data.access_token == "refreshed_token"
 
 
 class TestAutoRefreshTokenAuthMetadataPlugin:
@@ -300,7 +365,11 @@ class TestAutoRefreshTokenAuthMetadataPlugin:
     def test_plugin_passes_bearer_token_to_callback(self) -> None:
         """Plugin fetches token and passes Bearer metadata."""
         mock_helper = mock.Mock(spec=CredentialHelper)
-        mock_helper.get_token.return_value = "test-bearer-token"
+        mock_helper.get_token.return_value = TokenData(
+            access_token="test-bearer-token",
+            expires_at=time.time() + 3600,
+            scheme="Bearer",
+        )
 
         plugin = _AutoRefreshTokenAuthMetadataPlugin(mock_helper)
         mock_callback = mock.Mock()
@@ -310,6 +379,24 @@ class TestAutoRefreshTokenAuthMetadataPlugin:
 
         mock_helper.get_token.assert_called_once()
         expected_metadata = (("authorization", "Bearer test-bearer-token"),)
+        mock_callback.assert_called_once_with(expected_metadata, None)
+
+    def test_plugin_respects_token_scheme(self) -> None:
+        """Plugin uses the scheme from TokenData, not hardcoded Bearer."""
+        mock_helper = mock.Mock(spec=CredentialHelper)
+        mock_helper.get_token.return_value = TokenData(
+            access_token="dpop-token",
+            expires_at=time.time() + 3600,
+            scheme="Dpop",
+        )
+
+        plugin = _AutoRefreshTokenAuthMetadataPlugin(mock_helper)
+        mock_callback = mock.Mock()
+        mock_context = mock.Mock()
+
+        plugin(mock_context, mock_callback)
+
+        expected_metadata = (("authorization", "Dpop dpop-token"),)
         mock_callback.assert_called_once_with(expected_metadata, None)
 
     def test_plugin_passes_oauth_error_to_callback(self) -> None:
@@ -325,6 +412,20 @@ class TestAutoRefreshTokenAuthMetadataPlugin:
         plugin(mock_context, mock_callback)
 
         mock_callback.assert_called_once_with(None, oauth_error)
+
+    def test_plugin_catches_unexpected_exceptions(self) -> None:
+        """Non-OAuthError exceptions are forwarded to callback."""
+        mock_helper = mock.Mock(spec=CredentialHelper)
+        runtime_error = RuntimeError("unexpected failure")
+        mock_helper.get_token.side_effect = runtime_error
+
+        plugin = _AutoRefreshTokenAuthMetadataPlugin(mock_helper)
+        mock_callback = mock.Mock()
+        mock_context = mock.Mock()
+
+        plugin(mock_context, mock_callback)
+
+        mock_callback.assert_called_once_with(None, runtime_error)
 
 
 @pytest.mark.asyncio
