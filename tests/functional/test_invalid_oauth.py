@@ -26,7 +26,7 @@ def test_invalid_secret() -> None:
     )
 
     with pytest.raises(OAuthError):
-        credential_helper.get_token()
+        _ = credential_helper.get_token()
 
 
 @pytest.mark.functional
@@ -48,7 +48,7 @@ def test_invalid_clientid() -> None:
     )
 
     with pytest.raises(OAuthError):
-        credential_helper.get_token()
+        _ = credential_helper.get_token()
 
 
 @pytest.mark.functional
@@ -70,4 +70,4 @@ def test_invalid_audience() -> None:
     )
 
     with pytest.raises(OAuthError):
-        credential_helper.get_token()
+        _ = credential_helper.get_token()
