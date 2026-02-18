@@ -21,6 +21,7 @@ FP_ERROR_TOLERANCE = 1e-4
 
 @pytest.mark.asyncio
 @pytest.mark.functional
+@pytest.mark.e2e
 @pytest.mark.parametrize("test_case", TEST_CASES, ids=lambda tc: tc.id)
 async def test_classify_single(
     athena_options: AthenaOptions,
