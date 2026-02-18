@@ -6,8 +6,8 @@ import logging
 import os
 import sys
 import uuid
-from pathlib import Path
 
+import anyio
 from dotenv import load_dotenv
 
 from common_utils.image_generation import create_test_image
@@ -48,9 +48,9 @@ async def classify_single_image_example(
 
     async with AthenaClient(channel, options) as client:
         # Load image data
-        if image_path and Path(image_path).exists():
+        if image_path and await anyio.Path(image_path).exists():
             logger.info("Loading image from: %s", image_path)
-            image_bytes = Path(image_path).read_bytes()
+            image_bytes = await anyio.Path(image_path).read_bytes()
         else:
             # Create a simple test image if no path provided
             logger.info("Creating synthetic test image")

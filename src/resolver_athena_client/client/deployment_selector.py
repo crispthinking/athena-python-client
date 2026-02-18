@@ -4,6 +4,7 @@ import logging
 from types import TracebackType
 
 import grpc
+from typing_extensions import Self
 
 from resolver_athena_client.generated.athena.models_pb2 import (
     ListDeploymentsResponse,
@@ -70,7 +71,7 @@ class DeploymentSelector:
 
         return response
 
-    async def __aenter__(self) -> "DeploymentSelector":
+    async def __aenter__(self) -> Self:
         """Enter the async context manager.
 
         Returns
