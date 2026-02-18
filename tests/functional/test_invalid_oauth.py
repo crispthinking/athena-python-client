@@ -3,17 +3,12 @@ import os
 import pytest
 from dotenv import load_dotenv
 
-from resolver_athena_client.client.athena_options import AthenaOptions
-from resolver_athena_client.client.channel import (
-    CredentialHelper,
-    create_channel_with_credentials,
-)
+from resolver_athena_client.client.channel import CredentialHelper
 from resolver_athena_client.client.exceptions import OAuthError
 
 
-@pytest.mark.asyncio
 @pytest.mark.functional
-async def test_invalid_secret(athena_options: AthenaOptions) -> None:
+def test_invalid_secret() -> None:
     """Test that an invalid OAuth client secret is rejected."""
     _ = load_dotenv()
     invalid_client_secret = "this_is_not_a_valid_secret"
@@ -31,15 +26,12 @@ async def test_invalid_secret(athena_options: AthenaOptions) -> None:
     )
 
     with pytest.raises(OAuthError):
-        _ = await create_channel_with_credentials(
-            athena_options.host, credential_helper=credential_helper
-        )
+        credential_helper.get_token()
 
 
-@pytest.mark.asyncio
 @pytest.mark.functional
-async def test_invalid_clientid(athena_options: AthenaOptions) -> None:
-    """Test that an invalid OAuth client secret is rejected."""
+def test_invalid_clientid() -> None:
+    """Test that an invalid OAuth client ID is rejected."""
     _ = load_dotenv()
     client_secret = os.environ["OAUTH_CLIENT_SECRET"]
     client_id = "this_is_not_a_valid_client_id"
@@ -56,14 +48,11 @@ async def test_invalid_clientid(athena_options: AthenaOptions) -> None:
     )
 
     with pytest.raises(OAuthError):
-        _ = await create_channel_with_credentials(
-            athena_options.host, credential_helper=credential_helper
-        )
+        credential_helper.get_token()
 
 
-@pytest.mark.asyncio
 @pytest.mark.functional
-async def test_invalid_audience(athena_options: AthenaOptions) -> None:
+def test_invalid_audience() -> None:
     """Test that an invalid OAuth audience is rejected."""
     _ = load_dotenv()
     client_secret = os.environ["OAUTH_CLIENT_SECRET"]
@@ -81,6 +70,4 @@ async def test_invalid_audience(athena_options: AthenaOptions) -> None:
     )
 
     with pytest.raises(OAuthError):
-        _ = await create_channel_with_credentials(
-            athena_options.host, credential_helper=credential_helper
-        )
+        credential_helper.get_token()
