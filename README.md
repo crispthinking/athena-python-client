@@ -169,3 +169,10 @@ Then run the functional tests with:
 ```bash
 pytest -m functional
 ```
+
+To exclude the e2e tests, which require usage of the live classifier and
+therefore are unsuitable for regular development runs, use:
+
+```bash
+pytest -m 'functional and not e2e'
+```

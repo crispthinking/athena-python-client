@@ -81,6 +81,7 @@ reportAny = false
 [tool.pytest.ini_options]
 markers = [
     "functional: mark a test as a functional test",
+    "e2e: mark a test as an end-to-end test which asserts expected scores for known inputs. These tests should only be considered authoritative against the live classifier."
 ]
 addopts = "--strict-markers"
 
