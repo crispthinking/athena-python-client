@@ -40,7 +40,7 @@ class TokenData(NamedTuple):
     def is_old(self) -> bool:
         """Check if this token should be proactively refreshed.
 
-        A token is considered "old" if less than 50% of its lifetime remains.
+        A token is considered "old" if less than 25% of its lifetime remains.
         This allows background refresh to happen before expiry while the token
         is still usable.
         """
