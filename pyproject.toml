@@ -71,7 +71,7 @@ ignore = ["COM812", "D213", "D211", "D203", "S324", "ASYNC109"]
 "tests/**" = ["D", "S106", "S105", "S101", "SLF001"]
 
 [tool.pyright]
-include = ["src", "tests"]
+include = ["src", "tests", "examples", "common_utils"]
 exclude = ["src/resolver_athena_client/generated/*"]
 venvPath = "."
 venv = ".venv"

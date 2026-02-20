@@ -250,11 +250,12 @@ Handle OAuth-specific errors gracefully:
 
 .. code-block:: python
 
-    from resolver_athena_client.client.exceptions import AuthenticationError
+    from resolver_athena_client.client.exceptions import OAuthError
 
     try:
-        token = credential_helper.get_token()
-    except AuthenticationError as e:
+        token_data = credential_helper.get_token()
+        access_token = token_data.access_token
+    except OAuthError as e:
         logger.error(f"OAuth authentication failed: {e}")
         # Handle authentication failure
     except Exception as e:
@@ -348,8 +349,8 @@ Test your authentication setup:
                 client_secret=os.getenv("OAUTH_CLIENT_SECRET"),
             )
 
-            token = credential_helper.get_token()
-            print(f"✓ Authentication successful (token length: {len(token)})")
+            token_data = credential_helper.get_token()
+            print(f"✓ Authentication successful (token length: {len(token_data.access_token)})")
             return True
 
         except Exception as e:
