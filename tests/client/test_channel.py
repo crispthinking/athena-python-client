@@ -426,3 +426,222 @@ class TestAutoRefreshTokenAuthMetadataPlugin:
         plugin(mock_context, mock_callback)
 
         mock_callback.assert_called_once_with((), runtime_error)
+
+
+class TestBackgroundTokenRefresh:
+    """Tests for background token refresh functionality."""
+
+    def test_token_is_old_when_past_halfway_lifetime(self) -> None:
+        """Test that a token is considered old when past 50% of its lifetime."""
+        current_time = time.time()
+        # Token with 1 hour lifetime, 20 minutes remaining (33%)
+        token = TokenData(
+            access_token="test_token",
+            expires_at=current_time + 1200,  # 20 minutes from now
+            scheme="Bearer",
+            issued_at=current_time - 2400,  # 40 minutes ago
+        )
+        # Total lifetime = 3600s, remaining = 1200s (33%), so it's old
+        assert token.is_old()
+
+    def test_token_is_not_old_when_fresh(self) -> None:
+        """Test that a token is not old when more than 50% lifetime remains."""
+        current_time = time.time()
+        # Token with 1 hour lifetime, 40 minutes remaining (67%)
+        token = TokenData(
+            access_token="test_token",
+            expires_at=current_time + 2400,  # 40 minutes from now
+            scheme="Bearer",
+            issued_at=current_time - 1200,  # 20 minutes ago
+        )
+        # Total lifetime = 3600s, remaining = 2400s (67%), so it's fresh
+        assert not token.is_old()
+
+    def test_token_is_old_fallback_for_legacy_tokens(self) -> None:
+        """Test fallback logic for tokens without issued_at."""
+        current_time = time.time()
+        # Legacy token without issued_at (defaults to 0.0)
+        token = TokenData(
+            access_token="test_token",
+            expires_at=current_time + 60,  # 1 minute from now
+            scheme="Bearer",
+        )
+        # Should be considered old if less than 90s remain
+        assert token.is_old()
+
+    def test_token_is_not_old_fallback_for_fresh_legacy_tokens(self) -> None:
+        """Test fallback logic for fresh legacy tokens."""
+        current_time = time.time()
+        # Legacy token with plenty of time remaining
+        token = TokenData(
+            access_token="test_token",
+            expires_at=current_time + 200,  # 200 seconds from now
+            scheme="Bearer",
+        )
+        # Should not be considered old if more than 90s remain
+        assert not token.is_old()
+
+    def test_get_token_triggers_background_refresh_for_old_token(self) -> None:
+        """Test that get_token triggers background refresh for old tokens."""
+        helper = CredentialHelper(
+            client_id="test_client_id",
+            client_secret="test_client_secret",
+        )
+
+        current_time = time.time()
+        # Set up an old but valid token
+        helper._token_data = TokenData(
+            access_token="old_token",
+            expires_at=current_time + 1200,  # 20 minutes remaining
+            scheme="Bearer",
+            issued_at=current_time - 2400,  # 40 minutes ago, so it's old
+        )
+
+        with mock.patch.object(
+            helper, "_start_background_refresh"
+        ) as mock_start:
+            token_data = helper.get_token()
+
+            # Should return current token immediately
+            assert token_data.access_token == "old_token"
+            # Should have triggered background refresh
+            mock_start.assert_called_once()
+
+    def test_get_token_does_not_trigger_refresh_for_fresh_token(self) -> None:
+        """Test that get_token does not trigger refresh for fresh tokens."""
+        helper = CredentialHelper(
+            client_id="test_client_id",
+            client_secret="test_client_secret",
+        )
+
+        current_time = time.time()
+        # Set up a fresh, valid token
+        helper._token_data = TokenData(
+            access_token="fresh_token",
+            expires_at=current_time + 2400,  # 40 minutes remaining
+            scheme="Bearer",
+            issued_at=current_time - 1200,  # 20 minutes ago, so it's fresh
+        )
+
+        with mock.patch.object(
+            helper, "_start_background_refresh"
+        ) as mock_start:
+            token_data = helper.get_token()
+
+            # Should return current token
+            assert token_data.access_token == "fresh_token"
+            # Should NOT have triggered background refresh
+            mock_start.assert_not_called()
+
+    def test_background_refresh_does_not_start_if_already_running(self) -> None:
+        """Test that background refresh doesn't start duplicate threads."""
+        helper = CredentialHelper(
+            client_id="test_client_id",
+            client_secret="test_client_secret",
+        )
+
+        # Mock a running refresh thread
+        mock_thread = mock.Mock()
+        mock_thread.is_alive.return_value = True
+        helper._refresh_thread = mock_thread
+
+        with mock.patch("threading.Thread") as mock_thread_class:
+            helper._start_background_refresh()
+
+            # Should not create a new thread
+            mock_thread_class.assert_not_called()
+
+    def test_background_refresh_starts_new_thread_if_none_exists(self) -> None:
+        """Test that background refresh starts a thread when none exists."""
+        helper = CredentialHelper(
+            client_id="test_client_id",
+            client_secret="test_client_secret",
+        )
+
+        mock_thread = mock.Mock()
+        with mock.patch("threading.Thread", return_value=mock_thread):
+            helper._start_background_refresh()
+
+            # Should have started the thread
+            mock_thread.start.assert_called_once()
+
+    def test_background_refresh_silently_handles_errors(self) -> None:
+        """Test that background refresh silently ignores errors."""
+        helper = CredentialHelper(
+            client_id="test_client_id",
+            client_secret="test_client_secret",
+        )
+
+        # Mock refresh to raise an error
+        with mock.patch.object(
+            helper, "_refresh_token", side_effect=OAuthError("Test error")
+        ):
+            # Should not raise an exception
+            helper._background_refresh()
+
+    def test_get_token_blocks_for_expired_token(self) -> None:
+        """Test that get_token blocks and refreshes when token is expired."""
+        helper = CredentialHelper(
+            client_id="test_client_id",
+            client_secret="test_client_secret",
+        )
+
+        # Set up an expired token
+        helper._token_data = TokenData(
+            access_token="expired_token",
+            expires_at=time.time() - 100,  # Expired
+            scheme="Bearer",
+            issued_at=time.time() - 3700,
+        )
+
+        mock_response = mock.Mock()
+        mock_response.json.return_value = {
+            "access_token": "new_token",
+            "expires_in": 3600,
+            "token_type": "bearer",
+        }
+        mock_response.raise_for_status.return_value = None
+
+        with mock.patch("httpx.Client") as mock_client:
+            mock_response_obj = mock_client.return_value.__enter__.return_value
+            mock_response_obj.post.return_value = mock_response
+
+            token_data = helper.get_token()
+
+            # Should have refreshed and returned new token
+            assert token_data.access_token == "new_token"
+            # Should have called the OAuth endpoint
+            mock_response_obj.post.assert_called_once()
+
+    def test_refresh_token_sets_issued_at(self) -> None:
+        """Test that _refresh_token sets the issued_at timestamp."""
+        helper = CredentialHelper(
+            client_id="test_client_id",
+            client_secret="test_client_secret",
+        )
+
+        mock_response = mock.Mock()
+        mock_response.json.return_value = {
+            "access_token": "new_token",
+            "expires_in": 3600,
+            "token_type": "bearer",
+        }
+        mock_response.raise_for_status.return_value = None
+
+        before_time = time.time()
+        with mock.patch("httpx.Client") as mock_client:
+            mock_response_obj = mock_client.return_value.__enter__.return_value
+            mock_response_obj.post.return_value = mock_response
+
+            _ = helper.get_token()
+
+        after_time = time.time()
+
+        # Check that issued_at was set to a reasonable value
+        assert helper._token_data is not None
+        assert before_time <= helper._token_data.issued_at <= after_time
+        # Check that expires_at is approximately issued_at + 3600
+        assert (
+            helper._token_data.expires_at - helper._token_data.issued_at - 3600
+            < 1
+        )

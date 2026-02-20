@@ -28,10 +28,28 @@ class TokenData(NamedTuple):
     access_token: str
     expires_at: float
     scheme: str
+    issued_at: float = 0.0
 
     def is_valid(self) -> bool:
         """Check if this token is still valid (with a 30-second buffer)."""
         return time.time() < (self.expires_at - 30)
+
+    def is_old(self) -> bool:
+        """Check if this token should be proactively refreshed.
+
+        A token is considered "old" if less than 50% of its lifetime remains.
+        This allows background refresh to happen before expiry while the token
+        is still usable.
+        """
+        if self.issued_at == 0.0:
+            # Fallback for tokens created before issued_at was tracked
+            # Consider old if less than 30% of expiry buffer remains
+            return time.time() >= (self.expires_at - 90)
+
+        current_time = time.time()
+        total_lifetime = self.expires_at - self.issued_at
+        time_remaining = self.expires_at - current_time
+        return time_remaining < (total_lifetime * 0.5)
 
 
 class CredentialHelper:
@@ -67,13 +85,16 @@ class CredentialHelper:
         self._audience: str = audience
         self._token_data: TokenData | None = None
         self._lock: threading.Lock = threading.Lock()
+        self._refresh_thread: threading.Thread | None = None
 
     def get_token(self) -> TokenData:
         """Get valid token data, refreshing if necessary.
 
-        Uses double-checked locking: the happy path (token is valid)
-        avoids acquiring the lock entirely.  The lock is only taken
-        when the token needs to be refreshed.
+        Uses double-checked locking with background refresh optimization:
+        - If token is valid and fresh, returns immediately (no lock)
+        - If token is valid but old, triggers background refresh and
+          returns current token
+        - If token is expired, blocks until new token is acquired
 
         Returns
         -------
@@ -86,9 +107,15 @@ class CredentialHelper:
 
         """
         token_data = self._token_data
+
+        # Fast path: token is valid and fresh
         if token_data is not None and token_data.is_valid():
+            # If token is old, trigger background refresh
+            if token_data.is_old():
+                self._start_background_refresh()
             return token_data
 
+        # Slow path: token is expired or missing, must block
         with self._lock:
             token_data = self._token_data
             if token_data is not None and token_data.is_valid():
@@ -101,6 +128,51 @@ class CredentialHelper:
                 msg = "Token is unexpectedly None after refresh"
                 raise RuntimeError(msg)
             return token_data
+
+    def _start_background_refresh(self) -> None:
+        """Start a background thread to refresh the token.
+
+        Only starts a new thread if one isn't already running.
+
+        This method is safe to call multiple times - it only starts a new
+        thread if no refresh is currently in progress.
+        """
+        # Quick check without lock - if refresh thread exists and is
+        # alive, skip
+        if self._refresh_thread is not None and self._refresh_thread.is_alive():
+            return
+
+        # Try to acquire lock and start refresh
+        if self._lock.acquire(blocking=False):
+            try:
+                # Double-check: another thread might have started refresh
+                refresh_needed = (
+                    self._refresh_thread is None
+                    or not self._refresh_thread.is_alive()
+                )
+                if refresh_needed:
+                    self._refresh_thread = threading.Thread(
+                        target=self._background_refresh,
+                        daemon=True,
+                    )
+                    self._refresh_thread.start()
+            finally:
+                self._lock.release()
+
+    def _background_refresh(self) -> None:
+        """Background thread target for token refresh.
+
+        Acquires the lock and refreshes the token. Errors are silently
+        ignored since the next foreground request will retry if needed.
+        """
+        with self._lock:
+            # ruff: noqa: SIM105
+            try:
+                self._refresh_token()
+            except Exception:  # noqa: BLE001, S110
+                # Silently ignore errors in background refresh
+                # Next get_token() call will retry if needed
+                pass
 
     def _refresh_token(self) -> None:
         """Refresh the authentication token by making an OAuth request.
@@ -138,10 +210,12 @@ class CredentialHelper:
             token_type = raw.get("token_type", "Bearer")
             # Preserve server-provided casing, only strip whitespace
             scheme: str = token_type.strip() if token_type else "Bearer"
+            current_time = time.time()
             self._token_data = TokenData(
                 access_token=access_token,
-                expires_at=time.time() + expires_in,
+                expires_at=current_time + expires_in,
                 scheme=scheme,
+                issued_at=current_time,
             )
 
         except httpx.HTTPStatusError as e:
