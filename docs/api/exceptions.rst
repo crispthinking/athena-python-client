@@ -129,7 +129,8 @@ OAuth Error Handling
             client_id=client_id,
             client_secret=client_secret
         )
-        token = credential_helper.get_token()
+        token_data = credential_helper.get_token()
+        access_token = token_data.access_token
     except OAuthError as e:
         logger.error(f"OAuth authentication failed: {e}")
         # Handle OAuth failure - check credentials

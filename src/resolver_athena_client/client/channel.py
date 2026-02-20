@@ -135,7 +135,9 @@ class CredentialHelper:
             raw = response.json()
             access_token: str = raw["access_token"]
             expires_in: int = raw.get("expires_in", 3600)  # Default 1 hour
-            scheme: str = raw.get("token_type", "Bearer").capitalize()
+            token_type = raw.get("token_type", "Bearer")
+            # Preserve server-provided casing, only strip whitespace
+            scheme: str = token_type.strip() if token_type else "Bearer"
             self._token_data = TokenData(
                 access_token=access_token,
                 expires_at=time.time() + expires_in,
@@ -206,9 +208,10 @@ class _AutoRefreshTokenAuthMetadataPlugin(grpc.AuthMetadataPlugin):
         """Supply authorization metadata for an RPC.
 
         Called by the gRPC runtime on a background thread before each
-        RPC.  On success the token is forwarded as a Bearer token; on
-        failure the error is passed to the callback so gRPC can surface
-        it as an RPC error.
+        RPC.  On success the token is forwarded using the scheme from
+        the OAuth token response (typically ``Bearer``); on failure
+        the error is passed to the callback so gRPC can surface it as
+        an RPC error.
 
         Args:
         ----

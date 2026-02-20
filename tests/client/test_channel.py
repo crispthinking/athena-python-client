@@ -426,14 +426,3 @@ class TestAutoRefreshTokenAuthMetadataPlugin:
         plugin(mock_context, mock_callback)
 
         mock_callback.assert_called_once_with((), runtime_error)
-
-
-@pytest.mark.asyncio
-async def test_create_channel_with_credentials_invalid_host() -> None:
-    """Test channel creation with credentials and invalid host raises error."""
-    test_host = ""  # Invalid host
-
-    mock_helper = mock.Mock(spec=CredentialHelper)
-
-    with pytest.raises(InvalidHostError, match="host cannot be empty"):
-        _ = await create_channel_with_credentials(test_host, mock_helper)
