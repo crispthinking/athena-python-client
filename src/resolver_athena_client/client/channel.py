@@ -17,13 +17,7 @@ from resolver_athena_client.client.exceptions import (
 
 
 class TokenData(NamedTuple):
-    """Immutable snapshot of token state.
-
-    Storing token, expiry, and scheme together as a single object
-    ensures that validity checks and token reads are always consistent,
-    eliminating TOCTOU races between ``get_token`` and
-    ``invalidate_token``.
-    """
+    """Immutable snapshot of token state."""
 
     access_token: str
     expires_at: float
@@ -136,7 +130,6 @@ class CredentialHelper:
             access_token: str = raw["access_token"]
             expires_in: int = raw.get("expires_in", 3600)  # Default 1 hour
             token_type = raw.get("token_type", "Bearer")
-            # Preserve server-provided casing, only strip whitespace
             scheme: str = token_type.strip() if token_type else "Bearer"
             self._token_data = TokenData(
                 access_token=access_token,
@@ -180,14 +173,7 @@ class CredentialHelper:
 
 
 class _AutoRefreshTokenAuthMetadataPlugin(grpc.AuthMetadataPlugin):
-    """gRPC auth plugin that fetches a fresh token for every RPC.
-
-    The plugin delegates to ``CredentialHelper.get_token()`` which
-    handles caching, expiry checks, and thread-safe refresh internally.
-    This callback is invoked by gRPC on a *separate* thread, so the
-    underlying ``CredentialHelper`` must use ``threading.Lock`` (not
-    ``asyncio.Lock``).
-    """
+    """gRPC auth plugin that fetches a fresh token for every RPC."""
 
     def __init__(self, credential_helper: CredentialHelper) -> None:
         """Initialize with a credential helper.
@@ -246,12 +232,6 @@ async def create_channel_with_credentials(
     Raises:
     ------
         InvalidHostError: If host is empty
-
-    Note:
-    ----
-        OAuth errors are no longer raised at channel-creation time.
-        Instead, they surface as RPC errors when the per-request auth
-        metadata plugin attempts to acquire a token.
 
     """
     if not host:
