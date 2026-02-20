@@ -88,12 +88,6 @@ class CredentialHelper:
     def get_token(self) -> TokenData:
         """Get valid token data, refreshing if necessary.
 
-        Uses double-checked locking with background refresh optimization:
-        - If token is valid and fresh, returns immediately (no lock)
-        - If token is valid but old, triggers background refresh and
-          returns current token
-        - If token is expired, blocks until new token is acquired
-
         Returns
         -------
             A valid ``TokenData`` containing access token, expiry, and scheme
