@@ -117,6 +117,7 @@ class TestCredentialHelper:
             access_token="test_token",
             expires_at=time.time() - 100,
             scheme="Bearer",
+            issued_at=time.time() - 3700,
         )
 
         assert not helper._token_data.is_valid()
@@ -132,6 +133,7 @@ class TestCredentialHelper:
             access_token="test_token",
             expires_at=time.time() + 3600,
             scheme="Bearer",
+            issued_at=time.time(),
         )
 
         assert helper._token_data.is_valid()
@@ -147,6 +149,7 @@ class TestCredentialHelper:
             access_token="test_token",
             expires_at=time.time() + 20,
             scheme="Bearer",
+            issued_at=time.time() - 3580,
         )
 
         assert not helper._token_data.is_valid()
@@ -272,6 +275,7 @@ class TestCredentialHelper:
             access_token="cached_token",
             expires_at=time.time() + 3600,
             scheme="Bearer",
+            issued_at=time.time(),
         )
 
         token_data = helper.get_token()
@@ -359,6 +363,7 @@ class TestCredentialHelper:
             access_token="valid_token",
             expires_at=time.time() + 3600,
             scheme="Bearer",
+            issued_at=time.time(),
         )
 
         helper.invalidate_token()
@@ -377,6 +382,7 @@ class TestCredentialHelper:
             access_token="old_token",
             expires_at=time.time() + 3600,
             scheme="Bearer",
+            issued_at=time.time(),
         )
         helper.invalidate_token()
 
@@ -407,6 +413,7 @@ class TestAutoRefreshTokenAuthMetadataPlugin:
             access_token="test-bearer-token",
             expires_at=time.time() + 3600,
             scheme="Bearer",
+            issued_at=time.time(),
         )
 
         plugin = _AutoRefreshTokenAuthMetadataPlugin(mock_helper)
@@ -426,6 +433,7 @@ class TestAutoRefreshTokenAuthMetadataPlugin:
             access_token="dpop-token",
             expires_at=time.time() + 3600,
             scheme="Dpop",
+            issued_at=time.time(),
         )
 
         plugin = _AutoRefreshTokenAuthMetadataPlugin(mock_helper)
@@ -493,30 +501,6 @@ class TestBackgroundTokenRefresh:
             issued_at=current_time - 1200,  # 20 minutes ago
         )
         # Total lifetime = 3600s, remaining = 2400s (67%), so it's fresh
-        assert not token.is_old()
-
-    def test_token_is_old_fallback_for_legacy_tokens(self) -> None:
-        """Test fallback logic for tokens without issued_at."""
-        current_time = time.time()
-        # Legacy token without issued_at (defaults to 0.0)
-        token = TokenData(
-            access_token="test_token",
-            expires_at=current_time + 60,  # 1 minute from now
-            scheme="Bearer",
-        )
-        # Should be considered old if less than 90s remain
-        assert token.is_old()
-
-    def test_token_is_not_old_fallback_for_fresh_legacy_tokens(self) -> None:
-        """Test fallback logic for fresh legacy tokens."""
-        current_time = time.time()
-        # Legacy token with plenty of time remaining
-        token = TokenData(
-            access_token="test_token",
-            expires_at=current_time + 200,  # 200 seconds from now
-            scheme="Bearer",
-        )
-        # Should not be considered old if more than 90s remain
         assert not token.is_old()
 
     def test_get_token_triggers_background_refresh_for_old_token(self) -> None:
@@ -616,6 +600,29 @@ class TestBackgroundTokenRefresh:
         ):
             # Should not raise an exception
             helper._background_refresh()
+
+    def test_background_refresh_prevents_stampede(self) -> None:
+        """Test background refresh skips refresh if token is fresh."""
+        helper = CredentialHelper(
+            client_id="test_client_id",
+            client_secret="test_client_secret",
+        )
+
+        current_time = time.time()
+        # Set up a fresh token (already refreshed by another thread)
+        helper._token_data = TokenData(
+            access_token="fresh_token",
+            expires_at=current_time + 2400,  # 40 minutes remaining
+            scheme="Bearer",
+            issued_at=current_time - 1200,  # 20 minutes ago, so it's fresh
+        )
+
+        # Mock refresh to track if it's called
+        with mock.patch.object(helper, "_refresh_token") as mock_refresh:
+            helper._background_refresh()
+
+            # Should NOT have called refresh since token is fresh
+            mock_refresh.assert_not_called()
 
     def test_get_token_blocks_for_expired_token(self) -> None:
         """Test that get_token blocks and refreshes when token is expired."""

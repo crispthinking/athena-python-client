@@ -31,7 +31,7 @@ class TokenData(NamedTuple):
     access_token: str
     expires_at: float
     scheme: str
-    issued_at: float = 0.0
+    issued_at: float
 
     def is_valid(self) -> bool:
         """Check if this token is still valid (with a 30-second buffer)."""
@@ -44,12 +44,6 @@ class TokenData(NamedTuple):
         This allows background refresh to happen before expiry while the token
         is still usable.
         """
-        if self.issued_at == 0.0:
-            # Fallback for tokens created before issued_at was tracked.
-            # Use 90s threshold (3x the 30s validity buffer) to ensure
-            # old tokens get refreshed proactively.
-            return time.time() >= (self.expires_at - 90)
-
         current_time = time.time()
         total_lifetime = self.expires_at - self.issued_at
         time_remaining = self.expires_at - current_time
@@ -171,6 +165,12 @@ class CredentialHelper:
         retry if needed.
         """
         with self._lock:
+            # Check if token still needs refresh (prevent stampede)
+            token_data = self._token_data
+            if token_data is not None and not token_data.is_old():
+                # Token was already refreshed by another thread
+                return
+
             try:
                 self._refresh_token()
             except Exception as e:  # noqa: BLE001
