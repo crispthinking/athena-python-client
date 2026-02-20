@@ -143,10 +143,13 @@ class CredentialHelper:
         # Try to acquire lock and start refresh
         if self._lock.acquire(blocking=False):
             try:
-                # Double-check: another thread might have started refresh
+                # Double-check: another thread might have started refresh,
+                # or the token may have been refreshed.
                 refresh_needed = (
                     self._refresh_thread is None
                     or not self._refresh_thread.is_alive()
+                    or self._token_data is None
+                    or not self._token_data.is_old()
                 )
                 if refresh_needed:
                     self._refresh_thread = threading.Thread(
