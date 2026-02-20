@@ -173,7 +173,7 @@ class TestCredentialHelper:
             token_data = helper.get_token()
 
             assert token_data.access_token == "new_access_token"
-            assert token_data.scheme == "Bearer"
+            assert token_data.scheme == "bearer"
             assert helper._token_data is not None
             assert helper._token_data.expires_at is not None
 
@@ -198,7 +198,7 @@ class TestCredentialHelper:
 
             token_data = helper.get_token()
 
-            assert token_data.scheme == "Dpop"
+            assert token_data.scheme == "DPoP"
 
     def test_get_token_defaults_to_bearer(self) -> None:
         """Test that scheme defaults to Bearer when token_type is absent."""
