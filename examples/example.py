@@ -163,15 +163,6 @@ async def main() -> int:
         audience=audience,
     )
 
-    # Test token acquisition
-    try:
-        logger.info("Acquiring OAuth token...")
-        token = await credential_helper.get_token()
-        logger.info("Successfully acquired token (length: %d)", len(token))
-    except Exception:
-        logger.exception("Failed to acquire OAuth token")
-        return 1
-
     # Get available deployment
     channel = await create_channel_with_credentials(host, credential_helper)
     async with DeploymentSelector(channel) as deployment_selector:

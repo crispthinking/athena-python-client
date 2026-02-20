@@ -71,21 +71,12 @@ async def credential_helper() -> CredentialHelper:
     audience = os.getenv("OAUTH_AUDIENCE", "crisp-athena-live")
 
     # Create credential helper
-    credential_helper = CredentialHelper(
+    return CredentialHelper(
         client_id=client_id,
         client_secret=client_secret,
         auth_url=auth_url,
         audience=audience,
     )
-
-    # Test token acquisition
-    try:
-        _ = await credential_helper.get_token()
-    except Exception as e:
-        msg = "Failed to acquire OAuth token"
-        raise AssertionError(msg) from e
-
-    return credential_helper
 
 
 @pytest.fixture
