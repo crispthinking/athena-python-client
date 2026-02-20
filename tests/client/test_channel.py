@@ -165,7 +165,7 @@ class TestCredentialHelper:
         mock_response.json.return_value = {
             "access_token": "new_access_token",
             "expires_in": 3600,
-            "token_type": "bearer",
+            "token_type": "Bearer",
         }
         mock_response.raise_for_status.return_value = None
 
@@ -176,7 +176,7 @@ class TestCredentialHelper:
             token_data = helper.get_token()
 
             assert token_data.access_token == "new_access_token"
-            assert token_data.scheme == "bearer"
+            assert token_data.scheme == "Bearer"
             assert helper._token_data is not None
             assert helper._token_data.expires_at is not None
 
