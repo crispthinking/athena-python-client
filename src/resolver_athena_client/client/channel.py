@@ -47,7 +47,7 @@ class TokenData(NamedTuple):
         current_time = time.time()
         total_lifetime = self.expires_at - self.issued_at
         time_remaining = self.expires_at - current_time
-        return time_remaining < (total_lifetime * 0.5)
+        return time_remaining < (total_lifetime * 0.25)
 
 
 class CredentialHelper:
