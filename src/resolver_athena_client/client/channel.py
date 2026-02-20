@@ -1,6 +1,7 @@
 """Channel creation utilities for the Athena client."""
 
 import json
+import logging
 import threading
 import time
 from typing import NamedTuple, override
@@ -14,6 +15,8 @@ from resolver_athena_client.client.exceptions import (
     InvalidHostError,
     OAuthError,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class TokenData(NamedTuple):
@@ -42,8 +45,9 @@ class TokenData(NamedTuple):
         is still usable.
         """
         if self.issued_at == 0.0:
-            # Fallback for tokens created before issued_at was tracked
-            # Consider old if less than 30% of expiry buffer remains
+            # Fallback for tokens created before issued_at was tracked.
+            # Use 90s threshold (3x the 30s validity buffer) to ensure
+            # old tokens get refreshed proactively.
             return time.time() >= (self.expires_at - 90)
 
         current_time = time.time()
@@ -162,17 +166,21 @@ class CredentialHelper:
     def _background_refresh(self) -> None:
         """Background thread target for token refresh.
 
-        Acquires the lock and refreshes the token. Errors are silently
-        ignored since the next foreground request will retry if needed.
+        Acquires the lock and refreshes the token. Errors are logged
+        but silently ignored since the next foreground request will
+        retry if needed.
         """
         with self._lock:
-            # ruff: noqa: SIM105
             try:
                 self._refresh_token()
-            except Exception:  # noqa: BLE001, S110
-                # Silently ignore errors in background refresh
-                # Next get_token() call will retry if needed
-                pass
+            except Exception as e:  # noqa: BLE001
+                # Log but don't raise - background refresh failures
+                # are recoverable (next get_token() will retry)
+                logger.debug(
+                    "Background token refresh failed, "
+                    "will retry on next request: %s",
+                    e,
+                )
 
     def _refresh_token(self) -> None:
         """Refresh the authentication token by making an OAuth request.

@@ -222,6 +222,44 @@ class TestCredentialHelper:
 
             assert token_data.scheme == "Bearer"
 
+    def test_get_token_preserves_server_casing(self) -> None:
+        """Test that server-provided token_type casing is preserved."""
+        test_cases = [
+            ("Bearer", "Bearer"),
+            ("bearer", "bearer"),
+            ("BEARER", "BEARER"),
+            ("DPoP", "DPoP"),
+            ("dpop", "dpop"),
+            ("  Bearer  ", "Bearer"),  # Whitespace is stripped
+        ]
+
+        for server_type, expected_scheme in test_cases:
+            helper = CredentialHelper(
+                client_id="test_client_id",
+                client_secret="test_client_secret",
+            )
+
+            mock_response = mock.Mock()
+            mock_response.json.return_value = {
+                "access_token": "test_token",
+                "expires_in": 3600,
+                "token_type": server_type,
+            }
+            mock_response.raise_for_status.return_value = None
+
+            with mock.patch("httpx.Client") as mock_client:
+                mock_response_obj = (
+                    mock_client.return_value.__enter__.return_value
+                )
+                mock_response_obj.post.return_value = mock_response
+
+                token_data = helper.get_token()
+
+                assert token_data.scheme == expected_scheme, (
+                    f"Expected {expected_scheme} for {server_type}, "
+                    f"got {token_data.scheme}"
+                )
+
     def test_get_token_cached(self) -> None:
         """Test that cached token is returned when valid."""
         helper = CredentialHelper(
@@ -641,6 +679,7 @@ class TestBackgroundTokenRefresh:
         assert helper._token_data is not None
         assert before_time <= helper._token_data.issued_at <= after_time
         # Check that expires_at is approximately issued_at + 3600
+        # Allow 1 second tolerance for test execution time
         assert (
             helper._token_data.expires_at - helper._token_data.issued_at - 3600
             < 1
