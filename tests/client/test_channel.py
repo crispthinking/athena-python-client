@@ -135,6 +135,7 @@ class TestCredentialHelper:
             expires_at=time.time() - 100,
             scheme="Bearer",
             issued_at=time.time() - 3700,
+            proactive_refresh_threshold=0.25,
         )
 
         assert not helper._token_data.is_valid()
@@ -505,7 +506,7 @@ class TestBackgroundTokenRefresh:
             issued_at=current_time - 3_000,  # 50 minutes ago
         )
         # Total lifetime = 3600s, remaining = 600s (1/6th), so it's old
-        assert token.is_old(0.25)
+        assert token.is_old()
 
     def test_token_is_not_old_when_fresh(self) -> None:
         """Test that a token is not old when more than 25% lifetime remains."""
@@ -518,7 +519,7 @@ class TestBackgroundTokenRefresh:
             issued_at=current_time - 1200,  # 20 minutes ago
         )
         # Total lifetime = 3600s, remaining = 2400s (67%), so it's fresh
-        assert not token.is_old(0.25)
+        assert not token.is_old()
 
     def test_get_token_triggers_background_refresh_for_old_token(self) -> None:
         """Test that get_token triggers background refresh for old tokens."""

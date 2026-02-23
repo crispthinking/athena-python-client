@@ -4,7 +4,8 @@ import json
 import logging
 import threading
 import time
-from typing import NamedTuple, override
+from dataclasses import dataclass
+from typing import override
 
 import grpc
 import httpx
@@ -19,19 +20,30 @@ from resolver_athena_client.client.exceptions import (
 logger = logging.getLogger(__name__)
 
 
-class TokenData(NamedTuple):
+@dataclass(frozen=True)
+class TokenData:
     """Immutable snapshot of token state."""
 
     access_token: str
     expires_at: float
     scheme: str
     issued_at: float
+    proactive_refresh_threshold: float = 0.25
+
+    def __post_init__(self) -> None:
+        """Validate that proactive_refresh_threshold is between 0 and 1."""
+        if (
+            self.proactive_refresh_threshold <= 0
+            or self.proactive_refresh_threshold >= 1
+        ):
+            msg = "proactive_refresh_threshold must be between 0 and 1"
+            raise ValueError(msg)
 
     def is_valid(self) -> bool:
         """Check if this token is still valid (with a 30-second buffer)."""
         return time.time() < (self.expires_at - 30)
 
-    def is_old(self, proactive_refresh_threshold: float) -> bool:
+    def is_old(self) -> bool:
         """Check if this token should be proactively refreshed.
 
         A token is considered "old" if less than the
@@ -45,13 +57,12 @@ class TokenData(NamedTuple):
                 to trigger proactive refresh (e.g. 0.25 for 25%)
 
         """
-        if proactive_refresh_threshold <= 0 or proactive_refresh_threshold >= 1:
-            msg = "proactive_refresh_threshold must be between 0 and 1"
-            raise ValueError(msg)
         current_time = time.time()
         total_lifetime = self.expires_at - self.issued_at
         time_remaining = self.expires_at - current_time
-        return time_remaining < (total_lifetime * proactive_refresh_threshold)
+        return time_remaining < (
+            total_lifetime * self.proactive_refresh_threshold
+        )
 
 
 class CredentialHelper:
@@ -116,7 +127,7 @@ class CredentialHelper:
         # Fast path: token is valid and fresh
         if token_data is not None and token_data.is_valid():
             # If token is old, trigger background refresh
-            if token_data.is_old(self._proactive_refresh_threshold):
+            if token_data.is_old():
                 self._start_background_refresh()
             return token_data
 
@@ -157,10 +168,7 @@ class CredentialHelper:
                     or not self._refresh_thread.is_alive()
                 )
                 token_needs_refresh = (
-                    self._token_data is None
-                    or self._token_data.is_old(
-                        self._proactive_refresh_threshold
-                    )
+                    self._token_data is None or self._token_data.is_old()
                 )
                 refresh_needed = refresh_not_active and token_needs_refresh
                 if refresh_needed:
@@ -182,9 +190,7 @@ class CredentialHelper:
         with self._lock:
             # Check if token still needs refresh (prevent stampede)
             token_data = self._token_data
-            if token_data is not None and not token_data.is_old(
-                self._proactive_refresh_threshold
-            ):
+            if token_data is not None and not token_data.is_old():
                 # Token was already refreshed by another thread
                 return
 
@@ -240,6 +246,7 @@ class CredentialHelper:
                 expires_at=current_time + expires_in,
                 scheme=scheme,
                 issued_at=current_time,
+                proactive_refresh_threshold=self._proactive_refresh_threshold,
             )
 
         except httpx.HTTPStatusError as e:
