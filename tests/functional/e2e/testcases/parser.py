@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import cast
 
 # Path to the shared testcases directory in athena-protobufs
 _REPO_ROOT = Path(__file__).parent.parent.parent.parent.parent
@@ -27,12 +28,20 @@ def load_test_cases(dirname: str = "benign_model") -> list[AthenaTestCase]:
     with Path.open(
         Path(TESTCASES_DIR / dirname / "expected_outputs.json"),
     ) as f:
-        test_cases = json.load(f)
+        test_cases = cast(
+            "dict[str, list[str] | list[list[str | list[float]]]]", json.load(f)
+        )
+    classification_labels = cast(
+        "list[str]", test_cases["classification_labels"]
+    )
+    images = cast("list[list[str | list[float]]]", test_cases["images"])
     return [
         AthenaTestCase(
-            str(Path(TESTCASES_DIR / dirname / "images" / item[0])),
-            item[1],
-            test_cases["classification_labels"],
+            str(
+                Path(TESTCASES_DIR / dirname / "images" / cast("str", item[0]))
+            ),
+            cast("list[float]", item[1]),
+            classification_labels,
         )
-        for item in test_cases["images"]
+        for item in images
     ]

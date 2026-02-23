@@ -2,6 +2,7 @@
 
 import asyncio
 import contextlib
+from typing import cast
 from unittest import mock
 
 import pytest
@@ -64,9 +65,10 @@ async def test_classify_images_success(
 
     # Setup mock classifier client
     with mock.patch(
-        "resolver_athena_client.client.athena_client.ClassifierServiceClient"
+        "resolver_athena_client.client.athena_client.ClassifierServiceClient",
+        spec=ClassifierServiceClient,
     ) as mock_client_cls:
-        mock_client = mock_client_cls.return_value
+        mock_client = cast("mock.MagicMock", mock_client_cls.return_value)
 
         # Create mock stream that returns our responses
         mock_classify = MockAsyncIterator(test_responses)
@@ -121,9 +123,10 @@ async def test_client_context_manager_success(
     )  # Success response will have default empty global_error
 
     with mock.patch(
-        "resolver_athena_client.client.athena_client.ClassifierServiceClient"
+        "resolver_athena_client.client.athena_client.ClassifierServiceClient",
+        spec=ClassifierServiceClient,
     ) as mock_client_cls:
-        mock_client = mock_client_cls.return_value
+        mock_client = cast("mock.MagicMock", mock_client_cls.return_value)
 
         # Create mock stream that returns our response
         mock_classify = MockAsyncIterator([init_response])
@@ -157,7 +160,8 @@ async def test_client_context_manager_success(
                         await classify_task
 
         # Verify channel was closed
-        mock_channel.close.assert_called_once()
+        close_mock = cast("mock.MagicMock", mock_channel.close)
+        close_mock.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -176,9 +180,10 @@ async def test_client_context_manager_error(
     )
 
     with mock.patch(
-        "resolver_athena_client.client.athena_client.ClassifierServiceClient"
+        "resolver_athena_client.client.athena_client.ClassifierServiceClient",
+        spec=ClassifierServiceClient,
     ) as mock_client_cls:
-        mock_client = mock_client_cls.return_value
+        mock_client = cast("mock.MagicMock", mock_client_cls.return_value)
 
         # Create mock stream that returns our error response
         mock_classify = MockAsyncIterator([error_response])
@@ -225,9 +230,10 @@ async def test_client_transformers_disabled(
     )
 
     with mock.patch(
-        "resolver_athena_client.client.athena_client.ClassifierServiceClient"
+        "resolver_athena_client.client.athena_client.ClassifierServiceClient",
+        spec=ClassifierServiceClient,
     ) as mock_client_cls:
-        mock_client = mock_client_cls.return_value
+        mock_client = cast("mock.MagicMock", mock_client_cls.return_value)
         mock_classify = MockAsyncIterator([test_response])
         mock_client.classify = mock_classify
 
@@ -277,9 +283,10 @@ async def test_client_transformers_enabled(
     )
 
     with mock.patch(
-        "resolver_athena_client.client.athena_client.ClassifierServiceClient"
+        "resolver_athena_client.client.athena_client.ClassifierServiceClient",
+        spec=ClassifierServiceClient,
     ) as mock_client_cls:
-        mock_client = mock_client_cls.return_value
+        mock_client = cast("mock.MagicMock", mock_client_cls.return_value)
         mock_classify = MockAsyncIterator([test_response])
         mock_client.classify = mock_classify
 
@@ -337,13 +344,14 @@ async def test_client_num_workers_configuration(
 
     with (
         mock.patch(
-            "resolver_athena_client.client.athena_client.ClassifierServiceClient"
+            "resolver_athena_client.client.athena_client.ClassifierServiceClient",
+            spec=ClassifierServiceClient,
         ) as mock_client_cls,
         mock.patch(
             "resolver_athena_client.client.athena_client.WorkerBatcher"
         ) as mock_worker_batcher_cls,
     ):
-        mock_client = mock_client_cls.return_value
+        mock_client = cast("mock.MagicMock", mock_client_cls.return_value)
         mock_classify = MockAsyncIterator([test_response])
         mock_client.classify = mock_classify
 
@@ -391,4 +399,5 @@ async def test_client_close(
 
     await client.close()
 
-    mock_channel.close.assert_called_once()
+    close_mock = cast("mock.MagicMock", mock_channel.close)
+    close_mock.assert_called_once()

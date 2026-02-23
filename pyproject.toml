@@ -76,7 +76,6 @@ venvPath = "."
 venv = ".venv"
 stubPath = "stubs"
 reportImplicitStringConcatenation = false
-reportAny = false
 
 [tool.pytest.ini_options]
 markers = [

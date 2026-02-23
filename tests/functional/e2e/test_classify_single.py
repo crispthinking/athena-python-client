@@ -19,10 +19,19 @@ TEST_CASES = load_test_cases("integrator_sample")
 FP_ERROR_TOLERANCE = 1e-4
 
 
+def _get_test_case_id(tc: AthenaTestCase) -> str:
+    """Get the test case ID for pytest parametrize."""
+    return tc.id
+
+
 @pytest.mark.asyncio
 @pytest.mark.functional
 @pytest.mark.e2e
-@pytest.mark.parametrize("test_case", TEST_CASES, ids=lambda tc: tc.id)
+@pytest.mark.parametrize(
+    "test_case",
+    TEST_CASES,
+    ids=_get_test_case_id,
+)
 async def test_classify_single(
     athena_options: AthenaOptions,
     credential_helper: CredentialHelper,
