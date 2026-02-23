@@ -97,6 +97,23 @@ class TestCredentialHelper:
                 client_secret="",
             )
 
+    @pytest.mark.parametrize(
+        "invalid",
+        [-0.1, 1.1, -0.5, 2.0],
+    )
+    def test_init_with_invalid_proactive_refresh_threshold(
+        self, invalid: float
+    ) -> None:
+        with pytest.raises(
+            ValueError,
+            match="proactive_refresh_threshold must be a float between 0 and 1",
+        ):
+            _ = CredentialHelper(
+                client_id="test_client_id",
+                client_secret="test_client_secret",
+                proactive_refresh_threshold=invalid,
+            )
+
     def test_is_token_valid_with_no_token(self) -> None:
         """Test token is not valid when no token data is set."""
         helper = CredentialHelper(
@@ -487,8 +504,8 @@ class TestBackgroundTokenRefresh:
             scheme="Bearer",
             issued_at=current_time - 3_000,  # 50 minutes ago
         )
-        # Total lifetime = 3600s, remaining = 1200s (33%), so it's old
-        assert token.is_old()
+        # Total lifetime = 3600s, remaining = 600s (1/6th), so it's old
+        assert token.is_old(0.25)
 
     def test_token_is_not_old_when_fresh(self) -> None:
         """Test that a token is not old when more than 25% lifetime remains."""
@@ -501,7 +518,7 @@ class TestBackgroundTokenRefresh:
             issued_at=current_time - 1200,  # 20 minutes ago
         )
         # Total lifetime = 3600s, remaining = 2400s (67%), so it's fresh
-        assert not token.is_old()
+        assert not token.is_old(0.25)
 
     def test_get_token_triggers_background_refresh_for_old_token(self) -> None:
         """Test that get_token triggers background refresh for old tokens."""

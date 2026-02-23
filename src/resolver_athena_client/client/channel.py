@@ -37,17 +37,27 @@ class TokenData(NamedTuple):
         """Check if this token is still valid (with a 30-second buffer)."""
         return time.time() < (self.expires_at - 30)
 
-    def is_old(self) -> bool:
+    def is_old(self, proactive_refresh_threshold: float) -> bool:
         """Check if this token should be proactively refreshed.
 
-        A token is considered "old" if less than 25% of its lifetime remains.
-        This allows background refresh to happen before expiry while the token
-        is still usable.
+        A token is considered "old" if less than the
+        proactive_refresh_threshold of its lifetime remains. This allows
+        background refresh to happen before expiry while the token is still
+        usable.
+
+        Args:
+        ----
+            proactive_refresh_threshold: Fraction of token lifetime past which
+                to trigger proactive refresh (e.g. 0.25 for 25%)
+
         """
+        if proactive_refresh_threshold <= 0 or proactive_refresh_threshold >= 1:
+            msg = "proactive_refresh_threshold must be between 0 and 1"
+            raise ValueError(msg)
         current_time = time.time()
         total_lifetime = self.expires_at - self.issued_at
         time_remaining = self.expires_at - current_time
-        return time_remaining < (total_lifetime * 0.25)
+        return time_remaining < (total_lifetime * proactive_refresh_threshold)
 
 
 class CredentialHelper:
@@ -59,6 +69,7 @@ class CredentialHelper:
         client_secret: str,
         auth_url: str = "https://crispthinking.auth0.com/oauth/token",
         audience: str = "crisp-athena-live",
+        proactive_refresh_threshold: float = 0.25,
     ) -> None:
         """Initialize the credential helper.
 
@@ -68,6 +79,8 @@ class CredentialHelper:
             client_secret: OAuth client secret
             auth_url: OAuth token endpoint URL
             audience: OAuth audience
+            proactive_refresh_threshold: Fraction of token lifetime to trigger
+                proactive refresh (default 0.25 for 25%)
 
         """
         if not client_id:
@@ -84,6 +97,12 @@ class CredentialHelper:
         self._token_data: TokenData | None = None
         self._lock: threading.Lock = threading.Lock()
         self._refresh_thread: threading.Thread | None = None
+
+        if proactive_refresh_threshold <= 0 or proactive_refresh_threshold >= 1:
+            msg = "proactive_refresh_threshold must be a float between 0 and 1"
+            raise ValueError(msg)
+
+        self._proactive_refresh_threshold: float = proactive_refresh_threshold
 
     def get_token(self) -> TokenData:
         """Get valid token data, refreshing if necessary.
@@ -103,7 +122,7 @@ class CredentialHelper:
         # Fast path: token is valid and fresh
         if token_data is not None and token_data.is_valid():
             # If token is old, trigger background refresh
-            if token_data.is_old():
+            if token_data.is_old(self._proactive_refresh_threshold):
                 self._start_background_refresh()
             return token_data
 
@@ -144,7 +163,10 @@ class CredentialHelper:
                     or not self._refresh_thread.is_alive()
                 )
                 token_needs_refresh = (
-                    self._token_data is None or self._token_data.is_old()
+                    self._token_data is None
+                    or self._token_data.is_old(
+                        self._proactive_refresh_threshold
+                    )
                 )
                 refresh_needed = refresh_not_active and token_needs_refresh
                 if refresh_needed:
@@ -166,7 +188,9 @@ class CredentialHelper:
         with self._lock:
             # Check if token still needs refresh (prevent stampede)
             token_data = self._token_data
-            if token_data is not None and not token_data.is_old():
+            if token_data is not None and not token_data.is_old(
+                self._proactive_refresh_threshold
+            ):
                 # Token was already refreshed by another thread
                 return
 
