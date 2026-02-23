@@ -139,12 +139,14 @@ class CredentialHelper:
             try:
                 # Double-check: another thread might have started refresh,
                 # or the token may have been refreshed.
-                refresh_needed = (
+                refresh_not_active = (
                     self._refresh_thread is None
                     or not self._refresh_thread.is_alive()
-                    or self._token_data is None
-                    or not self._token_data.is_old()
                 )
+                token_needs_refresh = (
+                    self._token_data is None or self._token_data.is_old()
+                )
+                refresh_needed = refresh_not_active and token_needs_refresh
                 if refresh_needed:
                     self._refresh_thread = threading.Thread(
                         target=self._background_refresh,
