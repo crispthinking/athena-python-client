@@ -478,20 +478,20 @@ class TestBackgroundTokenRefresh:
     """Tests for background token refresh functionality."""
 
     def test_token_is_old_when_past_halfway_lifetime(self) -> None:
-        """Test that a token is considered old when past 50% of its lifetime."""
+        """Test that a token is considered old when past 25% of its lifetime."""
         current_time = time.time()
         # Token with 1 hour lifetime, 20 minutes remaining (33%)
         token = TokenData(
             access_token="test_token",
-            expires_at=current_time + 1200,  # 20 minutes from now
+            expires_at=current_time + 600,  # 10 minutes from now
             scheme="Bearer",
-            issued_at=current_time - 2400,  # 40 minutes ago
+            issued_at=current_time - 3_000,  # 50 minutes ago
         )
         # Total lifetime = 3600s, remaining = 1200s (33%), so it's old
         assert token.is_old()
 
     def test_token_is_not_old_when_fresh(self) -> None:
-        """Test that a token is not old when more than 50% lifetime remains."""
+        """Test that a token is not old when more than 25% lifetime remains."""
         current_time = time.time()
         # Token with 1 hour lifetime, 40 minutes remaining (67%)
         token = TokenData(
@@ -514,9 +514,9 @@ class TestBackgroundTokenRefresh:
         # Set up an old but valid token
         helper._token_data = TokenData(
             access_token="old_token",
-            expires_at=current_time + 1200,  # 20 minutes remaining
+            expires_at=current_time + 600,  # 10 minutes from now
             scheme="Bearer",
-            issued_at=current_time - 2400,  # 40 minutes ago, so it's old
+            issued_at=current_time - 3_000,  # 50 minutes ago
         )
 
         with mock.patch.object(
