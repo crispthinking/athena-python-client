@@ -213,15 +213,6 @@ async def main() -> int:
         audience=audience,
     )
 
-    # Test token acquisition
-    try:
-        logger.info("Acquiring OAuth token...")
-        token = await credential_helper.get_token()
-        logger.info("Successfully acquired token (length: %d)", len(token))
-    except Exception:
-        logger.exception("Failed to acquire OAuth token")
-        return 1
-
     # Configure client options
     options = AthenaOptions(
         host=host,

@@ -1,8 +1,10 @@
 """Channel creation utilities for the Athena client."""
 
-import asyncio
 import json
+import logging
+import threading
 import time
+from dataclasses import dataclass
 from typing import override
 
 import grpc
@@ -15,38 +17,47 @@ from resolver_athena_client.client.exceptions import (
     OAuthError,
 )
 
+logger = logging.getLogger(__name__)
 
-class TokenMetadataPlugin(grpc.AuthMetadataPlugin):
-    """Plugin that adds authorization token to gRPC metadata."""
 
-    def __init__(self, token: str) -> None:
-        """Initialize the plugin with the auth token.
+@dataclass(frozen=True)
+class TokenData:
+    """Immutable snapshot of token state."""
 
-        Args:
-        ----
-            token: The authorization token to add to requests
+    access_token: str
+    expires_at: float
+    scheme: str
+    issued_at: float
+    proactive_refresh_threshold: float = 0.25
+
+    def __post_init__(self) -> None:
+        """Validate that proactive_refresh_threshold is between 0 and 1."""
+        if (
+            self.proactive_refresh_threshold <= 0
+            or self.proactive_refresh_threshold >= 1
+        ):
+            msg = "proactive_refresh_threshold must be between 0 and 1"
+            raise ValueError(msg)
+
+    def is_valid(self) -> bool:
+        """Check if this token is still valid (with a 30-second buffer)."""
+        return time.time() < (self.expires_at - 30)
+
+    def is_old(self) -> bool:
+        """Check if this token should be proactively refreshed.
+
+        A token is considered "old" if less than the
+        proactive_refresh_threshold of its lifetime remains. This allows
+        background refresh to happen before expiry while the token is still
+        usable.
 
         """
-        self._token: str = token
-
-    @override
-    def __call__(
-        self,
-        _: grpc.AuthMetadataContext,
-        callback: grpc.AuthMetadataPluginCallback,
-    ) -> None:
-        """Pass authentication metadata to the provided callback.
-
-        This method will be invoked asynchronously in a separate thread.
-
-        Args:
-        ----
-            callback: An AuthMetadataPluginCallback to be invoked either
-            synchronously or asynchronously.
-
-        """
-        metadata = (("authorization", f"Token {self._token}"),)
-        callback(metadata, None)
+        current_time = time.time()
+        total_lifetime = self.expires_at - self.issued_at
+        time_remaining = self.expires_at - current_time
+        return time_remaining < (
+            total_lifetime * self.proactive_refresh_threshold
+        )
 
 
 class CredentialHelper:
@@ -58,6 +69,7 @@ class CredentialHelper:
         client_secret: str,
         auth_url: str = "https://crispthinking.auth0.com/oauth/token",
         audience: str = "crisp-athena-live",
+        proactive_refresh_threshold: float = 0.25,
     ) -> None:
         """Initialize the credential helper.
 
@@ -67,6 +79,8 @@ class CredentialHelper:
             client_secret: OAuth client secret
             auth_url: OAuth token endpoint URL
             audience: OAuth audience
+            proactive_refresh_threshold: Fraction of token lifetime to trigger
+                proactive refresh (default 0.25 for 25%)
 
         """
         if not client_id:
@@ -80,55 +94,117 @@ class CredentialHelper:
         self._client_secret: str = client_secret
         self._auth_url: str = auth_url
         self._audience: str = audience
-        self._token: str | None = None
-        self._token_expires_at: float | None = None
-        self._lock: asyncio.Lock = asyncio.Lock()
+        self._token_data: TokenData | None = None
+        self._lock: threading.Lock = threading.Lock()
+        self._refresh_thread: threading.Thread | None = None
 
-    async def get_token(self) -> str:
-        """Get a valid authentication token.
+        if proactive_refresh_threshold <= 0 or proactive_refresh_threshold >= 1:
+            msg = "proactive_refresh_threshold must be a float between 0 and 1"
+            raise ValueError(msg)
 
-        This method will return a cached token if it's still valid,
-        or fetch a new token if needed.
+        self._proactive_refresh_threshold: float = proactive_refresh_threshold
+
+    def get_token(self) -> TokenData:
+        """Get valid token data, refreshing if necessary.
 
         Returns
         -------
-            A valid authentication token
+            A valid ``TokenData`` containing access token, expiry, and scheme
 
         Raises
         ------
             OAuthError: If token acquisition fails
-            TokenExpiredError: If token has expired and refresh fails
+            RuntimeError: If token is unexpectedly None after refresh
 
         """
-        async with self._lock:
-            if self._is_token_valid():
-                if self._token is None:
-                    msg = "Token should be valid but is None"
-                    raise RuntimeError(msg)
-                return self._token
+        token_data = self._token_data
 
-            await self._refresh_token()
-            if self._token is None:
-                msg = "Token refresh failed"
+        # Fast path: token is valid and fresh
+        if token_data is not None and token_data.is_valid():
+            # If token is old, trigger background refresh
+            if token_data.is_old():
+                self._start_background_refresh()
+            return token_data
+
+        # Slow path: token is expired or missing, must block
+        with self._lock:
+            token_data = self._token_data
+            if token_data is not None and token_data.is_valid():
+                return token_data
+
+            self._refresh_token()
+
+            token_data = self._token_data
+            if token_data is None:
+                msg = "Token is unexpectedly None after refresh"
                 raise RuntimeError(msg)
-            return self._token
+            return token_data
 
-    def _is_token_valid(self) -> bool:
-        """Check if the current token is valid and not expired.
+    def _start_background_refresh(self) -> None:
+        """Start a background thread to refresh the token.
 
-        Returns
-        -------
-            True if token is valid, False otherwise
+        Only starts a new thread if one isn't already running.
 
+        This method is safe to call multiple times - it only starts a new
+        thread if no refresh is currently in progress.
         """
-        if not self._token or not self._token_expires_at:
-            return False
+        # Quick check without lock - if refresh thread exists and is
+        # alive, skip
+        if self._refresh_thread is not None and self._refresh_thread.is_alive():
+            return
 
-        # Add 30 second buffer before expiration
-        return time.time() < (self._token_expires_at - 30)
+        # Try to acquire lock and start refresh
+        if self._lock.acquire(blocking=False):
+            try:
+                # Double-check: another thread might have started refresh,
+                # or the token may have been refreshed.
+                refresh_not_active = (
+                    self._refresh_thread is None
+                    or not self._refresh_thread.is_alive()
+                )
+                token_needs_refresh = (
+                    self._token_data is None or self._token_data.is_old()
+                )
+                refresh_needed = refresh_not_active and token_needs_refresh
+                if refresh_needed:
+                    self._refresh_thread = threading.Thread(
+                        target=self._background_refresh,
+                        daemon=True,
+                    )
+                    self._refresh_thread.start()
+            finally:
+                self._lock.release()
 
-    async def _refresh_token(self) -> None:
+    def _background_refresh(self) -> None:
+        """Background thread target for token refresh.
+
+        Acquires the lock and refreshes the token. Errors are logged
+        but silently ignored since the next foreground request will
+        retry if needed.
+        """
+        with self._lock:
+            # Check if token still needs refresh (prevent stampede)
+            token_data = self._token_data
+            if token_data is not None and not token_data.is_old():
+                # Token was already refreshed by another thread
+                return
+
+            try:
+                self._refresh_token()
+            except Exception as e:  # noqa: BLE001
+                # Log but don't raise - background refresh failures
+                # are recoverable (next get_token() will retry)
+                logger.debug(
+                    "Background token refresh failed, "
+                    "will retry on next request: %s",
+                    e,
+                )
+
+    def _refresh_token(self) -> None:
         """Refresh the authentication token by making an OAuth request.
+
+        This is a synchronous call (suitable for the gRPC metadata-plugin
+        thread) and must be called while ``self._lock`` is held.
 
         Raises
         ------
@@ -145,8 +221,8 @@ class CredentialHelper:
         headers = {"content-type": "application/json"}
 
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
+            with httpx.Client() as client:
+                response = client.post(
                     self._auth_url,
                     json=payload,
                     headers=headers,
@@ -154,12 +230,19 @@ class CredentialHelper:
                 )
                 _ = response.raise_for_status()
 
-                token_data = response.json()
-                self._token = token_data["access_token"]
-                expires_in = token_data.get(
-                    "expires_in", 3600
-                )  # Default 1 hour
-                self._token_expires_at = time.time() + expires_in
+            raw = response.json()
+            access_token: str = raw["access_token"]
+            expires_in: int = raw.get("expires_in", 3600)  # Default 1 hour
+            token_type = raw.get("token_type", "Bearer")
+            scheme: str = token_type.strip() if token_type else "Bearer"
+            current_time = time.time()
+            self._token_data = TokenData(
+                access_token=access_token,
+                expires_at=current_time + expires_in,
+                scheme=scheme,
+                issued_at=current_time,
+                proactive_refresh_threshold=self._proactive_refresh_threshold,
+            )
 
         except httpx.HTTPStatusError as e:
             error_detail = ""
@@ -190,11 +273,52 @@ class CredentialHelper:
             msg = f"Unexpected error during OAuth: {e}"
             raise OAuthError(msg) from e
 
-    async def invalidate_token(self) -> None:
+    def invalidate_token(self) -> None:
         """Invalidate the current token to force a refresh on next use."""
-        async with self._lock:
-            self._token = None
-            self._token_expires_at = None
+        with self._lock:
+            self._token_data = None
+
+
+class _AutoRefreshTokenAuthMetadataPlugin(grpc.AuthMetadataPlugin):
+    """gRPC auth plugin that fetches a fresh token for every RPC."""
+
+    def __init__(self, credential_helper: CredentialHelper) -> None:
+        """Initialize with a credential helper.
+
+        Args:
+        ----
+            credential_helper: The helper that manages token lifecycle
+
+        """
+        self._credential_helper: CredentialHelper = credential_helper
+
+    @override
+    def __call__(
+        self,
+        _: grpc.AuthMetadataContext,
+        callback: grpc.AuthMetadataPluginCallback,
+    ) -> None:
+        """Supply authorization metadata for an RPC.
+
+        Called by the gRPC runtime on a background thread before each
+        RPC.  On success the token is forwarded using the scheme from
+        the OAuth token response (typically ``Bearer``); on failure
+        the error is passed to the callback so gRPC can surface it as
+        an RPC error.
+
+        Args:
+        ----
+            callback: gRPC callback to receive metadata or an error
+
+        """
+        try:
+            token_data = self._credential_helper.get_token()
+            scheme = token_data.scheme
+            token = token_data.access_token
+            metadata = (("authorization", f"{scheme} {token}"),)
+            callback(metadata, None)
+        except Exception as err:  # noqa: BLE001
+            callback((), err)
 
 
 async def create_channel_with_credentials(
@@ -215,19 +339,17 @@ async def create_channel_with_credentials(
     Raises:
     ------
         InvalidHostError: If host is empty
-        OAuthError: If OAuth authentication fails
 
     """
     if not host:
         raise InvalidHostError(InvalidHostError.default_message)
 
-    # Get a valid token from the credential helper
-    token = await credential_helper.get_token()
-
-    # Create credentials with token authentication
+    # Create credentials with per-RPC token refresh
     credentials = grpc.composite_channel_credentials(
         grpc.ssl_channel_credentials(),
-        grpc.access_token_call_credentials(token),
+        grpc.metadata_call_credentials(
+            _AutoRefreshTokenAuthMetadataPlugin(credential_helper)
+        ),
     )
 
     # Configure gRPC options for persistent connections
