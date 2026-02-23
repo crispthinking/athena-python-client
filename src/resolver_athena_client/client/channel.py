@@ -51,11 +51,6 @@ class TokenData:
         background refresh to happen before expiry while the token is still
         usable.
 
-        Args:
-        ----
-            proactive_refresh_threshold: Fraction of token lifetime past which
-                to trigger proactive refresh (e.g. 0.25 for 25%)
-
         """
         current_time = time.time()
         total_lifetime = self.expires_at - self.issued_at
