@@ -7,6 +7,16 @@ import uuid
 from collections.abc import AsyncGenerator, AsyncIterable, AsyncIterator
 
 import grpc
+from resolver_athena_client.generated.athena.models_pb2 import (
+    ClassificationInput,
+    ClassificationOutput,
+    ClassifyRequest,
+    ClassifyResponse,
+    HashType,
+    ImageFormat,
+    ImageHash,
+    RequestEncoding,
+)
 from typing_extensions import Self
 
 from resolver_athena_client.client.athena_options import AthenaOptions
@@ -18,16 +28,6 @@ from resolver_athena_client.client.transformers.core import (
 )
 from resolver_athena_client.client.transformers.worker_batcher import (
     WorkerBatcher,
-)
-from resolver_athena_client.generated.athena.models_pb2 import (
-    ClassificationInput,
-    ClassificationOutput,
-    ClassifyRequest,
-    ClassifyResponse,
-    HashType,
-    ImageFormat,
-    ImageHash,
-    RequestEncoding,
 )
 from resolver_athena_client.grpc_wrappers.classifier_service import (
     ClassifierServiceClient,

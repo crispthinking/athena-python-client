@@ -1,9 +1,9 @@
 """Tests for ImageData model."""
 
 import pytest
+from resolver_athena_client.generated.athena.models_pb2 import ImageFormat
 
 from resolver_athena_client.client.models import ImageData
-from resolver_athena_client.generated.athena.models_pb2 import ImageFormat
 
 
 def test_image_data_detects_png_format() -> None:

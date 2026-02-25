@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, final
 
 from google.protobuf.empty_pb2 import Empty
 from grpc import aio
-
 from resolver_athena_client.generated.athena.athena_pb2_grpc import (
     ClassifierServiceStub,
 )

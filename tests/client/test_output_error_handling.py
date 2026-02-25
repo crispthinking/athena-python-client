@@ -1,6 +1,13 @@
 """Test classification output error handling functionality."""
 
 import pytest
+from resolver_athena_client.generated.athena.models_pb2 import (
+    Classification,
+    ClassificationError,
+    ClassificationOutput,
+    ClassifyResponse,
+    ErrorCode,
+)
 
 from resolver_athena_client.client.exceptions import ClassificationOutputError
 from resolver_athena_client.client.utils import (
@@ -9,13 +16,6 @@ from resolver_athena_client.client.utils import (
     has_output_errors,
     log_output_errors,
     process_classification_outputs,
-)
-from resolver_athena_client.generated.athena.models_pb2 import (
-    Classification,
-    ClassificationError,
-    ClassificationOutput,
-    ClassifyResponse,
-    ErrorCode,
 )
 
 # Test constants

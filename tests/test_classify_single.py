@@ -7,11 +7,6 @@ import cv2 as cv
 import grpc.aio
 import numpy as np
 import pytest
-
-from resolver_athena_client.client.athena_client import AthenaClient
-from resolver_athena_client.client.athena_options import AthenaOptions
-from resolver_athena_client.client.exceptions import AthenaError
-from resolver_athena_client.client.models import ImageData
 from resolver_athena_client.generated.athena.models_pb2 import (
     Classification,
     ClassificationError,
@@ -23,6 +18,11 @@ from resolver_athena_client.generated.athena.models_pb2 import (
     ImageHash,
     RequestEncoding,
 )
+
+from resolver_athena_client.client.athena_client import AthenaClient
+from resolver_athena_client.client.athena_options import AthenaOptions
+from resolver_athena_client.client.exceptions import AthenaError
+from resolver_athena_client.client.models import ImageData
 
 
 @pytest.fixture

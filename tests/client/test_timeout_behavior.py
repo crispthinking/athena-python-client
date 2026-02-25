@@ -11,14 +11,14 @@ import grpc
 import pytest
 from grpc import StatusCode
 from grpc.aio._call import AioRpcError
-
-from resolver_athena_client.client.athena_client import AthenaClient
-from resolver_athena_client.client.athena_options import AthenaOptions
-from resolver_athena_client.client.models import ImageData
 from resolver_athena_client.generated.athena.models_pb2 import (
     ClassificationOutput,
     ClassifyResponse,
 )
+
+from resolver_athena_client.client.athena_client import AthenaClient
+from resolver_athena_client.client.athena_options import AthenaOptions
+from resolver_athena_client.client.models import ImageData
 
 
 class MockGrpcError(AioRpcError):

@@ -3,14 +3,14 @@
 import asyncio
 
 import pytest
-
-from resolver_athena_client.client.transformers.worker_batcher import (
-    WorkerBatcher,
-)
 from resolver_athena_client.generated.athena.models_pb2 import (
     ClassificationInput,
     ClassifyRequest,
     RequestEncoding,
+)
+
+from resolver_athena_client.client.transformers.worker_batcher import (
+    WorkerBatcher,
 )
 
 # Test constants for various batch scenarios

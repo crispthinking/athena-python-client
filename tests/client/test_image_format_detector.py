@@ -1,11 +1,11 @@
 """Tests for image format detection."""
 
 import pytest
+from resolver_athena_client.generated.athena.models_pb2 import ImageFormat
 
 from resolver_athena_client.client.image_format_detector import (
     detect_image_format,
 )
-from resolver_athena_client.generated.athena.models_pb2 import ImageFormat
 
 
 def test_detect_png_format() -> None:

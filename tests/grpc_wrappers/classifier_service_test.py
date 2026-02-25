@@ -2,11 +2,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from google.protobuf.empty_pb2 import Empty
-
 from resolver_athena_client.generated.athena.models_pb2 import (
     ClassifyResponse,
     ListDeploymentsResponse,
 )
+
 from resolver_athena_client.grpc_wrappers.classifier_service import (
     ClassifierServiceClient,
 )

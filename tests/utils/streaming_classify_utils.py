@@ -3,6 +3,11 @@ import time
 import typing
 from collections.abc import AsyncIterator
 
+from resolver_athena_client.generated.athena.models_pb2 import (
+    ClassificationOutput,
+    ClassifyResponse,
+)
+
 from resolver_athena_client.client.athena_client import AthenaClient
 from resolver_athena_client.client.athena_options import AthenaOptions
 from resolver_athena_client.client.channel import (
@@ -14,10 +19,6 @@ from resolver_athena_client.client.utils import (
     get_output_error_summary,
     has_output_errors,
     process_classification_outputs,
-)
-from resolver_athena_client.generated.athena.models_pb2 import (
-    ClassificationOutput,
-    ClassifyResponse,
 )
 
 T = typing.TypeVar("T")

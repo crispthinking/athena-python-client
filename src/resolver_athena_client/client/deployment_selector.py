@@ -4,11 +4,11 @@ import logging
 from types import TracebackType
 
 import grpc
-from typing_extensions import Self
-
 from resolver_athena_client.generated.athena.models_pb2 import (
     ListDeploymentsResponse,
 )
+from typing_extensions import Self
+
 from resolver_athena_client.grpc_wrappers.classifier_service import (
     ClassifierServiceClient,
 )

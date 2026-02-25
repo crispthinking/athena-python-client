@@ -11,10 +11,10 @@ import enum
 import brotli
 import cv2 as cv
 import numpy as np
+from resolver_athena_client.generated.athena.models_pb2 import ImageFormat
 
 from resolver_athena_client.client.consts import EXPECTED_HEIGHT, EXPECTED_WIDTH
 from resolver_athena_client.client.models import ImageData
-from resolver_athena_client.generated.athena.models_pb2 import ImageFormat
 
 # Global optimization constants
 _target_size = (EXPECTED_WIDTH, EXPECTED_HEIGHT)
