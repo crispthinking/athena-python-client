@@ -1,5 +1,6 @@
 import os
 import uuid
+from typing import cast
 
 import cv2 as cv
 import numpy as np
@@ -111,7 +112,7 @@ def valid_formatted_image(
 
     Images are cached to disk to avoid regenerating on every test run.
     """
-    image_format = request.param
+    image_format = cast("str", request.param)
     image_dir = tmp_path_factory.mktemp("images")
     base_image = _create_base_test_image_opencv(EXPECTED_WIDTH, EXPECTED_HEIGHT)
 

@@ -410,8 +410,8 @@ class AthenaClient:
             ) -> None:
                 """Safely shutdown a single worker, handling mocks/errors."""
                 try:
-                    shutdown_method = getattr(worker_batcher, "shutdown", None)
-                    if shutdown_method and callable(shutdown_method):
+                    if hasattr(worker_batcher, "shutdown"):
+                        shutdown_method = worker_batcher.shutdown
                         shutdown_coro = shutdown_method()
                         # Only await if it's actually a coroutine (not a mock)
                         if asyncio.iscoroutine(shutdown_coro):
@@ -421,8 +421,7 @@ class AthenaClient:
                             self.logger.debug(
                                 "Skipping non-coroutine shutdown method"
                             )
-                    else:
-                        self.logger.debug("Worker has no shutdown method")
+
                 except (AttributeError, TypeError):
                     # Worker doesn't have shutdown method or it's not callable
                     self.logger.debug("Worker shutdown failed, skipping")

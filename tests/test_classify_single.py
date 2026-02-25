@@ -1,6 +1,7 @@
 """Tests for the classify_single method in AthenaClient."""
 
 import uuid
+from typing import cast
 from unittest.mock import AsyncMock, Mock
 
 import cv2 as cv
@@ -93,8 +94,11 @@ async def test_classify_single_success(
     assert not result.HasField("error")
 
     # Verify the call was made with correct parameters
-    athena_client.classifier.classify_single.assert_called_once()
-    call_args = athena_client.classifier.classify_single.call_args[0][0]
+    classify_single_mock = athena_client.classifier.classify_single
+    classify_single_mock.assert_called_once()
+    call_args = cast(
+        "ClassificationInput", classify_single_mock.call_args[0][0]
+    )
 
     assert isinstance(call_args, ClassificationInput)
     assert call_args.affiliate == "test-affiliate"
@@ -130,7 +134,10 @@ async def test_classify_single_with_correlation_id(
     _ = await athena_client.classify_single(copied_image_data)
 
     # Verify correlation ID was used
-    call_args = athena_client.classifier.classify_single.call_args[0][0]
+    classify_single_mock = athena_client.classifier.classify_single
+    call_args = cast(
+        "ClassificationInput", classify_single_mock.call_args[0][0]
+    )
     assert call_args.correlation_id == custom_correlation_id
 
 
@@ -152,13 +159,15 @@ async def test_classify_single_auto_correlation_id(
     _ = await athena_client.classify_single(sample_image_data)
 
     # Verify a correlation ID was generated
-    call_args = athena_client.classifier.classify_single.call_args[0][0]
-    assert call_args.correlation_id is not None
-    assert len(call_args.correlation_id) > 0
+    classify_single_mock = athena_client.classifier.classify_single
+    call_args = cast(
+        "ClassificationInput", classify_single_mock.call_args[0][0]
+    )
+    correlation_id = call_args.correlation_id
+    assert correlation_id is not None
+    assert len(correlation_id) > 0
     # Should be a valid UUID format
-    _ = uuid.UUID(
-        call_args.correlation_id
-    )  # This will raise if not a valid UUID
+    _ = uuid.UUID(correlation_id)  # This will raise if not a valid UUID
 
 
 @pytest.mark.asyncio
@@ -182,7 +191,10 @@ async def test_classify_single_with_compression(
     _ = await athena_client.classify_single(sample_image_data)
 
     # Verify compression settings were applied
-    call_args = athena_client.classifier.classify_single.call_args[0][0]
+    classify_single_mock = athena_client.classifier.classify_single
+    call_args = cast(
+        "ClassificationInput", classify_single_mock.call_args[0][0]
+    )
     assert call_args.encoding == RequestEncoding.REQUEST_ENCODING_BROTLI
     # Data should be compressed - check it's the same as the modified image data
     assert call_args.data == sample_image_data.data
@@ -218,7 +230,10 @@ async def test_classify_single_error_handling(
     _ = await athena_client.classify_single(valid_image_data)
 
     # Verify resizing was processed (encoding should be uncompressed)
-    call_args = athena_client.classifier.classify_single.call_args[0][0]
+    classify_single_mock = athena_client.classifier.classify_single
+    call_args = cast(
+        "ClassificationInput", classify_single_mock.call_args[0][0]
+    )
     assert call_args.encoding == RequestEncoding.REQUEST_ENCODING_UNCOMPRESSED
 
 
@@ -284,7 +299,8 @@ async def test_classify_single_timeout_parameter(
     _ = await athena_client.classify_single(sample_image_data)
 
     # Verify timeout was passed
-    call_kwargs = athena_client.classifier.classify_single.call_args[1]
+    classify_single_mock = athena_client.classifier.classify_single
+    call_kwargs = cast("dict[str, float]", classify_single_mock.call_args[1])
     expected_timeout = 30.0  # From the fixture options
     assert call_kwargs["timeout"] == expected_timeout
 
@@ -314,7 +330,10 @@ async def test_classify_single_multiple_hashes(
     _ = await athena_client.classify_single(image_data)
 
     # Verify all hashes were included
-    call_args = athena_client.classifier.classify_single.call_args[0][0]
+    classify_single_mock = athena_client.classifier.classify_single
+    call_args = cast(
+        "ClassificationInput", classify_single_mock.call_args[0][0]
+    )
     expected_hash_count = 3  # Original + 2 transformations
     assert len(call_args.hashes) == expected_hash_count
     for hash_obj in call_args.hashes:
@@ -405,7 +424,10 @@ async def test_classify_single_with_png_format(
     _ = await athena_client.classify_single(image_data)
 
     # Verify PNG format was detected and sent
-    call_args = athena_client.classifier.classify_single.call_args[0][0]
+    classify_single_mock = athena_client.classifier.classify_single
+    call_args = cast(
+        "ClassificationInput", classify_single_mock.call_args[0][0]
+    )
     assert call_args.format == ImageFormat.IMAGE_FORMAT_PNG
 
 
@@ -431,7 +453,10 @@ async def test_classify_single_with_jpeg_format(
     _ = await athena_client.classify_single(image_data)
 
     # Verify JPEG format was detected and sent
-    call_args = athena_client.classifier.classify_single.call_args[0][0]
+    classify_single_mock = athena_client.classifier.classify_single
+    call_args = cast(
+        "ClassificationInput", classify_single_mock.call_args[0][0]
+    )
     assert call_args.format == ImageFormat.IMAGE_FORMAT_JPEG
 
 
@@ -456,6 +481,9 @@ async def test_classify_single_never_sends_unspecified(
     _ = await athena_client.classify_single(unknown_data)
 
     # Verify UNSPECIFIED was converted to RAW_UINT8
-    call_args = athena_client.classifier.classify_single.call_args[0][0]
+    classify_single_mock = athena_client.classifier.classify_single
+    call_args = cast(
+        "ClassificationInput", classify_single_mock.call_args[0][0]
+    )
     assert call_args.format != ImageFormat.IMAGE_FORMAT_UNSPECIFIED
     assert call_args.format == ImageFormat.IMAGE_FORMAT_RAW_UINT8_BGR
