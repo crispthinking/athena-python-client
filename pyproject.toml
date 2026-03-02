@@ -24,8 +24,7 @@ documentation = "https://crispthinking.github.io/athena-python-client/"
 dependencies = [
     "anyio>=4.10.0",
     "brotli>=1.1.0",
-    "grpcio==1.78.0",
-    "grpcio-tools==1.78.0",
+    "grpcio>=1.78.0,!=1.78.1,<2.0.0",
     "httpx>=0.25.0",
     "numpy>=2.2.6",
     "opencv-python-headless>=4.13.0.92",
@@ -44,6 +43,7 @@ docs = [
 dev = [
     "basedpyright>=1.31.4",
     "brotli-stubs>=1.1.0",
+    "grpcio-tools>=1.78.0,!=1.78.1,<2.0.0",
     "load-dotenv>=0.1.0",
     "mypy-protobuf>=3.6.0",
     "pre-commit>=4.2.0",

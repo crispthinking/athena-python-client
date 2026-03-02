@@ -1277,7 +1277,6 @@ dependencies = [
     { name = "anyio" },
     { name = "brotli" },
     { name = "grpcio" },
-    { name = "grpcio-tools" },
     { name = "httpx" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
@@ -1288,6 +1287,7 @@ dependencies = [
 dev = [
     { name = "basedpyright" },
     { name = "brotli-stubs" },
+    { name = "grpcio-tools" },
     { name = "load-dotenv" },
     { name = "mypy-protobuf" },
     { name = "pre-commit" },
@@ -1315,8 +1315,7 @@ docs = [
 requires-dist = [
     { name = "anyio", specifier = ">=4.10.0" },
     { name = "brotli", specifier = ">=1.1.0" },
-    { name = "grpcio", specifier = "==1.78.0" },
-    { name = "grpcio-tools", specifier = "==1.78.0" },
+    { name = "grpcio", specifier = ">=1.78.0,!=1.78.1,<2.0.0" },
     { name = "httpx", specifier = ">=0.25.0" },
     { name = "numpy", specifier = ">=2.2.6" },
     { name = "opencv-python-headless", specifier = ">=4.13.0.92" },
@@ -1326,6 +1325,7 @@ requires-dist = [
 dev = [
     { name = "basedpyright", specifier = ">=1.31.4" },
     { name = "brotli-stubs", specifier = ">=1.1.0" },
+    { name = "grpcio-tools", specifier = ">=1.78.0,!=1.78.1,<2.0.0" },
     { name = "load-dotenv", specifier = ">=0.1.0" },
     { name = "mypy-protobuf", specifier = ">=3.6.0" },
     { name = "pre-commit", specifier = ">=4.2.0" },
