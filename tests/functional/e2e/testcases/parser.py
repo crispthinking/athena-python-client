@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 # Path to the shared testcases directory in athena-protobufs
@@ -21,6 +22,12 @@ class AthenaTestCase:
             zip(classification_labels, expected_output, strict=True)
         )
         self.classification_labels: list[str] = classification_labels
+
+
+def load_test_cases_by_env() -> list[AthenaTestCase]:
+    return load_test_cases(
+        os.getenv("ATHENA_E2E_TESTCASE_DIR", "integrator_sample")
+    )
 
 
 def load_test_cases(dirname: str = "benign_model") -> list[AthenaTestCase]:
