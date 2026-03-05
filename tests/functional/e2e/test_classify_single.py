@@ -11,10 +11,10 @@ from resolver_athena_client.client.channel import (
 from resolver_athena_client.client.models import ImageData
 from tests.functional.e2e.testcases.parser import (
     AthenaTestCase,
-    load_test_cases,
+    load_test_cases_by_env,
 )
 
-TEST_CASES = load_test_cases("integrator_sample")
+TEST_CASES = load_test_cases_by_env()
 
 FP_ERROR_TOLERANCE = 1e-4
 
