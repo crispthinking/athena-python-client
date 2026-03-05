@@ -2,6 +2,8 @@ import json
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 # Path to the shared testcases directory in athena-protobufs
 _REPO_ROOT = Path(__file__).parent.parent.parent.parent.parent
 TESTCASES_DIR = _REPO_ROOT / "athena-protobufs" / "testcases"
@@ -25,6 +27,7 @@ class AthenaTestCase:
 
 
 def load_test_cases_by_env() -> list[AthenaTestCase]:
+    _ = load_dotenv()
     return load_test_cases(
         os.getenv("ATHENA_E2E_TESTCASE_DIR", "integrator_sample")
     )
