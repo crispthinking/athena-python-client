@@ -175,7 +175,6 @@ class StreamingSender:
     """
 
     def __init__(self, grpc_channel: Channel, options: AthenaOptions) -> None:
-        self._results: list[ClassificationOutput] = []
         self._request_queue: Queue[ImageData] = Queue()
         self._pending_results: dict[str, Future[ClassificationOutput]] = {}
 
@@ -200,7 +199,6 @@ class StreamingSender:
                             output.correlation_id
                         )
                         future.set_result(output)
-                    self._results.append(output)
 
     async def _send_from_queue(self) -> AsyncIterator[ImageData]:
         """Async generator to yield requests from the queue."""
