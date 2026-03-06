@@ -91,8 +91,7 @@ async def credential_helper() -> CredentialHelper:
     )
 
 
-@pytest.fixture(scope="session")
-def athena_options() -> AthenaOptions:
+def _load_options() -> AthenaOptions:
     _ = load_dotenv()
     host = os.getenv("ATHENA_HOST", "localhost")
 
@@ -113,6 +112,11 @@ def athena_options() -> AthenaOptions:
         affiliate=affiliate,
         compression_quality=2,
     )
+
+
+@pytest.fixture
+def athena_options() -> AthenaOptions:
+    return _load_options()
 
 
 @pytest.fixture(scope="session", params=SUPPORTED_TEST_FORMATS)
@@ -222,11 +226,12 @@ class StreamingSender:
 
 @pytest_asyncio.fixture(scope="session", loop_scope="session")
 async def streaming_sender(
-    athena_options: AthenaOptions, credential_helper: CredentialHelper
+    credential_helper: CredentialHelper,
 ) -> StreamingSender:
     """Fixture to provide a helper for sending over a streaming connection."""
     # Create gRPC channel with credentials
+    opts = _load_options()
     channel = await create_channel_with_credentials(
-        athena_options.host, credential_helper
+        opts.host, credential_helper
     )
-    return StreamingSender(channel, athena_options)
+    return StreamingSender(channel, opts)
