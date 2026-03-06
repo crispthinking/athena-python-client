@@ -1,3 +1,4 @@
+import asyncio
 import os
 import uuid
 from asyncio import Future, Queue, Task, create_task
@@ -214,7 +215,7 @@ class StreamingSender:
 
         if image_data.correlation_id is None:
             image_data.correlation_id = str(uuid.uuid4())
-        future: Future[ClassificationOutput] = Future()
+        future = asyncio.get_event_loop().create_future()
         self._pending_results[image_data.correlation_id] = future
 
         await self._request_queue.put(image_data)
