@@ -162,6 +162,8 @@ ATHENA_NON_EXISTENT_AFFILIATE=non-existent-affiliate-id (default:
 thisaffiliatedoesnotexist123) - this is used to test error handling.
 ATHENA_NON_PERMITTED_AFFILIATE=non-permitted-affiliate-id (default:
 thisaffiliatedoesnothaveathenaenabled) - this is used to test error handling.
+ATHENA_E2E_TESTCASE_DIR=test-case-directory (default: integrator_sample) - this is the test case directory to use for the e2e tests.
+See E2E Tests section below for more details.
 ```
 
 Then run the functional tests with:
@@ -170,8 +172,18 @@ Then run the functional tests with:
 pytest -m functional
 ```
 
-To exclude the e2e tests, which require usage of the live classifier and
-therefore are unsuitable for regular development runs, use:
+#### E2E Tests
+
+The e2e tests assert that the API returns some expected _scores_ rather than
+exercising different API paths. As such, they are dependent on the classifier
+that you are calling through the API. Right now, there are 2 types of
+classifier, benign and live. By default, the tests will run the
+`integrator_sample` test set, which uses the live classifier. If you wish to
+use the benign classifier instead, you may set the `ATHENA_E2E_TESTCASE_DIR`
+environment variable to `benign_model`.
+
+Alternatively, you may disable these tests altogether, by excluding tests that
+have the `e2e` marker, something like this:
 
 ```bash
 pytest -m 'functional and not e2e'

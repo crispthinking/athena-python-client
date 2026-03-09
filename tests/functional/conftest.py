@@ -1,18 +1,31 @@
+import asyncio
 import os
 import uuid
+from asyncio import Future, Queue, Task, create_task
+from collections.abc import AsyncIterator
+from copy import deepcopy
 
 import cv2 as cv
 import numpy as np
 import pytest
 import pytest_asyncio
 from dotenv import load_dotenv
+from grpc.aio import Channel
 
+from resolver_athena_client.client.athena_client import AthenaClient
 from resolver_athena_client.client.athena_options import AthenaOptions
-from resolver_athena_client.client.channel import CredentialHelper
+from resolver_athena_client.client.channel import (
+    CredentialHelper,
+    create_channel_with_credentials,
+)
 from resolver_athena_client.client.consts import (
     EXPECTED_HEIGHT,
     EXPECTED_WIDTH,
     MAX_DEPLOYMENT_ID_LENGTH,
+)
+from resolver_athena_client.client.models.input_model import ImageData
+from resolver_athena_client.generated.athena.models_pb2 import (
+    ClassificationOutput,
 )
 
 
@@ -79,8 +92,7 @@ async def credential_helper() -> CredentialHelper:
     )
 
 
-@pytest.fixture
-def athena_options() -> AthenaOptions:
+def _load_options() -> AthenaOptions:
     _ = load_dotenv()
     host = os.getenv("ATHENA_HOST", "localhost")
 
@@ -99,7 +111,13 @@ def athena_options() -> AthenaOptions:
         timeout=120.0,  # Maximum duration, not forced timeout
         keepalive_interval=30.0,  # Longer intervals for persistent streams
         affiliate=affiliate,
+        compression_quality=2,
     )
+
+
+@pytest.fixture
+def athena_options() -> AthenaOptions:
+    return _load_options()
 
 
 @pytest.fixture(scope="session", params=SUPPORTED_TEST_FORMATS)
@@ -144,3 +162,75 @@ def valid_formatted_image(
         _ = f.write(image_bytes)
 
     return image_bytes
+
+
+class StreamingSender:
+    """Helper class to provide a single-send-like interface with speed
+
+    The class provides a 'send' method that can be passed an imagedata and will
+    send it along a stream, and collect all results into an internal buffer.
+
+    The 'send' method will asynchronously wait for the result and return it,
+    providing an interface that mimics a single request-response call, while
+    under the hood it is using a streaming connection for speed.
+    """
+
+    def __init__(self, grpc_channel: Channel, options: AthenaOptions) -> None:
+        self._request_queue: Queue[ImageData] = Queue()
+        self._pending_results: dict[str, Future[ClassificationOutput]] = {}
+
+        # tests are run in series, so we gain nothing here from waiting for a
+        # batch that will never fill, so just send it immediately for better
+        # latency
+        streaming_options = deepcopy(options)
+        streaming_options.max_batch_size = 1
+
+        self._run_task: Task[None] = create_task(
+            self._run(grpc_channel, streaming_options)
+        )
+
+    async def _run(self, grpc_channel: Channel, options: AthenaOptions) -> None:
+        async with AthenaClient(grpc_channel, options) as client:
+            generator = self._send_from_queue()
+            responses = client.classify_images(generator)
+            async for response in responses:
+                for output in response.outputs:
+                    if output.correlation_id in self._pending_results:
+                        future = self._pending_results.pop(
+                            output.correlation_id
+                        )
+                        future.set_result(output)
+
+    async def _send_from_queue(self) -> AsyncIterator[ImageData]:
+        """Async generator to yield requests from the queue."""
+        while True:
+            if image_data := await self._request_queue.get():
+                yield image_data
+                self._request_queue.task_done()
+
+    async def send(self, image_data: ImageData) -> ClassificationOutput:
+        """Send an image and wait for the corresponding result."""
+        if self._run_task.done():
+            self._run_task.result()
+
+        if image_data.correlation_id is None:
+            image_data.correlation_id = str(uuid.uuid4())
+        future = asyncio.get_event_loop().create_future()
+        self._pending_results[image_data.correlation_id] = future
+
+        await self._request_queue.put(image_data)
+
+        return await future
+
+
+@pytest_asyncio.fixture(scope="session", loop_scope="session")
+async def streaming_sender(
+    credential_helper: CredentialHelper,
+) -> StreamingSender:
+    """Fixture to provide a helper for sending over a streaming connection."""
+    # Create gRPC channel with credentials
+    opts = _load_options()
+    channel = await create_channel_with_credentials(
+        opts.host, credential_helper
+    )
+    return StreamingSender(channel, opts)
