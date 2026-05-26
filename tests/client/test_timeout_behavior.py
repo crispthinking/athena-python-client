@@ -4,7 +4,7 @@ import asyncio
 import contextlib
 import time
 from collections.abc import AsyncIterator
-from typing import Self, TypeVar, override
+from typing import Self, TypeVar, cast, override
 from unittest import mock
 
 import grpc
@@ -82,7 +82,7 @@ async def test_timeout_behavior() -> None:
     with mock.patch(
         "resolver_athena_client.client.athena_client.ClassifierServiceClient"
     ) as mock_client_cls:
-        mock_client = mock_client_cls.return_value
+        mock_client = cast("mock.MagicMock", mock_client_cls.return_value)
         # Create an iterator that will wait longer than the timeout
         mock_classify = SlowMockAsyncIterator(test_responses, delay=0.02)
         mock_client.classify = mock.AsyncMock(return_value=mock_classify)
@@ -138,7 +138,7 @@ async def test_infinite_timeout() -> None:
     with mock.patch(
         "resolver_athena_client.client.athena_client.ClassifierServiceClient"
     ) as mock_client_cls:
-        mock_client = mock_client_cls.return_value
+        mock_client = cast("mock.MagicMock", mock_client_cls.return_value)
         # Create an iterator with significant delays
         mock_classify = SlowMockAsyncIterator(test_responses, delay=0.02)
         mock_client.classify = mock.AsyncMock(return_value=mock_classify)
@@ -202,7 +202,7 @@ async def test_custom_timeout() -> None:
     with mock.patch(
         "resolver_athena_client.client.athena_client.ClassifierServiceClient"
     ) as mock_client_cls:
-        mock_client = mock_client_cls.return_value
+        mock_client = cast("mock.MagicMock", mock_client_cls.return_value)
         # Create an iterator with delays between responses
         mock_classify = SlowMockAsyncIterator(test_responses, delay=0.015)
         mock_client.classify = mock.AsyncMock(return_value=mock_classify)
@@ -258,7 +258,7 @@ async def test_timeout_with_errors() -> None:
     with mock.patch(
         "resolver_athena_client.client.athena_client.ClassifierServiceClient"
     ) as mock_client_cls:
-        mock_client = mock_client_cls.return_value
+        mock_client = cast("mock.MagicMock", mock_client_cls.return_value)
         # Use our custom MockGrpcError
         error = MockGrpcError(
             code=StatusCode.INTERNAL,
@@ -315,7 +315,7 @@ async def test_timeout_with_cancellation() -> None:
     with mock.patch(
         "resolver_athena_client.client.athena_client.ClassifierServiceClient"
     ) as mock_client_cls:
-        mock_client = mock_client_cls.return_value
+        mock_client = cast("mock.MagicMock", mock_client_cls.return_value)
         mock_classify = SlowMockAsyncIterator(test_responses, delay=0.01)
         mock_client.classify = mock.AsyncMock(return_value=mock_classify)
 

@@ -4,6 +4,7 @@ import uuid
 from asyncio import Future, Queue, Task, create_task
 from collections.abc import AsyncIterator
 from copy import deepcopy
+from typing import cast
 
 import cv2 as cv
 import numpy as np
@@ -11,6 +12,9 @@ import pytest
 import pytest_asyncio
 from dotenv import load_dotenv
 from grpc.aio import Channel
+from resolver_athena_client.generated.athena.models_pb2 import (
+    ClassificationOutput,
+)
 
 from resolver_athena_client.client.athena_client import AthenaClient
 from resolver_athena_client.client.athena_options import AthenaOptions
@@ -24,9 +28,6 @@ from resolver_athena_client.client.consts import (
     MAX_DEPLOYMENT_ID_LENGTH,
 )
 from resolver_athena_client.client.models.input_model import ImageData
-from resolver_athena_client.generated.athena.models_pb2 import (
-    ClassificationOutput,
-)
 
 
 def _create_base_test_image_opencv(width: int, height: int) -> np.ndarray:
@@ -129,7 +130,7 @@ def valid_formatted_image(
 
     Images are cached to disk to avoid regenerating on every test run.
     """
-    image_format = request.param
+    image_format = cast("str", request.param)
     image_dir = tmp_path_factory.mktemp("images")
     base_image = _create_base_test_image_opencv(EXPECTED_WIDTH, EXPECTED_HEIGHT)
 
