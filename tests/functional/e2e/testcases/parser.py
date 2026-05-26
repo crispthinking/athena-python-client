@@ -1,6 +1,9 @@
 import json
+import os
 from pathlib import Path
 from typing import TypedDict, cast
+
+from dotenv import load_dotenv
 
 # Path to the shared testcases directory in athena-protobufs
 _REPO_ROOT = Path(__file__).parent.parent.parent.parent.parent
@@ -27,6 +30,13 @@ class AthenaTestCase:
             zip(classification_labels, expected_output, strict=True)
         )
         self.classification_labels: list[str] = classification_labels
+
+
+def load_test_cases_by_env() -> list[AthenaTestCase]:
+    _ = load_dotenv()
+    return load_test_cases(
+        os.getenv("ATHENA_E2E_TESTCASE_DIR", "integrator_sample")
+    )
 
 
 def load_test_cases(dirname: str = "benign_model") -> list[AthenaTestCase]:
