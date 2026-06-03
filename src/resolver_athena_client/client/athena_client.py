@@ -441,7 +441,7 @@ class AthenaClient:
                     for result in results
                     if isinstance(
                         result,
-                        (asyncio.CancelledError, ConnectionError, OSError),
+                        asyncio.CancelledError | ConnectionError | OSError,
                     )
                 ]
 

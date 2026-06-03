@@ -12,9 +12,6 @@ import pytest
 import pytest_asyncio
 from dotenv import load_dotenv
 from grpc.aio import Channel
-from resolver_athena_client.generated.athena.models_pb2 import (
-    ClassificationOutput,
-)
 
 from resolver_athena_client.client.athena_client import AthenaClient
 from resolver_athena_client.client.athena_options import AthenaOptions
@@ -28,6 +25,9 @@ from resolver_athena_client.client.consts import (
     MAX_DEPLOYMENT_ID_LENGTH,
 )
 from resolver_athena_client.client.models.input_model import ImageData
+from resolver_athena_client.generated.athena.models_pb2 import (
+    ClassificationOutput,
+)
 
 
 def _create_base_test_image_opencv(width: int, height: int) -> np.ndarray:
@@ -216,7 +216,9 @@ class StreamingSender:
 
         if image_data.correlation_id is None:
             image_data.correlation_id = str(uuid.uuid4())
-        future = asyncio.get_event_loop().create_future()
+        future: Future[ClassificationOutput] = (
+            asyncio.get_event_loop().create_future()
+        )
         self._pending_results[image_data.correlation_id] = future
 
         await self._request_queue.put(image_data)
