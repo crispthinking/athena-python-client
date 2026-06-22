@@ -48,7 +48,7 @@ This example shows:
             "OAUTH_AUTH_URL", "https://crispthinking.auth0.com/oauth/token"
         )
         audience = os.getenv("OAUTH_AUDIENCE", "crisp-athena-live")
-        host = os.getenv("ATHENA_HOST", "trust-messages-global.crispthinking.com")
+        host = os.getenv("ATHENA_HOST", "api.athena-risk-intelligence.com")
 
         # Create credential helper
         credential_helper = CredentialHelper(

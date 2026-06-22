@@ -21,7 +21,7 @@ class AthenaOptions:
     Attributes
     ----------
         host: The hostname of the Athena service to connect to.
-            Defaults to "localhost".
+            Defaults to "api.athena-risk-intelligence.com".
         resize_images: Whether to automatically resize images before sending.
             When True, images will be resized to the optimal size for the model.
             Defaults to True.
@@ -59,7 +59,7 @@ class AthenaOptions:
 
     """
 
-    host: str = "localhost"
+    host: str = "api.athena-risk-intelligence.com"
     resize_images: bool = True
     compress_images: bool = True
     deployment_id: str = "default"
