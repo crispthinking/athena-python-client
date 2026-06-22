@@ -14,10 +14,14 @@ TEST_CASES = load_test_cases_by_env()
 FP_ERROR_TOLERANCE = 1e-4
 
 
+def _test_id(tc: AthenaTestCase) -> str:
+    return str(tc.id)
+
+
 @pytest.mark.asyncio(loop_scope="session")
 @pytest.mark.functional
 @pytest.mark.e2e
-@pytest.mark.parametrize("test_case", TEST_CASES, ids=lambda tc: tc.id)
+@pytest.mark.parametrize("test_case", TEST_CASES, ids=_test_id)
 async def test_e2e_case(
     streaming_sender: StreamingSender,
     test_case: AthenaTestCase,

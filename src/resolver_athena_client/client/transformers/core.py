@@ -7,6 +7,7 @@ composable.
 
 import asyncio
 import enum
+from typing import cast
 
 import brotli
 import cv2 as cv
@@ -72,7 +73,10 @@ async def resize_image(
             err = "Failed to decode image data for resizing"
             raise ValueError(err)
 
-        if img.shape[0] == EXPECTED_HEIGHT and img.shape[1] == EXPECTED_WIDTH:
+        shape = cast("tuple[int, int, int]", img.shape)
+        height: int = shape[0]
+        width: int = shape[1]
+        if height == EXPECTED_HEIGHT and width == EXPECTED_WIDTH:
             resized_img = img
         else:
             resized_img = cv.resize(

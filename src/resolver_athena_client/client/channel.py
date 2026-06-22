@@ -5,7 +5,7 @@ import logging
 import threading
 import time
 from dataclasses import dataclass
-from typing import override
+from typing import cast, override
 
 import grpc
 import httpx
@@ -230,10 +230,18 @@ class CredentialHelper:
                 )
                 _ = response.raise_for_status()
 
-            raw = response.json()
-            access_token: str = raw["access_token"]
-            expires_in: int = raw.get("expires_in", 3600)  # Default 1 hour
-            token_type = raw.get("token_type", "Bearer")
+            raw = cast("dict[str, object]", response.json())
+            access_token = str(raw["access_token"])
+            expires_in_raw = raw.get("expires_in")
+            expires_in: int = (
+                int(cast("int", expires_in_raw))
+                if expires_in_raw is not None
+                else 3600
+            )
+            token_type_raw = raw.get("token_type")
+            token_type: str = (
+                str(token_type_raw) if token_type_raw is not None else "Bearer"
+            )
             scheme: str = token_type.strip() if token_type else "Bearer"
             current_time = time.time()
             self._token_data = TokenData(
@@ -247,7 +255,7 @@ class CredentialHelper:
         except httpx.HTTPStatusError as e:
             error_detail = ""
             try:
-                error_data = e.response.json()
+                error_data = cast("dict[str, str]", e.response.json())
                 error_desc = error_data.get(
                     "error_description", error_data.get("error", "")
                 )

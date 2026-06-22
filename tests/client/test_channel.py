@@ -3,6 +3,7 @@
 # Ideally we don't use private attributes in the tests but hard to test without
 
 import time
+from typing import cast
 from unittest import mock
 
 import httpx
@@ -48,7 +49,8 @@ async def test_create_channel_does_not_eagerly_fetch_token() -> None:
         _ = await create_channel_with_credentials(test_host, mock_helper)
 
         # Token should NOT be fetched at channel creation time
-        mock_helper.get_token.assert_not_called()
+        get_token_mock = cast("mock.MagicMock", mock_helper.get_token)
+        get_token_mock.assert_not_called()
 
 
 class TestCredentialHelper:
@@ -179,17 +181,30 @@ class TestCredentialHelper:
             client_secret="test_client_secret",
         )
 
-        mock_response = mock.Mock()
-        mock_response.json.return_value = {
+        mock_response = mock.Mock(spec=httpx.Response)
+        json_mock = cast("mock.MagicMock", mock_response.json)
+        json_mock.return_value = {
             "access_token": "new_access_token",
             "expires_in": 3600,
             "token_type": "Bearer",
         }
-        mock_response.raise_for_status.return_value = None
+        raise_for_status_mock = cast(
+            "mock.MagicMock", mock_response.raise_for_status
+        )
+        raise_for_status_mock.return_value = None
 
         with mock.patch("httpx.Client") as mock_client:
-            mock_response_obj = mock_client.return_value.__enter__.return_value
-            mock_response_obj.post.return_value = mock_response
+            mock_client_instance = cast(
+                "mock.MagicMock", mock_client.return_value
+            )
+            mock_context = cast(
+                "mock.MagicMock", mock_client_instance.__enter__
+            )
+            mock_response_obj = cast(
+                "mock.MagicMock", mock_context.return_value
+            )
+            post_mock = cast("mock.MagicMock", mock_response_obj.post)
+            post_mock.return_value = mock_response
 
             token_data = helper.get_token()
 
@@ -205,17 +220,30 @@ class TestCredentialHelper:
             client_secret="test_client_secret",
         )
 
-        mock_response = mock.Mock()
-        mock_response.json.return_value = {
+        mock_response = mock.Mock(spec=httpx.Response)
+        json_mock = cast("mock.MagicMock", mock_response.json)
+        json_mock.return_value = {
             "access_token": "some_token",
             "expires_in": 3600,
             "token_type": "DPoP",
         }
-        mock_response.raise_for_status.return_value = None
+        raise_for_status_mock = cast(
+            "mock.MagicMock", mock_response.raise_for_status
+        )
+        raise_for_status_mock.return_value = None
 
         with mock.patch("httpx.Client") as mock_client:
-            mock_response_obj = mock_client.return_value.__enter__.return_value
-            mock_response_obj.post.return_value = mock_response
+            mock_client_instance = cast(
+                "mock.MagicMock", mock_client.return_value
+            )
+            mock_context = cast(
+                "mock.MagicMock", mock_client_instance.__enter__
+            )
+            mock_response_obj = cast(
+                "mock.MagicMock", mock_context.return_value
+            )
+            post_mock = cast("mock.MagicMock", mock_response_obj.post)
+            post_mock.return_value = mock_response
 
             token_data = helper.get_token()
 
@@ -228,16 +256,29 @@ class TestCredentialHelper:
             client_secret="test_client_secret",
         )
 
-        mock_response = mock.Mock()
-        mock_response.json.return_value = {
+        mock_response = mock.Mock(spec=httpx.Response)
+        json_mock = cast("mock.MagicMock", mock_response.json)
+        json_mock.return_value = {
             "access_token": "some_token",
             "expires_in": 3600,
         }
-        mock_response.raise_for_status.return_value = None
+        raise_for_status_mock = cast(
+            "mock.MagicMock", mock_response.raise_for_status
+        )
+        raise_for_status_mock.return_value = None
 
         with mock.patch("httpx.Client") as mock_client:
-            mock_response_obj = mock_client.return_value.__enter__.return_value
-            mock_response_obj.post.return_value = mock_response
+            mock_client_instance = cast(
+                "mock.MagicMock", mock_client.return_value
+            )
+            mock_context = cast(
+                "mock.MagicMock", mock_client_instance.__enter__
+            )
+            mock_response_obj = cast(
+                "mock.MagicMock", mock_context.return_value
+            )
+            post_mock = cast("mock.MagicMock", mock_response_obj.post)
+            post_mock.return_value = mock_response
 
             token_data = helper.get_token()
 
@@ -260,19 +301,30 @@ class TestCredentialHelper:
                 client_secret="test_client_secret",
             )
 
-            mock_response = mock.Mock()
-            mock_response.json.return_value = {
+            mock_response = mock.Mock(spec=httpx.Response)
+            json_mock = cast("mock.MagicMock", mock_response.json)
+            json_mock.return_value = {
                 "access_token": "test_token",
                 "expires_in": 3600,
                 "token_type": server_type,
             }
-            mock_response.raise_for_status.return_value = None
+            raise_for_status_mock = cast(
+                "mock.MagicMock", mock_response.raise_for_status
+            )
+            raise_for_status_mock.return_value = None
 
             with mock.patch("httpx.Client") as mock_client:
-                mock_response_obj = (
-                    mock_client.return_value.__enter__.return_value
+                mock_client_instance = cast(
+                    "mock.MagicMock", mock_client.return_value
                 )
-                mock_response_obj.post.return_value = mock_response
+                mock_context = cast(
+                    "mock.MagicMock", mock_client_instance.__enter__
+                )
+                mock_response_obj = cast(
+                    "mock.MagicMock", mock_context.return_value
+                )
+                post_mock = cast("mock.MagicMock", mock_response_obj.post)
+                post_mock.return_value = mock_response
 
                 token_data = helper.get_token()
 
@@ -307,9 +359,10 @@ class TestCredentialHelper:
             client_secret="test_client_secret",
         )
 
-        mock_response = mock.Mock()
+        mock_response = mock.Mock(spec=httpx.Response)
         mock_response.status_code = 401
-        mock_response.json.return_value = {
+        json_mock = cast("mock.MagicMock", mock_response.json)
+        json_mock.return_value = {
             "error": "invalid_client",
             "error_description": "Invalid client credentials",
         }
@@ -321,8 +374,17 @@ class TestCredentialHelper:
         )
 
         with mock.patch("httpx.Client") as mock_client:
-            mock_response_obj = mock_client.return_value.__enter__.return_value
-            mock_response_obj.post.side_effect = http_error
+            mock_client_instance = cast(
+                "mock.MagicMock", mock_client.return_value
+            )
+            mock_context = cast(
+                "mock.MagicMock", mock_client_instance.__enter__
+            )
+            mock_response_obj = cast(
+                "mock.MagicMock", mock_context.return_value
+            )
+            post_mock = cast("mock.MagicMock", mock_response_obj.post)
+            post_mock.side_effect = http_error
 
             with pytest.raises(
                 OAuthError, match="OAuth request failed with status 401"
@@ -339,8 +401,17 @@ class TestCredentialHelper:
         request_error = httpx.RequestError("Connection failed")
 
         with mock.patch("httpx.Client") as mock_client:
-            mock_response_obj = mock_client.return_value.__enter__.return_value
-            mock_response_obj.post.side_effect = request_error
+            mock_client_instance = cast(
+                "mock.MagicMock", mock_client.return_value
+            )
+            mock_context = cast(
+                "mock.MagicMock", mock_client_instance.__enter__
+            )
+            mock_response_obj = cast(
+                "mock.MagicMock", mock_context.return_value
+            )
+            post_mock = cast("mock.MagicMock", mock_response_obj.post)
+            post_mock.side_effect = request_error
 
             with pytest.raises(
                 OAuthError, match="Failed to connect to OAuth server"
@@ -354,15 +425,28 @@ class TestCredentialHelper:
             client_secret="test_client_secret",
         )
 
-        mock_response = mock.Mock()
-        mock_response.json.return_value = {
+        mock_response = mock.Mock(spec=httpx.Response)
+        json_mock = cast("mock.MagicMock", mock_response.json)
+        json_mock.return_value = {
             "invalid_field": "missing_access_token",
         }
-        mock_response.raise_for_status.return_value = None
+        raise_for_status_mock = cast(
+            "mock.MagicMock", mock_response.raise_for_status
+        )
+        raise_for_status_mock.return_value = None
 
         with mock.patch("httpx.Client") as mock_client:
-            mock_response_obj = mock_client.return_value.__enter__.return_value
-            mock_response_obj.post.return_value = mock_response
+            mock_client_instance = cast(
+                "mock.MagicMock", mock_client.return_value
+            )
+            mock_context = cast(
+                "mock.MagicMock", mock_client_instance.__enter__
+            )
+            mock_response_obj = cast(
+                "mock.MagicMock", mock_context.return_value
+            )
+            post_mock = cast("mock.MagicMock", mock_response_obj.post)
+            post_mock.return_value = mock_response
 
             with pytest.raises(
                 OAuthError, match="Invalid OAuth response format"
@@ -404,21 +488,37 @@ class TestCredentialHelper:
         )
         helper.invalidate_token()
 
-        mock_response = mock.Mock()
-        mock_response.json.return_value = {
-            "access_token": "refreshed_token",
+        mock_response = mock.Mock(spec=httpx.Response)
+        json_mock = cast("mock.MagicMock", mock_response.json)
+        json_mock.return_value = {
+            "access_token": "fresh_token",
             "expires_in": 3600,
-            "token_type": "bearer",
+            "token_type": "Bearer",
         }
-        mock_response.raise_for_status.return_value = None
+        raise_for_status_mock = cast(
+            "mock.MagicMock", mock_response.raise_for_status
+        )
+        raise_for_status_mock.return_value = None
 
         with mock.patch("httpx.Client") as mock_client:
-            mock_response_obj = mock_client.return_value.__enter__.return_value
-            mock_response_obj.post.return_value = mock_response
+            mock_client_instance = cast(
+                "mock.MagicMock", mock_client.return_value
+            )
+            mock_context = cast(
+                "mock.MagicMock", mock_client_instance.__enter__
+            )
+            mock_response_obj = cast(
+                "mock.MagicMock", mock_context.return_value
+            )
+            post_mock = cast("mock.MagicMock", mock_response_obj.post)
+            post_mock.return_value = mock_response
 
-            token_data = helper.get_token()
+            # First call should fetch a new token
+            token = helper.get_token()
 
-        assert token_data.access_token == "refreshed_token"
+            # Verify network call was made
+            post_mock.assert_called_once()
+        assert token.access_token == "fresh_token"
 
 
 class TestAutoRefreshTokenAuthMetadataPlugin:
@@ -427,7 +527,8 @@ class TestAutoRefreshTokenAuthMetadataPlugin:
     def test_plugin_passes_bearer_token_to_callback(self) -> None:
         """Plugin fetches token and passes Bearer metadata."""
         mock_helper = mock.Mock(spec=CredentialHelper)
-        mock_helper.get_token.return_value = TokenData(
+        get_token_mock = cast("mock.MagicMock", mock_helper.get_token)
+        get_token_mock.return_value = TokenData(
             access_token="test-bearer-token",
             expires_at=time.time() + 3600,
             scheme="Bearer",
@@ -440,14 +541,16 @@ class TestAutoRefreshTokenAuthMetadataPlugin:
 
         plugin(mock_context, mock_callback)
 
-        mock_helper.get_token.assert_called_once()
+        get_token_mock = cast("mock.MagicMock", mock_helper.get_token)
+        get_token_mock.assert_called_once()
         expected_metadata = (("authorization", "Bearer test-bearer-token"),)
         mock_callback.assert_called_once_with(expected_metadata, None)
 
     def test_plugin_respects_token_scheme(self) -> None:
         """Plugin uses the scheme from TokenData, not hardcoded Bearer."""
         mock_helper = mock.Mock(spec=CredentialHelper)
-        mock_helper.get_token.return_value = TokenData(
+        get_token_mock = cast("mock.MagicMock", mock_helper.get_token)
+        get_token_mock.return_value = TokenData(
             access_token="dpop-token",
             expires_at=time.time() + 3600,
             scheme="Dpop",
@@ -467,7 +570,8 @@ class TestAutoRefreshTokenAuthMetadataPlugin:
         """Test that OAuthError is forwarded to the callback as an error."""
         mock_helper = mock.Mock(spec=CredentialHelper)
         oauth_error = OAuthError("token acquisition failed")
-        mock_helper.get_token.side_effect = oauth_error
+        get_token_mock = cast("mock.MagicMock", mock_helper.get_token)
+        get_token_mock.side_effect = oauth_error
 
         plugin = _AutoRefreshTokenAuthMetadataPlugin(mock_helper)
         mock_callback = mock.Mock()
@@ -481,7 +585,8 @@ class TestAutoRefreshTokenAuthMetadataPlugin:
         """Non-OAuthError exceptions are forwarded to callback."""
         mock_helper = mock.Mock(spec=CredentialHelper)
         runtime_error = RuntimeError("unexpected failure")
-        mock_helper.get_token.side_effect = runtime_error
+        get_token_mock = cast("mock.MagicMock", mock_helper.get_token)
+        get_token_mock.side_effect = runtime_error
 
         plugin = _AutoRefreshTokenAuthMetadataPlugin(mock_helper)
         mock_callback = mock.Mock()
@@ -582,7 +687,8 @@ class TestBackgroundTokenRefresh:
 
         # Mock a running refresh thread
         mock_thread = mock.Mock()
-        mock_thread.is_alive.return_value = True
+        is_alive_mock = cast("mock.MagicMock", mock_thread.is_alive)
+        is_alive_mock.return_value = True
         helper._refresh_thread = mock_thread
 
         with mock.patch("threading.Thread") as mock_thread_class:
@@ -603,7 +709,8 @@ class TestBackgroundTokenRefresh:
             helper._start_background_refresh()
 
             # Should have started the thread
-            mock_thread.start.assert_called_once()
+            start_mock = cast("mock.MagicMock", mock_thread.start)
+            start_mock.assert_called_once()
 
     def test_background_refresh_silently_handles_errors(self) -> None:
         """Test that background refresh silently ignores errors."""
@@ -657,24 +764,37 @@ class TestBackgroundTokenRefresh:
             issued_at=time.time() - 3700,
         )
 
-        mock_response = mock.Mock()
-        mock_response.json.return_value = {
-            "access_token": "new_token",
+        mock_response = mock.Mock(spec=httpx.Response)
+        json_mock = cast("mock.MagicMock", mock_response.json)
+        json_mock.return_value = {
+            "access_token": "new_access_token",
             "expires_in": 3600,
-            "token_type": "bearer",
+            "token_type": "Bearer",
         }
-        mock_response.raise_for_status.return_value = None
+        raise_for_status_mock = cast(
+            "mock.MagicMock", mock_response.raise_for_status
+        )
+        raise_for_status_mock.return_value = None
 
         with mock.patch("httpx.Client") as mock_client:
-            mock_response_obj = mock_client.return_value.__enter__.return_value
-            mock_response_obj.post.return_value = mock_response
+            mock_client_instance = cast(
+                "mock.MagicMock", mock_client.return_value
+            )
+            mock_context = cast(
+                "mock.MagicMock", mock_client_instance.__enter__
+            )
+            mock_response_obj = cast(
+                "mock.MagicMock", mock_context.return_value
+            )
+            post_mock = cast("mock.MagicMock", mock_response_obj.post)
+            post_mock.return_value = mock_response
 
             token_data = helper.get_token()
 
             # Should have refreshed and returned new token
-            assert token_data.access_token == "new_token"
+            assert token_data.access_token == "new_access_token"
             # Should have called the OAuth endpoint
-            mock_response_obj.post.assert_called_once()
+            post_mock.assert_called_once()
 
     def test_refresh_token_sets_issued_at(self) -> None:
         """Test that _refresh_token sets the issued_at timestamp."""
@@ -683,18 +803,31 @@ class TestBackgroundTokenRefresh:
             client_secret="test_client_secret",
         )
 
-        mock_response = mock.Mock()
-        mock_response.json.return_value = {
-            "access_token": "new_token",
+        mock_response = mock.Mock(spec=httpx.Response)
+        json_mock = cast("mock.MagicMock", mock_response.json)
+        json_mock.return_value = {
+            "access_token": "test_token",
             "expires_in": 3600,
-            "token_type": "bearer",
+            "token_type": "Bearer",
         }
-        mock_response.raise_for_status.return_value = None
+        raise_for_status_mock = cast(
+            "mock.MagicMock", mock_response.raise_for_status
+        )
+        raise_for_status_mock.return_value = None
 
         before_time = time.time()
         with mock.patch("httpx.Client") as mock_client:
-            mock_response_obj = mock_client.return_value.__enter__.return_value
-            mock_response_obj.post.return_value = mock_response
+            mock_client_instance = cast(
+                "mock.MagicMock", mock_client.return_value
+            )
+            mock_context = cast(
+                "mock.MagicMock", mock_client_instance.__enter__
+            )
+            mock_response_obj = cast(
+                "mock.MagicMock", mock_context.return_value
+            )
+            post_mock = cast("mock.MagicMock", mock_response_obj.post)
+            post_mock.return_value = mock_response
 
             _ = helper.get_token()
 

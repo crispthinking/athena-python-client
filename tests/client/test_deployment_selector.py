@@ -1,5 +1,6 @@
 """Tests for deployment selector."""
 
+from typing import cast
 from unittest import mock
 
 import pytest
@@ -39,9 +40,10 @@ async def test_list_deployments_success(mock_channel: mock.Mock) -> None:
 
     # Setup mock
     with mock.patch(
-        "resolver_athena_client.client.deployment_selector.ClassifierServiceClient"
+        "resolver_athena_client.client.deployment_selector.ClassifierServiceClient",
+        spec=ClassifierServiceClient,
     ) as mock_client_cls:
-        mock_client = mock_client_cls.return_value
+        mock_client = cast("mock.MagicMock", mock_client_cls.return_value)
         mock_client.list_deployments = mock.AsyncMock(
             return_value=expected_response
         )
@@ -61,7 +63,10 @@ async def test_list_deployments_success(mock_channel: mock.Mock) -> None:
 
         # Verify client interaction
         mock_client_cls.assert_called_once_with(mock_channel)
-        mock_client.list_deployments.assert_called_once()
+        list_deployments_mock = cast(
+            "mock.AsyncMock", mock_client.list_deployments
+        )
+        list_deployments_mock.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -72,9 +77,10 @@ async def test_list_deployments_empty(mock_channel: mock.Mock) -> None:
 
     # Setup mock
     with mock.patch(
-        "resolver_athena_client.client.deployment_selector.ClassifierServiceClient"
+        "resolver_athena_client.client.deployment_selector.ClassifierServiceClient",
+        spec=ClassifierServiceClient,
     ) as mock_client_cls:
-        mock_client = mock_client_cls.return_value
+        mock_client = cast("mock.MagicMock", mock_client_cls.return_value)
         mock_client.list_deployments = mock.AsyncMock(
             return_value=empty_response
         )
@@ -89,7 +95,10 @@ async def test_list_deployments_empty(mock_channel: mock.Mock) -> None:
 
         # Verify client interaction
         mock_client_cls.assert_called_once_with(mock_channel)
-        mock_client.list_deployments.assert_called_once()
+        list_deployments_mock = cast(
+            "mock.AsyncMock", mock_client.list_deployments
+        )
+        list_deployments_mock.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -97,9 +106,10 @@ async def test_list_deployments_client_error(mock_channel: mock.Mock) -> None:
     """Test deployment listing when client raises an error."""
     # Setup mock to raise error
     with mock.patch(
-        "resolver_athena_client.client.deployment_selector.ClassifierServiceClient"
+        "resolver_athena_client.client.deployment_selector.ClassifierServiceClient",
+        spec=ClassifierServiceClient,
     ) as mock_client_cls:
-        mock_client = mock_client_cls.return_value
+        mock_client = cast("mock.MagicMock", mock_client_cls.return_value)
         mock_client.list_deployments = mock.AsyncMock(
             side_effect=RuntimeError("Test error")
         )
@@ -113,4 +123,7 @@ async def test_list_deployments_client_error(mock_channel: mock.Mock) -> None:
 
         # Verify client interaction
         mock_client_cls.assert_called_once_with(mock_channel)
-        mock_client.list_deployments.assert_called_once()
+        list_deployments_mock = cast(
+            "mock.AsyncMock", mock_client.list_deployments
+        )
+        list_deployments_mock.assert_called_once()
