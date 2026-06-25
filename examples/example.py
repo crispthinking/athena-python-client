@@ -151,7 +151,7 @@ async def main() -> int:
         logger.error("OAUTH_CLIENT_ID and OAUTH_CLIENT_SECRET must be set")
         return 1
 
-    host = os.getenv("ATHENA_HOST", "trust-messages-global.crispthinking.com")
+    host = os.getenv("ATHENA_HOST", "api.athena-risk-intelligence.com")
     affiliate = os.getenv("ATHENA_AFFILIATE", "athena-test")
     logger.info("Connecting to %s", host)
 
