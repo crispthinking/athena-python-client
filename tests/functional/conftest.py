@@ -79,23 +79,25 @@ async def credential_helper() -> CredentialHelper:
     _ = load_dotenv()
     client_id = os.environ["OAUTH_CLIENT_ID"]
     client_secret = os.environ["OAUTH_CLIENT_SECRET"]
-    auth_url = os.getenv(
-        "OAUTH_AUTH_URL", "https://crispthinking.auth0.com/oauth/token"
-    )
-    audience = os.getenv("OAUTH_AUDIENCE", "crisp-athena-live")
+    auth_url = os.getenv("OAUTH_AUTH_URL")
+    audience = os.getenv("OAUTH_AUDIENCE")
 
     # Create credential helper
-    return CredentialHelper(
-        client_id=client_id,
-        client_secret=client_secret,
-        auth_url=auth_url,
-        audience=audience,
-    )
+    kwargs: dict[str, str] = {
+        "client_id": client_id,
+        "client_secret": client_secret,
+    }
+    if auth_url:
+        kwargs["auth_url"] = auth_url
+    if audience:
+        kwargs["audience"] = audience
+
+    return CredentialHelper(proactive_refresh_threshold=0.25, **kwargs)
 
 
 def _load_options() -> AthenaOptions:
     _ = load_dotenv()
-    host = os.getenv("ATHENA_HOST", "localhost")
+    host = os.getenv("ATHENA_HOST")
 
     deployment_id = f"functional-test-{uuid.uuid4()}"
     if len(deployment_id) > MAX_DEPLOYMENT_ID_LENGTH:
@@ -104,8 +106,7 @@ def _load_options() -> AthenaOptions:
     affiliate = os.environ["ATHENA_TEST_AFFILIATE"]
 
     # Run classification with OAuth authentication
-    return AthenaOptions(
-        host=host,
+    opts = AthenaOptions(
         resize_images=True,
         deployment_id=deployment_id,
         compress_images=True,
@@ -114,6 +115,11 @@ def _load_options() -> AthenaOptions:
         affiliate=affiliate,
         compression_quality=2,
     )
+
+    if host:
+        opts.host = host
+
+    return opts
 
 
 @pytest.fixture
