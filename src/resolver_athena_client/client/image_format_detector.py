@@ -1,5 +1,7 @@
 """Utility for detecting image formats from raw bytes."""
 
+from collections.abc import Callable
+
 from resolver_athena_client.generated.athena.models_pb2 import ImageFormat
 
 PNG_MAGIC_BYTES = b"\x89PNG"
@@ -13,7 +15,32 @@ TIFF_LE_MAGIC_BYTES = b"II*\x00"
 TIFF_BE_MAGIC_BYTES = b"MM\x00*"
 
 
-def detect_image_format(data: bytes) -> ImageFormat.ValueType:  # noqa: PLR0911
+def _is_webp(data: bytes) -> bool:
+    """Check for the RIFF....WEBP signature (12 bytes minimum)."""
+    return (
+        data[:4] == WEBP_RIFF_MAGIC_BYTES
+        and data[8:12] == WEBP_WEBP_MAGIC_BYTES
+    )
+
+
+_ImageFormatDetector = tuple[Callable[[bytes], bool], ImageFormat.ValueType]
+_FORMAT_DETECTORS: list[_ImageFormatDetector] = [
+    (lambda d: d.startswith(PNG_MAGIC_BYTES), ImageFormat.IMAGE_FORMAT_PNG),
+    (lambda d: d.startswith(JPEG_MAGIC_BYTES), ImageFormat.IMAGE_FORMAT_JPEG),
+    (
+        lambda d: d.startswith((GIF87A_MAGIC_BYTES, GIF89A_MAGIC_BYTES)),
+        ImageFormat.IMAGE_FORMAT_GIF,
+    ),
+    (lambda d: d.startswith(BMP_MAGIC_BYTES), ImageFormat.IMAGE_FORMAT_BMP),
+    (_is_webp, ImageFormat.IMAGE_FORMAT_WEBP),
+    (
+        lambda d: d.startswith((TIFF_LE_MAGIC_BYTES, TIFF_BE_MAGIC_BYTES)),
+        ImageFormat.IMAGE_FORMAT_TIFF,
+    ),
+]
+
+
+def detect_image_format(data: bytes) -> ImageFormat.ValueType:
     """Detect image format from raw bytes using magic number signatures.
 
     Args:
@@ -28,46 +55,8 @@ def detect_image_format(data: bytes) -> ImageFormat.ValueType:  # noqa: PLR0911
     if not data:
         return ImageFormat.IMAGE_FORMAT_UNSPECIFIED
 
-    # Check magic numbers for common image formats
-    # PNG: starts with PNG_MAGIC_BYTES
-    png_len = len(PNG_MAGIC_BYTES)
-    if len(data) >= png_len and data[:png_len] == PNG_MAGIC_BYTES:
-        return ImageFormat.IMAGE_FORMAT_PNG
+    for matches, image_format in _FORMAT_DETECTORS:
+        if matches(data):
+            return image_format
 
-    # JPEG: starts with JPEG_MAGIC_BYTES
-    jpeg_len = len(JPEG_MAGIC_BYTES)
-    if len(data) >= jpeg_len and data[:jpeg_len] == JPEG_MAGIC_BYTES:
-        return ImageFormat.IMAGE_FORMAT_JPEG
-
-    # GIF: starts with GIF87A_MAGIC_BYTES or GIF89A_MAGIC_BYTES
-    gif_len = len(GIF87A_MAGIC_BYTES)
-    if len(data) >= gif_len and data[:gif_len] in (
-        GIF87A_MAGIC_BYTES,
-        GIF89A_MAGIC_BYTES,
-    ):
-        return ImageFormat.IMAGE_FORMAT_GIF
-
-    # BMP: starts with BMP_MAGIC_BYTES
-    bmp_len = len(BMP_MAGIC_BYTES)
-    if len(data) >= bmp_len and data[:bmp_len] == BMP_MAGIC_BYTES:
-        return ImageFormat.IMAGE_FORMAT_BMP
-
-    # WebP: RIFF....WEBP (12 bytes minimum for full signature)
-    webp_min_len = len(WEBP_RIFF_MAGIC_BYTES) + len(WEBP_WEBP_MAGIC_BYTES) + 4
-    if (
-        len(data) >= webp_min_len
-        and data[:4] == WEBP_RIFF_MAGIC_BYTES
-        and data[8:12] == WEBP_WEBP_MAGIC_BYTES
-    ):
-        return ImageFormat.IMAGE_FORMAT_WEBP
-
-    # TIFF: little-endian or big-endian magic bytes
-    tiff_len = len(TIFF_LE_MAGIC_BYTES)
-    if len(data) >= tiff_len and (
-        data[:tiff_len] == TIFF_LE_MAGIC_BYTES
-        or data[:tiff_len] == TIFF_BE_MAGIC_BYTES
-    ):
-        return ImageFormat.IMAGE_FORMAT_TIFF
-
-    # Fallback when format cannot be determined
     return ImageFormat.IMAGE_FORMAT_UNSPECIFIED

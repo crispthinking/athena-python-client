@@ -325,11 +325,11 @@ async def test_timeout_with_cancellation() -> None:
         responses: list[ClassifyResponse] = []
         classify_task = None
 
-        try:
+        def cancel_after_target() -> None:
+            """Cancel processing after target responses."""
+            raise asyncio.CancelledError
 
-            def cancel_after_target() -> None:
-                """Cancel processing after target responses."""
-                raise asyncio.CancelledError  # noqa: TRY301
+        try:
 
             async def collect_responses() -> None:
                 response_iter = aiter(client.classify_images(image_stream))
