@@ -5,6 +5,8 @@ import pytest
 from resolver_athena_client.client.models import ImageData
 from resolver_athena_client.generated.athena.models_pb2 import ImageFormat
 
+EXPECTED_HASH_COUNT = 2
+
 
 def test_image_data_detects_png_format() -> None:
     """Test that PNG format is detected during initialization."""
@@ -78,8 +80,8 @@ def test_image_data_transformation_preserves_format() -> None:
 
     # Format should still be PNG (transformers will update it if needed)
     assert image_data.image_format == ImageFormat.IMAGE_FORMAT_PNG
-    assert len(image_data.sha256_hashes) == 2  # noqa: PLR2004
-    assert len(image_data.md5_hashes) == 2  # noqa: PLR2004
+    assert len(image_data.sha256_hashes) == EXPECTED_HASH_COUNT
+    assert len(image_data.md5_hashes) == EXPECTED_HASH_COUNT
 
 
 @pytest.mark.parametrize(

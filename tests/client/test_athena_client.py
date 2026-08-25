@@ -2,7 +2,7 @@
 
 import asyncio
 import contextlib
-from typing import cast
+from typing import TYPE_CHECKING, cast
 from unittest import mock
 
 import pytest
@@ -22,6 +22,11 @@ from resolver_athena_client.grpc_wrappers.classifier_service import (
     ClassifierServiceClient,
 )
 from tests.utils.mock_async_iterator import MockAsyncIterator
+
+if TYPE_CHECKING:
+    from resolver_athena_client.client.transformers.worker_batcher import (
+        WorkerBatcherOptions,
+    )
 
 
 @pytest.fixture
@@ -388,7 +393,8 @@ async def test_client_num_workers_configuration(
         # Verify WorkerBatcher was created with correct num_workers
         mock_worker_batcher_cls.assert_called_once()
         call_kwargs = mock_worker_batcher_cls.call_args.kwargs
-        assert call_kwargs["num_workers"] == custom_num_workers
+        batcher_options = cast("WorkerBatcherOptions", call_kwargs["options"])
+        assert batcher_options.num_workers == custom_num_workers
 
 
 @pytest.mark.asyncio

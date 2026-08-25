@@ -6,6 +6,7 @@ import pytest
 
 from resolver_athena_client.client.transformers.worker_batcher import (
     WorkerBatcher,
+    WorkerBatcherOptions,
 )
 from resolver_athena_client.generated.athena.models_pb2 import (
     ClassificationInput,
@@ -104,9 +105,12 @@ async def test_worker_batcher_basic() -> None:
         source=source,
         transformer_func=identity_transform,
         deployment_id="test-deployment",
-        batch_timeout=0.001,
-        keepalive_interval=0.001,  # Very short keepalive for immediate response
-        num_workers=1,  # Single worker for simple case
+        # Very short keepalive/timeout for immediate response, single worker
+        options=WorkerBatcherOptions(
+            batch_timeout=0.001,
+            keepalive_interval=0.001,
+            num_workers=1,
+        ),
     )
 
     # Should get one request with the item
@@ -135,10 +139,12 @@ async def test_worker_batcher_batching() -> None:
         source=source,
         transformer_func=identity_transform,
         deployment_id="test-deployment",
-        max_batch_size=BATCH_SIZE_TWO,
-        batch_timeout=0.001,
-        keepalive_interval=0.1,
-        num_workers=1,
+        options=WorkerBatcherOptions(
+            max_batch_size=BATCH_SIZE_TWO,
+            batch_timeout=0.001,
+            keepalive_interval=0.1,
+            num_workers=1,
+        ),
     )
 
     # Should get first batch with 2 items
@@ -169,10 +175,13 @@ async def test_worker_batcher_timeout(
         source=source_with_timeout,
         transformer_func=identity_transform,
         deployment_id="test-deployment",
-        max_batch_size=BATCH_SIZE_THREE,
-        batch_timeout=0.001,  # Very short timeout to trigger timeout behavior
-        keepalive_interval=0.1,
-        num_workers=1,
+        # Very short timeout to trigger timeout behavior
+        options=WorkerBatcherOptions(
+            max_batch_size=BATCH_SIZE_THREE,
+            batch_timeout=0.001,
+            keepalive_interval=0.1,
+            num_workers=1,
+        ),
     )
 
     # Should get partial batches due to timeout
@@ -213,9 +222,11 @@ async def test_worker_batcher_empty() -> None:
         source=source,
         transformer_func=identity_transform,
         deployment_id="test-deployment",
-        batch_timeout=0.001,
-        keepalive_interval=0.001,
-        num_workers=1,
+        options=WorkerBatcherOptions(
+            batch_timeout=0.001,
+            keepalive_interval=0.001,
+            num_workers=1,
+        ),
     )
 
     # Empty source should produce keepalive
@@ -238,10 +249,12 @@ async def test_worker_batcher_exact_batch() -> None:
         source=source,
         transformer_func=identity_transform,
         deployment_id="test-deployment",
-        max_batch_size=BATCH_SIZE_THREE,
-        batch_timeout=0.001,
-        keepalive_interval=0.001,
-        num_workers=1,
+        options=WorkerBatcherOptions(
+            max_batch_size=BATCH_SIZE_THREE,
+            batch_timeout=0.001,
+            keepalive_interval=0.001,
+            num_workers=1,
+        ),
     )
 
     # Should get exactly one batch
@@ -279,10 +292,12 @@ async def test_worker_batcher_edge_cases() -> None:
         source=source,
         transformer_func=identity_transform,
         deployment_id="test-deployment",
-        max_batch_size=BATCH_SIZE_TWO,
-        batch_timeout=0.001,
-        keepalive_interval=0.1,
-        num_workers=1,
+        options=WorkerBatcherOptions(
+            max_batch_size=BATCH_SIZE_TWO,
+            batch_timeout=0.001,
+            keepalive_interval=0.1,
+            num_workers=1,
+        ),
     )
 
     total_items_received = 0
@@ -327,10 +342,12 @@ async def test_worker_batcher_full_batch() -> None:
         source=source,
         transformer_func=identity_transform,
         deployment_id="test-deployment",
-        max_batch_size=FULL_BATCH_SIZE,
-        batch_timeout=0.001,
-        keepalive_interval=0.1,
-        num_workers=1,
+        options=WorkerBatcherOptions(
+            max_batch_size=FULL_BATCH_SIZE,
+            batch_timeout=0.001,
+            keepalive_interval=0.1,
+            num_workers=1,
+        ),
     )
 
     # Should get first full batch
@@ -364,10 +381,12 @@ async def test_worker_batcher_source_iteration_end() -> None:
         source=source,
         transformer_func=identity_transform,
         deployment_id="test-deployment",
-        max_batch_size=BATCH_SIZE_THREE,
-        batch_timeout=0.001,
-        keepalive_interval=0.001,
-        num_workers=1,
+        options=WorkerBatcherOptions(
+            max_batch_size=BATCH_SIZE_THREE,
+            batch_timeout=0.001,
+            keepalive_interval=0.001,
+            num_workers=1,
+        ),
     )
 
     # Should get a batch with available items (less than max_batch_size)
@@ -401,10 +420,12 @@ async def test_worker_batcher_iterator_end_no_timeout() -> None:
         source=source,
         transformer_func=identity_transform,
         deployment_id="test-deployment",
-        max_batch_size=BATCH_SIZE_TWO,
-        batch_timeout=fast_timeout,
-        keepalive_interval=0.1,
-        num_workers=1,
+        options=WorkerBatcherOptions(
+            max_batch_size=BATCH_SIZE_TWO,
+            batch_timeout=fast_timeout,
+            keepalive_interval=0.1,
+            num_workers=1,
+        ),
     )
 
     # Should get the item before timeout
@@ -437,9 +458,11 @@ async def test_worker_batcher_transformation() -> None:
         source=source,
         transformer_func=modify_transform,
         deployment_id="test-deployment",
-        batch_timeout=0.001,
-        keepalive_interval=0.1,
-        num_workers=1,
+        options=WorkerBatcherOptions(
+            batch_timeout=0.001,
+            keepalive_interval=0.1,
+            num_workers=1,
+        ),
     )
 
     # Should get transformed item

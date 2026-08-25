@@ -5,6 +5,7 @@ import contextlib
 import logging
 import time
 from collections.abc import AsyncIterator, Awaitable, Callable
+from dataclasses import dataclass
 from typing import Generic, TypeVar
 
 from resolver_athena_client.generated.athena.models_pb2 import (
@@ -15,19 +16,26 @@ from resolver_athena_client.generated.athena.models_pb2 import (
 T = TypeVar("T")
 
 
+@dataclass
+class WorkerBatcherOptions:
+    """Tuning options for `WorkerBatcher`."""
+
+    max_batch_size: int = 10
+    num_workers: int = 4
+    queue_size: int = 100
+    keepalive_interval: float = 30.0
+    batch_timeout: float = 0.1
+
+
 class WorkerBatcher(Generic[T]):
     """Asyncio worker-based batcher with concurrent processing and buffering."""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         source: AsyncIterator[T],
         transformer_func: Callable[[T], Awaitable[ClassificationInput]],
         deployment_id: str,
-        max_batch_size: int = 10,
-        num_workers: int = 4,
-        queue_size: int = 100,
-        keepalive_interval: float = 30.0,
-        batch_timeout: float = 0.1,
+        options: WorkerBatcherOptions | None = None,
     ) -> None:
         """Initialize the worker batcher.
 
@@ -37,29 +45,28 @@ class WorkerBatcher(Generic[T]):
             transformer_func: Function to transform items (e.g., image
                 processing)
             deployment_id: Deployment ID for requests
-            max_batch_size: Maximum items per batch
-            num_workers: Number of concurrent worker tasks
-            queue_size: Size of internal processing queue
-            keepalive_interval: Seconds between keepalive requests
-            batch_timeout: Max seconds to wait before sending partial batch
+            options: Tuning options for batch size, worker count, and
+                timing. Defaults to `WorkerBatcherOptions()`.
 
         """
+        options = options or WorkerBatcherOptions()
+
         self.source: AsyncIterator[T] = source
         self.transformer_func: Callable[[T], Awaitable[ClassificationInput]] = (
             transformer_func
         )
         self.deployment_id: str = deployment_id
-        self.max_batch_size: int = max_batch_size
-        self.num_workers: int = num_workers
-        self.keepalive_interval: float = keepalive_interval
-        self.batch_timeout: float = batch_timeout
+        self.max_batch_size: int = options.max_batch_size
+        self.num_workers: int = options.num_workers
+        self.keepalive_interval: float = options.keepalive_interval
+        self.batch_timeout: float = options.batch_timeout
 
         # Internal queues and state - use Optional[T] to handle None sentinel
         self.input_queue: asyncio.Queue[T | None] = asyncio.Queue(
-            maxsize=queue_size
+            maxsize=options.queue_size
         )
         self.output_queue: asyncio.Queue[ClassificationInput] = asyncio.Queue(
-            maxsize=queue_size
+            maxsize=options.queue_size
         )
         self.processed_items: list[ClassificationInput] = []
 
